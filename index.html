@@ -453,6 +453,7 @@ function renderJobs(){
         <div class="job-actions">
           <button class="btn small secondary" onclick="event.stopPropagation(); openEdit('${j.id}')">Rediger</button>
           <button class="btn small secondary" onclick="event.stopPropagation(); openCopy('${j.id}')">Kopiér job</button>
+          <button class="btn small" onclick="event.stopPropagation(); printPackList('${j.id}')" style="background:var(--panel-2); color:var(--amber); border:1px solid var(--amber-dim);">📄 Pakkeliste</button>
           <button class="btn small danger" onclick="event.stopPropagation(); deleteJob('${j.id}')">Slet job</button>
         </div>
       </div>
@@ -987,6 +988,187 @@ document.getElementById('equipDetailSaveBtn').addEventListener('click', async ()
     btn.disabled = false; btn.textContent = 'Gem detaljer';
   }
 });
+
+// ---- pakkeliste (print/PDF) ----
+function printPackList(id){
+  const j = jobs.find(x=>x.id===id);
+  if(!j) return;
+
+  // group items by category
+  const grouped = {};
+  (j.items||[]).forEach(it=>{
+    const eq = EQUIPMENT.find(e=>e.name===it.name);
+    const cat = eq ? eq.category : 'Diverse';
+    if(!grouped[cat]) grouped[cat]=[];
+    grouped[cat].push({...it, eq});
+  });
+  const cats = Object.keys(grouped).sort();
+  const totalItems = (j.items||[]).reduce((s,i)=>s+i.qty,0);
+
+  const catHtml = cats.map(cat=>{
+    const rows = grouped[cat].map((it,idx)=>{
+      const eq = it.eq||{};
+      return `<tr class="${idx%2===0?'even':'odd'}">
+        <td class="check"><span class="checkbox"></span></td>
+        <td class="itemname">${esc(it.name)}</td>
+        <td class="qty">${it.qty}</td>
+        <td class="serial">${esc(eq.serial_number||'')}</td>
+        <td class="tv2">${esc(eq.tv2_number||'')}</td>
+        <td class="notes-col"></td>
+      </tr>`;
+    }).join('');
+    return `<tbody>
+      <tr class="cat-header"><td colspan="6">${esc(cat)}</td></tr>
+      ${rows}
+    </tbody>`;
+  }).join('');
+
+  const now = new Date().toLocaleDateString('da-DK',{day:'2-digit',month:'long',year:'numeric'});
+  const startFmt = j.start ? new Date(j.start+'T00:00:00').toLocaleDateString('da-DK',{day:'2-digit',month:'long',year:'numeric'}) : '—';
+  const endFmt   = j.end   ? new Date(j.end  +'T00:00:00').toLocaleDateString('da-DK',{day:'2-digit',month:'long',year:'numeric'}) : '—';
+
+  const html = `<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<title>Pakkeliste — ${esc(j.name||'Job')}</title>
+<style>
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; font-size:10pt; color:#1a1a1a; background:#fff; padding:0;}
+
+  @page{size:A4; margin:18mm 16mm 18mm 16mm;}
+
+  .page{max-width:210mm; margin:0 auto; padding:16mm 14mm;}
+
+  /* header */
+  .top-bar{display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #1a1a1a; padding-bottom:10px; margin-bottom:14px;}
+  .job-title{font-size:22pt; font-weight:800; letter-spacing:-0.02em; line-height:1.1;}
+  .job-sub{font-size:9pt; color:#555; margin-top:4px;}
+  .logo-area{text-align:right; font-size:8pt; color:#777; line-height:1.7;}
+  .logo-area strong{font-size:11pt; color:#1a1a1a; display:block; font-weight:800; letter-spacing:.05em;}
+
+  /* meta grid */
+  .meta-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:0; margin-bottom:16px; border:1px solid #ddd; border-radius:4px; overflow:hidden;}
+  .meta-cell{padding:8px 10px; border-right:1px solid #ddd;}
+  .meta-cell:last-child{border-right:none;}
+  .meta-label{font-size:7.5pt; text-transform:uppercase; letter-spacing:.06em; color:#888; margin-bottom:2px;}
+  .meta-value{font-size:10.5pt; font-weight:700;}
+
+  /* notes */
+  .notes-box{background:#f9f9f9; border:1px solid #ddd; border-radius:4px; padding:8px 10px; margin-bottom:16px; font-size:9pt; color:#444; white-space:pre-wrap;}
+  .notes-label{font-size:7.5pt; text-transform:uppercase; letter-spacing:.06em; color:#888; margin-bottom:3px;}
+
+  /* table */
+  table{width:100%; border-collapse:collapse; font-size:9pt;}
+  thead tr{background:#1a1a1a; color:#fff;}
+  thead th{padding:7px 8px; text-align:left; font-weight:700; font-size:8pt; text-transform:uppercase; letter-spacing:.04em;}
+  thead th.qty, thead th.check{text-align:center;}
+  .cat-header td{background:#e8e8e8; font-weight:800; font-size:8.5pt; text-transform:uppercase; letter-spacing:.06em; padding:5px 8px; color:#1a1a1a;}
+  tr.even td{background:#fff;}
+  tr.odd td{background:#f6f6f6;}
+  td{padding:6px 8px; border-bottom:1px solid #e0e0e0; vertical-align:middle;}
+  td.check{text-align:center; width:24px;}
+  td.qty{text-align:center; font-weight:700; width:36px;}
+  td.serial{color:#555; font-size:8.5pt; width:22%;}
+  td.tv2{color:#555; font-size:8.5pt; width:14%;}
+  td.notes-col{width:18%;}
+  .checkbox{display:inline-block; width:13px; height:13px; border:1.5px solid #aaa; border-radius:2px;}
+
+  /* summary */
+  .summary{margin-top:14px; display:flex; justify-content:flex-end;}
+  .summary-box{border:1px solid #ddd; border-radius:4px; padding:8px 14px; font-size:9pt; text-align:right;}
+  .summary-box span{font-weight:800; font-size:12pt;}
+
+  /* signature */
+  .sig-row{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-top:24px; padding-top:14px; border-top:1px solid #ddd;}
+  .sig-box{border-bottom:1px solid #999; padding-bottom:28px; font-size:8pt; color:#888;}
+  .sig-label{margin-top:4px;}
+
+  /* footer */
+  .footer{margin-top:20px; border-top:1px solid #ddd; padding-top:6px; font-size:7.5pt; color:#aaa; display:flex; justify-content:space-between;}
+
+  @media print{
+    body{padding:0;}
+    .page{padding:0;}
+    .no-print{display:none;}
+    tr.even td, tr.odd td{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    thead tr{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .cat-header td{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="top-bar">
+    <div>
+      <div class="job-title">${esc(j.name||'Job')}</div>
+      <div class="job-sub">Pakkeliste · Udstyr OB Pulje</div>
+    </div>
+    <div class="logo-area">
+      <strong>TV 2</strong>
+      OB PULJE<br>
+      Udskrevet: ${now}
+    </div>
+  </div>
+
+  <div class="meta-grid">
+    <div class="meta-cell"><div class="meta-label">Ansvarlig</div><div class="meta-value">${esc(j.who||'—')}</div></div>
+    <div class="meta-cell"><div class="meta-label">Start dato</div><div class="meta-value">${startFmt}</div></div>
+    <div class="meta-cell"><div class="meta-label">Slut dato</div><div class="meta-value">${endFmt}</div></div>
+    <div class="meta-cell"><div class="meta-label">Udstyr i alt</div><div class="meta-value">${(j.items||[]).length} poster · ${totalItems} stk.</div></div>
+  </div>
+
+  ${j.notes ? `<div class="notes-box"><div class="notes-label">Noter</div>${esc(j.notes)}</div>` : ''}
+
+  <table>
+    <thead>
+      <tr>
+        <th class="check">✓</th>
+        <th>Udstyr</th>
+        <th class="qty">Antal</th>
+        <th>Serienummer</th>
+        <th>TV2 nr.</th>
+        <th>Bemærkninger</th>
+      </tr>
+    </thead>
+    ${catHtml}
+  </table>
+
+  <div class="summary">
+    <div class="summary-box">
+      Total udstyr: <span>${totalItems}</span> stk. fordelt på ${(j.items||[]).length} poster
+    </div>
+  </div>
+
+  <div class="sig-row">
+    <div class="sig-box"><div class="sig-label">Pakket af / Dato</div></div>
+    <div class="sig-box"><div class="sig-label">Modtaget af / Dato</div></div>
+    <div class="sig-box"><div class="sig-label">Returneret af / Dato</div></div>
+  </div>
+
+  <div class="footer">
+    <div>Job ID: ${esc(j.id||'')}</div>
+    <div>TV 2 OB Pulje Udstyrsbooking</div>
+  </div>
+
+  <div class="no-print" style="margin-top:24px; text-align:center;">
+    <button onclick="window.print()" style="background:#1a1a1a; color:#fff; border:none; padding:12px 28px; font-size:13px; font-weight:700; border-radius:7px; cursor:pointer; letter-spacing:.02em;">
+      🖨 Udskriv / Gem som PDF
+    </button>
+    <p style="margin-top:10px; font-size:11px; color:#888;">I udskriftsdialog: vælg "Gem som PDF" som printer</p>
+  </div>
+
+</div>
+</body>
+</html>`;
+
+  function esc(s){ return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  const win = window.open('','_blank','width=900,height=1100');
+  win.document.write(html);
+  win.document.close();
+}
 
 // ---- init ----
 (async function init(){
