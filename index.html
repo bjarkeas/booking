@@ -296,6 +296,274 @@
     .btn.small{ min-height:36px; padding:8px 10px; font-size:12px; }
   }
 
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE APP SHELL
+   ═══════════════════════════════════════════════════════════ */
+
+#mobileApp {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 1000;
+  flex-direction: column;
+  font-family: var(--sans);
+}
+
+/* Header */
+#mobileHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+#mobileHeader .brand {
+  display: flex; align-items: center; gap: 8px;
+}
+#mobileHeader .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--amber); box-shadow: 0 0 6px var(--amber);
+}
+#mobileHeader h1 { font-size: 13px; font-weight: 700; letter-spacing:.04em; margin:0; }
+
+/* Search bar */
+#mobileSearchBar {
+  padding: 10px 14px 8px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+}
+#mobileSearchBar input {
+  flex: 1; background: var(--panel-2); border: 1px solid var(--border);
+  color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 15px;
+}
+
+/* Content */
+#mobileContent {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 14px 90px;
+}
+
+/* Floating scan button */
+#mobileScanFab {
+  position: fixed;
+  bottom: 76px;
+  right: 18px;
+  z-index: 1010;
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  background: var(--amber);
+  color: #1a1407;
+  border: none;
+  font-size: 24px;
+  box-shadow: 0 4px 16px rgba(232,163,61,.5);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .1s;
+}
+#mobileScanFab:active { transform: scale(.92); }
+
+/* Bottom navigation */
+#mobileNav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 66px;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  display: flex;
+  z-index: 1005;
+}
+#mobileNav button {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px; background: none; border: none;
+  color: var(--muted); font-size: 10px; font-weight: 600;
+  cursor: pointer; padding: 8px 0; letter-spacing: .02em;
+}
+#mobileNav button .icon { font-size: 22px; line-height: 1; }
+#mobileNav button.active { color: var(--amber); }
+#mobileNav button.active .icon { filter: drop-shadow(0 0 4px var(--amber)); }
+
+/* Mobile job cards */
+.m-job-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.m-job-head {
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 10px;
+}
+.m-job-title { font-size: 15px; font-weight: 700; flex: 1; }
+.m-job-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.m-job-status {
+  font-size: 9px; font-family: var(--mono); font-weight: 700;
+  padding: 2px 7px; border-radius: 10px;
+}
+.m-job-body {
+  display: none; border-top: 1px solid var(--border);
+  padding: 12px 16px;
+}
+.m-job-body.open { display: block; }
+.m-job-actions {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; margin-top: 12px;
+}
+.m-job-actions .btn { padding: 12px 8px; font-size: 13px; text-align: center; }
+
+/* Mobile full-screen modal */
+.m-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 1020;
+  display: none;
+  align-items: flex-end;
+}
+.m-modal-overlay.open { display: flex; }
+.m-modal-sheet {
+  background: var(--panel);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 0 0 40px;
+  -webkit-overflow-scrolling: touch;
+}
+.m-modal-handle {
+  width: 40px; height: 4px; background: var(--border);
+  border-radius: 2px; margin: 12px auto 0;
+}
+.m-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--panel); z-index: 1;
+}
+.m-modal-header h2 { font-size: 16px; margin: 0; }
+.m-modal-body { padding: 16px 18px; }
+.m-field { margin-bottom: 14px; }
+.m-field label { display: block; font-size: 11px; color: var(--muted); font-family: var(--mono); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+.m-field input, .m-field textarea, .m-field select {
+  width: 100%; background: var(--panel-2); border: 1px solid var(--border);
+  color: var(--text); padding: 13px 14px; border-radius: 10px;
+  font-size: 16px; font-family: var(--sans);
+}
+.m-field textarea { min-height: 70px; resize: none; }
+.m-status-toggle {
+  display: flex; gap: 0; border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+}
+.m-status-toggle label {
+  flex: 1; text-align: center; padding: 12px; font-size: 14px;
+  font-weight: 600; cursor: pointer; transition: background .15s;
+  margin: 0;
+}
+.m-status-toggle input { display: none; }
+
+/* Equipment picker mobile */
+.m-equip-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.m-equip-item:last-child { border-bottom: none; }
+.m-equip-cb { width: 22px; height: 22px; accent-color: var(--amber); flex-shrink: 0; }
+.m-equip-name { flex: 1; font-size: 14px; }
+.m-equip-cat { font-size: 11px; color: var(--muted); }
+.m-equip-qty-input {
+  width: 52px; background: var(--panel-2); border: 1px solid var(--border);
+  color: var(--text); border-radius: 8px; padding: 6px; text-align: center; font-size: 14px;
+}
+
+/* OB Vogne mobile */
+.m-ob-card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 12px; margin-bottom: 10px; overflow: hidden;
+}
+.m-ob-head {
+  display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+  background: var(--panel-2); cursor: pointer;
+}
+.m-ob-badge {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 12px; color: #fff; flex-shrink: 0;
+}
+.m-ob-body { display: none; padding: 12px 16px; border-top: 1px solid var(--border); }
+.m-ob-body.open { display: block; }
+.m-ob-booking {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 12px; background: var(--panel-2); border-radius: 8px; margin-bottom: 8px;
+  font-size: 13px;
+}
+
+/* Lager mobile */
+.m-lager-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.m-lager-icon { font-size: 18px; flex-shrink: 0; }
+.m-lager-name { flex: 1; font-size: 14px; font-weight: 600; }
+.m-lager-sub { font-size: 11px; color: var(--muted); }
+
+/* Avail mobile */
+.m-avail-result {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px; margin-top: 12px;
+}
+.m-avail-name { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.m-avail-status { font-size: 28px; font-weight: 800; margin: 12px 0; }
+.m-avail-detail { font-size: 13px; color: var(--muted); }
+
+/* Full-screen QR on mobile */
+#mobileQrView {
+  position: fixed; inset: 0; z-index: 1030;
+  background: #000;
+  display: none; flex-direction: column;
+}
+#mobileQrView.open { display: flex; }
+#mobileQrCamera { flex: 1; }
+#mobileQrBar {
+  background: var(--panel); padding: 14px 18px 40px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+#mobileQrTitle { font-size: 14px; font-weight: 700; color: var(--text); }
+#mobileQrStatus { font-size: 12px; color: var(--amber); font-family: var(--mono); min-height: 18px; }
+#mobileQrManual {
+  display: flex; gap: 8px;
+}
+#mobileQrManual input {
+  flex: 1; background: var(--panel-2); border: 1px solid var(--border);
+  color: var(--text); padding: 12px 14px; border-radius: 10px; font-size: 15px;
+}
+#mobileQrClose {
+  background: var(--panel-2); border: 1px solid var(--border);
+  color: var(--text); padding: 12px 20px; border-radius: 10px;
+  font-size: 14px; font-weight: 600; cursor: pointer; width: 100%;
+}
+
+/* Unknown QR in mobile */
+#mobileQrUnknown {
+  display: none; padding: 14px 18px 40px;
+  background: var(--panel); position: absolute; bottom: 0; left: 0; right: 0;
+  border-radius: 20px 20px 0 0;
+}
+#mobileQrUnknown.open { display: block; }
+
+@media (max-width: 767px) {
+  .app { display: none !important; }
+  #mobileApp { display: flex !important; }
+}
+
 </style>
 </head>
 <body>
@@ -590,6 +858,106 @@
     <div class="modal-actions">
       <button class="btn secondary" id="equipDetailCancelBtn">Annuller</button>
       <button class="btn" id="equipDetailSaveBtn">Gem detaljer</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     MOBILE APP SHELL
+     ═══════════════════════════════════════════════════════ -->
+<div id="mobileApp">
+
+  <!-- Header -->
+  <div id="mobileHeader">
+    <div class="brand">
+      <div class="dot"></div>
+      <h1>UDSTYR BOOKING</h1>
+    </div>
+    <button class="btn small" id="mobileNewJobBtn" style="padding:8px 14px;">+ Job</button>
+  </div>
+
+  <!-- Search bar -->
+  <div id="mobileSearchBar">
+    <input type="text" id="mobileSearch" placeholder="Søg..." autocomplete="off">
+  </div>
+
+  <!-- Dynamic content -->
+  <div id="mobileContent"></div>
+
+  <!-- Floating QR scan button -->
+  <button id="mobileScanFab" title="Scan QR">📷</button>
+
+  <!-- Bottom nav -->
+  <nav id="mobileNav">
+    <button data-mtab="jobs" class="active">
+      <span class="icon">📋</span>Jobs
+    </button>
+    <button data-mtab="ob">
+      <span class="icon">🚐</span>OB
+    </button>
+    <button data-mtab="avail">
+      <span class="icon">🔍</span>Ledig
+    </button>
+    <button data-mtab="lager">
+      <span class="icon">📦</span>Lager
+    </button>
+  </nav>
+</div>
+
+<!-- Mobile Job Modal (slide-up sheet) -->
+<div class="m-modal-overlay" id="mJobOverlay">
+  <div class="m-modal-sheet">
+    <div class="m-modal-handle"></div>
+    <div class="m-modal-header">
+      <h2 id="mJobTitle">Nyt job</h2>
+      <button class="btn small secondary" onclick="closeMJobModal()">✕</button>
+    </div>
+    <div class="m-modal-body">
+      <div class="m-field"><label>Job navn</label><input type="text" id="mJobName" placeholder="f.eks. VM Fodbold" autocomplete="off"></div>
+      <div class="m-field"><label>Hvem</label><input type="text" id="mJobWho" placeholder="Initialer" autocomplete="off"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="m-field"><label>Start</label><input type="date" id="mJobStart"></div>
+        <div class="m-field"><label>Slut</label><input type="date" id="mJobEnd"></div>
+      </div>
+      <div class="m-field"><label>Status</label>
+        <div class="m-status-toggle">
+          <label id="mLabelTilbud"><input type="radio" name="mJobStatus" id="mJobStatusTilbud" value="tilbud"> Tilbud</label>
+          <label id="mLabelOrdre" style="border-left:1px solid var(--border);"><input type="radio" name="mJobStatus" id="mJobStatusOrdre" value="ordre" checked> Ordre</label>
+        </div>
+      </div>
+      <div class="m-field"><label>Udstyr</label>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <input type="text" id="mEquipSearch" placeholder="Søg i udstyr..." style="flex:1;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:12px 14px;border-radius:10px;font-size:15px;">
+          <button class="btn small secondary" onclick="mScanEquip()" style="padding:0 14px;font-size:20px;">📷</button>
+        </div>
+        <div id="mSelectedEquip" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
+        <div id="mEquipList" style="max-height:240px;overflow-y:auto;"></div>
+      </div>
+      <div id="mConflictBox" style="margin-bottom:10px;"></div>
+      <button class="btn" id="mSaveJobBtn" style="width:100%;padding:14px;font-size:15px;">Gem job</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile QR full-screen scanner -->
+<div id="mobileQrView">
+  <div id="mobileQrCamera"></div>
+  <div id="mobileQrBar">
+    <div id="mobileQrTitle">Scan QR / Stregkode</div>
+    <div id="mobileQrStatus"></div>
+    <div id="mobileQrManual">
+      <input type="text" id="mobileQrInput" placeholder="Eller skriv kode manuelt..." autocomplete="off">
+      <button class="btn small" onclick="mHandleQrInput()">OK</button>
+    </div>
+    <button id="mobileQrClose" onclick="closeMobileQr()">✕ Luk scanner</button>
+  </div>
+  <div id="mobileQrUnknown">
+    <div style="font-size:12px;color:var(--amber);font-family:var(--mono);margin-bottom:10px;">Ukendt kode: <span id="mQrUnknownCode" style="font-weight:700;"></span></div>
+    <select id="mQrLinkSelect" style="width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:12px;border-radius:10px;font-size:15px;margin-bottom:10px;"></select>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <button class="btn secondary" onclick="mQrCreateNew()" style="padding:12px;">+ Opret nyt</button>
+      <button class="btn" onclick="mQrLinkToExisting()" style="padding:12px;">Tilknyt</button>
     </div>
   </div>
 </div>
@@ -2448,6 +2816,457 @@ function scanForAvailability(){
 }
 
 
+// ═══════════════════════════════════════════════════════════
+// MOBILE APP
+// ═══════════════════════════════════════════════════════════
+var mCurrentTab = 'jobs';
+var mEditingJobId = null;
+var mSelectedItems = {};
+var mQrCallback = null;
+var mQrScanner = null;
+var mQrMode = 'job'; // 'job' or 'avail'
+
+function isMobile(){ return window.innerWidth < 768; }
+
+// ── Navigation ─────────────────────────────────────────────
+document.querySelectorAll('#mobileNav button').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('#mobileNav button').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    mCurrentTab = btn.dataset.mtab;
+    renderMobileTab();
+  });
+});
+
+function renderMobileTab(){
+  var q = (document.getElementById('mobileSearch').value||'').trim().toLowerCase();
+  if(mCurrentTab==='jobs')  renderMobileJobs(q);
+  if(mCurrentTab==='ob')    renderMobileOb(q);
+  if(mCurrentTab==='avail') renderMobileAvail(q);
+  if(mCurrentTab==='lager') renderMobileLager(q);
+  // Update search placeholder
+  var ph = {jobs:'Søg job navn, initialer...', ob:'Søg OB vogn eller booking...', avail:'Søg udstyr eller scan...', lager:'Søg i lager...'};
+  document.getElementById('mobileSearch').placeholder = ph[mCurrentTab]||'Søg...';
+}
+
+document.getElementById('mobileSearch').addEventListener('input', function(){ renderMobileTab(); });
+
+// ── Jobs tab ───────────────────────────────────────────────
+function renderMobileJobs(q){
+  var cont = document.getElementById('mobileContent');
+  var today = todayStr();
+  var visible = jobs.filter(function(j){
+    if(q) return (j.name||'').toLowerCase().includes(q)||(j.who||'').toLowerCase().includes(q);
+    // Default: upcoming + recent (30 days back, 60 forward)
+    if(!j.start) return true;
+    var past = new Date(); past.setDate(past.getDate()-30);
+    var future = new Date(); future.setDate(future.getDate()+60);
+    return new Date(j.end+'T00:00:00') >= past && new Date(j.start+'T00:00:00') <= future;
+  }).sort(function(a,b){ return (b.start||'').localeCompare(a.start||''); });
+
+  if(!visible.length){ cont.innerHTML='<div style="text-align:center;padding:50px 20px;color:var(--muted);">📋<br>Ingen jobs</div>'; return; }
+
+  cont.innerHTML = '';
+  visible.forEach(function(j){
+    var isTilbud = j.status==='tilbud';
+    var isActive = j.start<=today && j.end>=today;
+    var card = document.createElement('div'); card.className='m-job-card';
+    if(isTilbud) card.style.borderLeft='3px solid var(--amber)';
+    if(isActive) card.style.borderLeft='3px solid #5fb88a';
+
+    var head = document.createElement('div'); head.className='m-job-head';
+    head.innerHTML = '<div style="flex:1;">'
+      +'<div class="m-job-title">'+(isTilbud?'<span style="background:#5c4521;color:var(--amber);font-size:9px;padding:1px 5px;border-radius:4px;font-family:var(--mono);font-weight:700;margin-right:5px;">TILBUD</span>':'')+escapeHtml(j.name||'')+'</div>'
+      +'<div class="m-job-meta">'+(j.who?escapeHtml(j.who)+' · ':'')+fmtDate(j.start)+' → '+fmtDate(j.end)+'</div>'
+      +'</div>'
+      +'<span style="font-size:11px;color:var(--muted);font-family:var(--mono);">'+(j.items||[]).length+' stk.</span>';
+    head.addEventListener('click', function(){ var b=card.querySelector('.m-job-body'); b.classList.toggle('open'); });
+    card.appendChild(head);
+
+    var body = document.createElement('div'); body.className='m-job-body';
+    var items = (j.items||[]).map(function(it){ return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;"><span>'+escapeHtml(it.name)+'</span><span style="color:var(--amber);font-family:var(--mono);">×'+it.qty+'</span></div>'; }).join('')||'<div style="color:var(--muted);font-size:13px;">Intet udstyr</div>';
+    body.innerHTML = items
+      +'<div class="m-job-actions" style="margin-top:12px;">'
+      +'<button class="btn small secondary" style="padding:12px;">Rediger</button>'
+      +'<button class="btn small secondary" style="padding:12px;">Kopiér</button>'
+      +(isTilbud?'<button class="btn small" style="padding:12px;background:var(--green);color:#0a1f14;">→ Ordre</button>':'')
+      +'<button class="btn small" style="padding:12px;">📄 Pakkeliste</button>'
+      +'</div>';
+
+    body.querySelectorAll('button')[0].addEventListener('click', function(){ openMJobModal(j.id); });
+    body.querySelectorAll('button')[1].addEventListener('click', function(){ openMJobModal(null, j); });
+    if(isTilbud) body.querySelectorAll('button')[2].addEventListener('click', async function(){
+      if(!confirm('Konverter til ordre?')) return;
+      await supa.from('jobs').update({status:'ordre'}).eq('id',j.id);
+      await loadJobs(); renderMobileJobs(document.getElementById('mobileSearch').value||'');
+    });
+    body.querySelectorAll('button')[isTilbud?3:2].addEventListener('click', function(){ printPackList(j.id); });
+    card.appendChild(body);
+    cont.appendChild(card);
+  });
+}
+
+// ── OB Vogne tab ───────────────────────────────────────────
+function renderMobileOb(q){
+  var cont = document.getElementById('mobileContent');
+  var today = todayStr();
+  cont.innerHTML = '';
+  OB_VOGNE.forEach(function(vogn){
+    var upcoming = OB_BOOKINGER.filter(function(b){ return b.ob_vogn_id===vogn.id && b.end_date>=today; });
+    var active = upcoming.filter(function(b){ return b.start_date<=today; });
+    if(q && !vogn.name.toLowerCase().includes(q) && !upcoming.some(function(b){ return (b.name||'').toLowerCase().includes(q)||(b.who||'').toLowerCase().includes(q); })) return;
+
+    var card = document.createElement('div'); card.className='m-ob-card';
+    var head = document.createElement('div'); head.className='m-ob-head';
+    head.innerHTML = '<div class="m-ob-badge" style="background:'+vogn.color+';">'+escapeHtml(vogn.name)+'</div>'
+      +'<div style="flex:1;">'
+      +'<div style="font-weight:700;font-size:15px;">'+escapeHtml(vogn.name)+'</div>'
+      +'<div style="font-size:12px;color:'+(active.length?'var(--red)':upcoming.length?'var(--amber)':'var(--green)')+';">'+(active.length?'● Booket nu':upcoming.length?'● '+upcoming.length+' kommende booking(er)':'● Ledig')+'</div>'
+      +'</div>'
+      +'<span style="font-size:18px;color:var(--muted);">›</span>';
+    card.appendChild(head);
+
+    var body = document.createElement('div'); body.className='m-ob-body';
+    if(!upcoming.length){
+      body.innerHTML='<div style="color:var(--muted);font-size:13px;padding:4px 0;">Ingen kommende bookinger</div>';
+    } else {
+      upcoming.forEach(function(b){
+        var isTilbud = b.status==='tilbud';
+        var brow = document.createElement('div'); brow.className='m-ob-booking';
+        brow.innerHTML = '<div><div style="font-weight:600;font-size:13px;">'+(isTilbud?'<span style="background:#5c4521;color:var(--amber);font-size:8px;padding:1px 4px;border-radius:3px;font-weight:700;margin-right:4px;">TILBUD</span>':'')+escapeHtml(b.name)+'</div><div style="font-size:11px;color:var(--muted);">'+fmtDate(b.start_date)+' → '+fmtDate(b.end_date)+'</div></div>'
+          +'<button class="btn small secondary" style="font-size:11px;padding:6px 10px;">Rediger</button>';
+        brow.querySelector('button').addEventListener('click', function(){ openObModal(vogn.id, b); });
+        body.appendChild(brow);
+      });
+    }
+    body.innerHTML += '<button class="btn small" style="width:100%;margin-top:10px;padding:12px;" onclick="openObModal(\''+vogn.id+'\',null)">+ Book '+escapeHtml(vogn.name)+'</button>';
+    card.appendChild(body);
+
+    head.addEventListener('click', function(){
+      body.classList.toggle('open');
+      head.querySelector('span:last-child').style.transform = body.classList.contains('open')?'rotate(90deg)':'';
+    });
+    cont.appendChild(card);
+  });
+}
+
+// ── Avail tab ──────────────────────────────────────────────
+function renderMobileAvail(q){
+  var cont = document.getElementById('mobileContent');
+  cont.innerHTML = '<div style="text-align:center;padding:30px 0 10px;">'
+    +'<button class="btn" onclick="openMobileQr(\'avail\')" style="padding:16px 32px;font-size:16px;width:100%;margin-bottom:16px;">📷 Scan for at tjekke</button>'
+    +'</div>';
+  if(q) mRunAvail(q, cont);
+}
+
+function mRunAvail(q, cont){
+  if(!cont) cont = document.getElementById('mobileContent');
+  var ql = q.toLowerCase();
+  var eq = EQUIPMENT.find(function(e){return e.name.toLowerCase()===ql;})||EQUIPMENT.find(function(e){return e.name.toLowerCase().includes(ql);});
+  var pkg = PACKAGES.find(function(p){return p.name.toLowerCase()===ql;})||PACKAGES.find(function(p){return p.name.toLowerCase().includes(ql);});
+  var vogn = OB_VOGNE.find(function(v){return v.name.toLowerCase()===ql;})||OB_VOGNE.find(function(v){return v.name.toLowerCase().includes(ql);});
+  var res = '<div class="m-avail-result">';
+  if(!eq&&!pkg&&!vogn){ res+='<div class="m-avail-name">Intet matcher "'+escapeHtml(q)+'"</div></div>'; }
+  else {
+    if(vogn){
+      var c=obBookingConflict(vogn.id,todayStr(),addMonths(todayStr(),3),null);
+      res+='<div class="m-avail-name">🚐 '+escapeHtml(vogn.name)+'</div>'
+        +'<div class="m-avail-status" style="color:'+(c?'var(--red)':'var(--green)')+';">'+(c?'Booket':'Ledig')+'</div>'
+        +(c?'<div class="m-avail-detail">'+escapeHtml(c.name)+': '+fmtDate(c.start_date)+' → '+fmtDate(c.end_date)+'</div>':'');
+    }
+    if(eq){
+      var bq=bookedQty(eq.name,todayStr(),addMonths(todayStr(),3),null);
+      var free=eq.qty-bq.sum;
+      res+='<div class="m-avail-name">'+escapeHtml(eq.name)+'</div>'
+        +'<div class="m-avail-status" style="color:'+(free>0?'var(--green)':'var(--red)')+';">'+free+' / '+eq.qty+' ledige</div>'
+        +(bq.users.length?'<div class="m-avail-detail">Booket af: '+escapeHtml(bq.users.join(', '))+'</div>':'');
+    }
+  }
+  res+='</div>';
+  var existing = cont.querySelector('.m-avail-result');
+  if(existing) existing.outerHTML = res;
+  else cont.innerHTML += res;
+}
+
+// ── Lager tab ──────────────────────────────────────────────
+function renderMobileLager(q){
+  var cont = document.getElementById('mobileContent');
+  cont.innerHTML = '';
+  var items = [
+    ...PACKAGES.map(function(p){return {type:'pkg',obj:p,name:p.name,category:p.category};}),
+    ...EQUIPMENT.filter(function(e){return !e.package_id;}).map(function(e){return {type:'equip',obj:e,name:e.name,category:e.category};})
+  ].sort(function(a,b){return a.name.localeCompare(b.name,'da');})
+  .filter(function(it){return !q||it.name.toLowerCase().includes(q)||it.category.toLowerCase().includes(q);});
+
+  if(!items.length){ cont.innerHTML='<div style="text-align:center;padding:50px 20px;color:var(--muted);">📦<br>Intet match</div>'; return; }
+
+  items.forEach(function(item){
+    var row = document.createElement('div'); row.className='m-lager-item';
+    var icon = item.type==='pkg'?'📦':'🔧';
+    row.innerHTML = '<div class="m-lager-icon">'+icon+'</div>'
+      +'<div style="flex:1;"><div class="m-lager-name">'+escapeHtml(item.name)+'</div>'
+      +'<div class="m-lager-sub">'+escapeHtml(item.category)+(item.obj.qty?' · '+item.obj.qty+' stk.':'')+'</div></div>'
+      +'<button class="btn small secondary" style="padding:8px 12px;font-size:12px;">Detaljer</button>';
+    row.querySelector('button').addEventListener('click', function(){
+      if(item.type==='pkg'){
+        openPkgDetail(item.obj.id);
+      } else {
+        openEquipDetail(EQUIPMENT.indexOf(item.obj));
+      }
+    });
+    cont.appendChild(row);
+  });
+}
+
+// ── Mobile Job Modal ───────────────────────────────────────
+function openMJobModal(id, copyFrom){
+  var j = id ? jobs.find(function(x){return x.id===id;}) : copyFrom;
+  mEditingJobId = id || null;
+  mSelectedItems = {};
+  if(j){
+    (j.items||[]).forEach(function(it){
+      if(it.isPkg){var p=PACKAGES.find(function(p){return p.name===it.name;});if(p)mSelectedItems['PKG:'+p.id]=it.qty;else mSelectedItems[it.name]=it.qty;}
+      else mSelectedItems[it.name]=it.qty;
+    });
+  }
+  document.getElementById('mJobTitle').textContent = id?'Rediger job':copyFrom?'Kopiér job':'Nyt job';
+  document.getElementById('mJobName').value = j?(copyFrom?j.name+' (kopi)':j.name):'';
+  document.getElementById('mJobWho').value = j?j.who||'':'';
+  document.getElementById('mJobStart').value = j&&id?j.start||todayStr():todayStr();
+  document.getElementById('mJobEnd').value = j&&id?j.end||'':'';
+  document.getElementById('mJobStatusOrdre').checked = !j||j.status!=='tilbud';
+  document.getElementById('mJobStatusTilbud').checked = j&&j.status==='tilbud';
+  updateMJobStatusStyle();
+  renderMEquipList('');
+  renderMSelectedEquip();
+  document.getElementById('mConflictBox').innerHTML='';
+  document.getElementById('mJobOverlay').classList.add('open');
+}
+
+function closeMJobModal(){
+  document.getElementById('mJobOverlay').classList.remove('open');
+}
+
+function updateMJobStatusStyle(){
+  var isTilbud = document.getElementById('mJobStatusTilbud').checked;
+  var lt=document.getElementById('mLabelTilbud'), lo=document.getElementById('mLabelOrdre');
+  if(isTilbud){lt.style.background='var(--amber-dim)';lt.style.color='var(--amber)';lo.style.background='';lo.style.color='';}
+  else{lo.style.background='rgba(95,184,138,.15)';lo.style.color='#5fb88a';lt.style.background='';lt.style.color='';}
+}
+document.getElementById('mLabelTilbud').addEventListener('click', function(){document.getElementById('mJobStatusTilbud').checked=true;updateMJobStatusStyle();});
+document.getElementById('mLabelOrdre').addEventListener('click', function(){document.getElementById('mJobStatusOrdre').checked=true;updateMJobStatusStyle();});
+
+function renderMEquipList(filter){
+  var f = filter.trim().toLowerCase();
+  var cont = document.getElementById('mEquipList');
+  var items = [
+    ...PACKAGES.map(function(p){return {type:'pkg',obj:p,category:p.category,name:p.name};}),
+    ...EQUIPMENT.filter(function(e){return !e.package_id;}).map(function(e){return {type:'equip',obj:e,category:e.category,name:e.name};})
+  ].sort(function(a,b){var c=a.category.localeCompare(b.category,'da');return c!==0?c:a.name.localeCompare(b.name,'da');})
+  .filter(function(it){return !f||it.name.toLowerCase().includes(f)||it.category.toLowerCase().includes(f);});
+
+  cont.innerHTML='';
+  var lastCat=null;
+  items.forEach(function(item){
+    if(item.category!==lastCat){
+      var ch=document.createElement('div');ch.style.cssText='font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;padding:10px 0 4px;';
+      ch.textContent=item.category;cont.appendChild(ch);lastCat=item.category;
+    }
+    var key=item.type==='pkg'?'PKG:'+item.obj.id:item.obj.name;
+    var checked=mSelectedItems.hasOwnProperty(key);
+    var row=document.createElement('div');row.className='m-equip-item';
+    var cb=document.createElement('input');cb.type='checkbox';cb.className='m-equip-cb';cb.checked=checked;
+    (function(k){cb.addEventListener('change',function(){
+      if(cb.checked)mSelectedItems[k]=1;else delete mSelectedItems[k];
+      renderMSelectedEquip();
+    });})(key);
+    var nd=document.createElement('div');nd.style.flex='1';
+    nd.innerHTML='<div class="m-equip-name">'+(item.type==='pkg'?'📦 ':'')+escapeHtml(item.name)+'</div>'
+      +'<div class="m-equip-cat">'+escapeHtml(item.category)+'</div>';
+    row.appendChild(cb);row.appendChild(nd);
+    if(checked){
+      var qi=document.createElement('input');qi.type='number';qi.className='m-equip-qty-input';qi.min='1';qi.value=mSelectedItems[key];
+      (function(k){qi.addEventListener('change',function(){mSelectedItems[k]=parseInt(qi.value)||1;renderMSelectedEquip();});})(key);
+      row.appendChild(qi);
+    }
+    cont.appendChild(row);
+  });
+}
+
+function renderMSelectedEquip(){
+  var strip=document.getElementById('mSelectedEquip');
+  var names=Object.keys(mSelectedItems);
+  if(!names.length){strip.innerHTML='';return;}
+  strip.innerHTML='';
+  names.forEach(function(n){
+    var label=n.startsWith('PKG:')?(PACKAGES.find(function(p){return p.id===n.slice(4);})||{name:'pakke'}).name+' (pakke)':n;
+    var chip=document.createElement('div');chip.className='chip';chip.style.cssText='background:var(--amber-dim);color:var(--amber);border-radius:20px;padding:5px 10px;font-size:12px;font-family:var(--mono);display:flex;align-items:center;gap:6px;';
+    chip.textContent=label+' ×'+mSelectedItems[n]+' ';
+    var btn=document.createElement('button');btn.style.cssText='background:none;border:none;color:var(--amber);cursor:pointer;font-size:14px;padding:0;';btn.textContent='×';
+    (function(k){btn.onclick=function(){delete mSelectedItems[k];renderMSelectedEquip();renderMEquipList(document.getElementById('mEquipSearch').value||'');};})(n);
+    chip.appendChild(btn);strip.appendChild(chip);
+  });
+}
+
+document.getElementById('mEquipSearch').addEventListener('input',function(e){renderMEquipList(e.target.value);});
+
+document.getElementById('mSaveJobBtn').addEventListener('click', async function(){
+  var btn=document.getElementById('mSaveJobBtn');
+  var name=document.getElementById('mJobName').value.trim();
+  var who=document.getElementById('mJobWho').value.trim();
+  var start=document.getElementById('mJobStart').value;
+  var end=document.getElementById('mJobEnd').value;
+  if(!name){alert('Skriv et job navn.');return;}
+  if(!start||!end){alert('Vælg start- og slutdato.');return;}
+  if(start>end){alert('Slutdato skal være efter startdato.');return;}
+  var sv=document.querySelector('input[name="mJobStatus"]:checked');
+  var status=sv?sv.value:'ordre';
+  var items=Object.keys(mSelectedItems).map(function(n){
+    if(n.startsWith('PKG:')){var p=PACKAGES.find(function(p){return p.id===n.slice(4);});return {name:p?p.name:n,qty:mSelectedItems[n],isPkg:true};}
+    return {name:n,qty:mSelectedItems[n]};
+  });
+  btn.disabled=true;btn.textContent='Gemmer...';
+  try{
+    var row={name,who,start_date:start,end_date:end,items,status};
+    if(mEditingJobId){var {error}=await supa.from('jobs').update(row).eq('id',mEditingJobId);if(error)throw error;}
+    else{var {error}=await supa.from('jobs').insert(row);if(error)throw error;}
+    await loadJobs();closeMJobModal();renderMobileJobs(document.getElementById('mobileSearch').value||'');
+  }catch(e){alert('Fejl: '+(e.message||JSON.stringify(e)));}
+  finally{btn.disabled=false;btn.textContent='Gem job';}
+});
+
+document.getElementById('mobileNewJobBtn').addEventListener('click',function(){openMJobModal(null);});
+
+// Close modal on overlay click
+document.getElementById('mJobOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('mJobOverlay'))closeMJobModal();});
+
+// ── Mobile QR Scanner ──────────────────────────────────────
+function openMobileQr(mode){
+  mQrMode = mode || 'job';
+  document.getElementById('mobileQrView').classList.add('open');
+  document.getElementById('mobileQrUnknown').classList.remove('open');
+  document.getElementById('mobileQrInput').value='';
+  document.getElementById('mobileQrStatus').textContent='';
+  document.getElementById('mobileQrTitle').textContent = mode==='avail'?'Scan for at tjekke ledighed':'Scan for at tilføje til job';
+  startMobileQrCamera();
+  setTimeout(function(){document.getElementById('mobileQrInput').focus();},300);
+}
+
+function closeMobileQr(){
+  document.getElementById('mobileQrView').classList.remove('open');
+  document.getElementById('mobileQrUnknown').classList.remove('open');
+  if(mQrScanner){
+    mQrScanner.stop().catch(function(){});
+    mQrScanner = null;
+  }
+}
+
+function startMobileQrCamera(){
+  if(typeof Html5Qrcode==='undefined') return;
+  try{
+    mQrScanner = new Html5Qrcode('mobileQrCamera');
+    mQrScanner.start(
+      {facingMode:'environment'},
+      {fps:10, qrbox:{width:250,height:250}},
+      function(code){ mHandleQrCode(code); },
+      function(){}
+    ).catch(function(e){
+      document.getElementById('mobileQrStatus').textContent='Kamera utilgængeligt — brug manuel input';
+    });
+  }catch(e){
+    document.getElementById('mobileQrStatus').textContent='Kamera fejl: '+e.message;
+  }
+}
+
+function mHandleQrInput(){
+  var val=document.getElementById('mobileQrInput').value.trim();
+  if(val) mHandleQrCode(val);
+}
+document.getElementById('mobileQrInput').addEventListener('keydown',function(e){if(e.key==='Enter')mHandleQrInput();});
+
+function mHandleQrCode(code){
+  code=code.trim(); if(!code) return;
+  if(mQrScanner){mQrScanner.stop().catch(function(){});mQrScanner=null;}
+  document.getElementById('mobileQrStatus').textContent='Scannet: '+code;
+  var found=findByQr(code);
+  if(found){
+    if(mQrMode==='avail'){
+      closeMobileQr();
+      document.getElementById('mobileSearch').value=found.item.name;
+      mCurrentTab='avail';
+      document.querySelectorAll('#mobileNav button').forEach(function(b){b.classList.toggle('active',b.dataset.mtab==='avail');});
+      renderMobileAvail(found.item.name.toLowerCase());
+    } else {
+      // Add to job
+      var key=found.type==='pkg'?'PKG:'+found.item.id:found.item.name;
+      var label=found.type==='pkg'?found.item.name+' (pakke)':found.item.name;
+      mSelectedItems[key]=(mSelectedItems[key]||0)+1;
+      renderMSelectedEquip();
+      renderMEquipList(document.getElementById('mEquipSearch').value||'');
+      document.getElementById('mobileQrStatus').textContent='✓ Tilføjet: '+label;
+      document.getElementById('mobileQrInput').value='';
+      // Keep scanner open to scan more
+      startMobileQrCamera();
+    }
+  } else {
+    // Unknown QR
+    document.getElementById('mQrUnknownCode').textContent=code;
+    var sel=document.getElementById('mQrLinkSelect');
+    sel.innerHTML='<option value="">— Vælg udstyr/pakke —</option>'
+      +[...PACKAGES.map(function(p){return {label:'📦 '+p.name,id:p.id,type:'pkg'};}),
+        ...EQUIPMENT.filter(function(e){return !e.package_id;}).map(function(e){return {label:e.name,id:e.id,type:'equip'};})]
+      .map(function(i){return '<option value="'+i.type+':'+i.id+'">'+escapeHtml(i.label)+'</option>';}).join('');
+    document.getElementById('mobileQrUnknown').classList.add('open');
+    document.getElementById('_mQrUnknownCode'+'_pending'+'_') ; // store for later
+    document.getElementById('mobileQrUnknown').dataset.code=code;
+  }
+}
+
+function mQrLinkToExisting(){
+  var code=document.getElementById('mobileQrUnknown').dataset.code;
+  var val=document.getElementById('mQrLinkSelect').value;
+  if(!val){alert('Vælg et stykke udstyr.');return;}
+  var parts=val.split(':'),type=parts[0],id=parts[1];
+  supa.from(type==='pkg'?'packages':'equipment').update({qr_code:code}).eq('id',id).then(async function(res){
+    if(res.error){alert('Fejl: '+res.error.message);return;}
+    await (type==='pkg'?loadPackages():loadEquipment());
+    document.getElementById('mobileQrUnknown').classList.remove('open');
+    var found=findByQr(code);
+    if(found) mHandleQrCode(code);
+  });
+}
+
+function mQrCreateNew(){
+  var code=document.getElementById('mobileQrUnknown').dataset.code;
+  closeMobileQr();
+  // Switch to lager and pre-fill
+  mCurrentTab='lager';
+  document.querySelectorAll('#mobileNav button').forEach(function(b){b.classList.toggle('active',b.dataset.mtab==='lager');});
+  renderMobileLager('');
+  alert('Gå til lager og opret nyt udstyr med QR-kode: '+code);
+}
+
+function mScanEquip(){
+  openMobileQr('job');
+}
+
+// FAB scan button — context-aware
+document.getElementById('mobileScanFab').addEventListener('click',function(){
+  openMobileQr(mCurrentTab==='avail'?'avail':'job');
+});
+
+// ── Init mobile ────────────────────────────────────────────
+function initMobile(){
+  if(!isMobile()) return;
+  renderMobileJobs('');
+  // Poll every 15s
+  setInterval(async function(){
+    await Promise.all([loadJobs(),loadObBookinger()]);
+    renderMobileTab();
+  }, 15000);
+}
+
+
 (async function init(){
   initFilterDates();
   document.getElementById('availStart').value=todayStr();
@@ -2456,6 +3275,7 @@ function scanForAvailability(){
   }catch(e){ console.warn('Init load fejl:',e); }
   try{ await loadJobs(); }catch(e){ console.error('loadJobs fejlede:',e); }
   renderJobs();
+  initMobile();
   setInterval(async function(){
     if(overlay.classList.contains('open')) return;
     await Promise.all([loadJobs(),loadObBookinger()]);
