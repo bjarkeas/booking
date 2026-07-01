@@ -2383,13 +2383,14 @@ function handleScannedCode(code){
   code = code.trim();
   if(!code) return;
   document.getElementById('qrScanStatus').innerHTML = '<span style="color:var(--muted);">Scannet: '+escapeHtml(code)+'</span>';
+  // Save callback BEFORE closeQrScanner nullifies it
+  var cb = qrScanCallback;
   const found = findByQr(code);
+  closeQrScanner();
   if(found){
-    closeQrScanner();
-    if(qrScanCallback) qrScanCallback(found);
+    if(cb) cb(found);
   } else {
-    closeQrScanner();
-    handleUnknownQr(code, qrScanCallback);
+    handleUnknownQr(code, cb);
   }
 }
 
