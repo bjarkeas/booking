@@ -463,6 +463,27 @@
 }
 #mobileQrUnknown.open { display: block; }
 
+/* Active when mobile view is shown (any screen size) */
+body.mobile-view-active .overlay {
+  z-index: 1500 !important;
+  padding: 0 !important;
+  align-items: flex-end !important;
+}
+body.mobile-view-active .overlay .modal {
+  border-radius: 20px 20px 0 0 !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  max-height: 88vh !important;
+  overflow-y: auto !important;
+  padding: 20px 16px 40px !important;
+}
+body.mobile-view-active .row2,
+body.mobile-view-active .row3 { grid-template-columns: 1fr !important; }
+body.mobile-view-active #mobileQrView { z-index: 1700 !important; }
+body.mobile-view-active #qrScanOverlay { z-index: 1700 !important; }
+body.mobile-view-active .m-modal-overlay { z-index: 1600 !important; }
+body.mobile-view-active #mJobOverlay { z-index: 1600 !important; }
+
 @media (max-width: 767px) {
   /* ── Hide desktop, show mobile shell ── */
   .app { display: none !important; }
@@ -1178,6 +1199,7 @@ function openNew(){
   overlay.classList.add('open');
 }
 function openEdit(id){
+  console.log("openEdit called with id:", id);
   try{
   const j=jobs.find(function(x){return x.id===id;}); if(!j) return;
   editingJobId=id; selectedItems={};
@@ -2820,6 +2842,7 @@ document.getElementById('mobileSearch').addEventListener('input', function(){ re
 // ── Jobs tab ───────────────────────────────────────────────
 function mkBtn(txt, cls, fn){
   var b = document.createElement('button');
+  console.log("mkBtn created:", txt);
   b.className = 'btn small '+(cls||'secondary');
   b.textContent = txt;
   b.style.padding = '12px 8px';
@@ -3417,25 +3440,33 @@ function updateToggleState(view){
   });
 }
 function switchToMobile(){
+  localStorage.setItem('viewPref','mobile');
   document.getElementById('mobileApp').style.display='flex';
   document.querySelector('.app').style.display='none';
+  document.body.classList.add('mobile-view-active');
   updateToggleState('mobile');
   renderMobileTab();
 }
 function switchToDesktop(){
+  localStorage.setItem('viewPref','desktop');
   document.getElementById('mobileApp').style.display='none';
   document.querySelector('.app').style.display='block';
+  document.body.classList.remove('mobile-view-active');
   updateToggleState('desktop');
 }
 function applyViewPreference(){
-  // Always start in the right view for the device — no saved preference
-  if(isMobile()){
+  // User's explicit choice wins — otherwise device decides
+  var saved = localStorage.getItem('viewPref');
+  var useMobile = saved ? (saved === 'mobile') : isMobile();
+  if(useMobile){
     document.getElementById('mobileApp').style.display='flex';
     document.querySelector('.app').style.display='none';
+    document.body.classList.add('mobile-view-active');
     updateToggleState('mobile');
   } else {
     document.getElementById('mobileApp').style.display='none';
     document.querySelector('.app').style.display='block';
+    document.body.classList.remove('mobile-view-active');
     updateToggleState('desktop');
   }
 }
