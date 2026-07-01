@@ -200,6 +200,9 @@
      MOBIL LAYOUT (max 640px)
      ═══════════════════════════════════════ */
   @media (max-width: 640px){
+    #qrScanOverlay{ left:8px; right:8px; width:auto; top:8px; }
+    #overlay .modal{ margin-left:0 !important; }
+
 
     /* App padding */
     .app{ padding:10px 10px 60px; }
@@ -409,21 +412,16 @@
   </div>
 </div>
 
-<div class="overlay" id="qrScanOverlay">
-  <div class="modal" style="max-width:420px;">
-    <h2>Scan QR / Stregkode</h2>
-    <div id="qrCameraView" style="width:100%;border-radius:8px;overflow:hidden;background:#000;min-height:200px;margin-bottom:12px;"></div>
-    <div id="qrScanStatus" style="font-size:11.5px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;min-height:18px;"></div>
-    <div class="field">
-      <label>Manuel input / USB scanner</label>
-      <div style="display:flex;gap:8px;">
-        <input type="text" id="qrManualInput" placeholder="Scan eller skriv serienummer / QR-kode..." style="flex:1;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:7px;font-size:13px;">
-        <button class="btn small" id="qrManualConfirmBtn">OK</button>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn secondary" id="qrCloseScanBtn">Luk</button>
-    </div>
+<div id="qrScanOverlay" style="display:none; position:fixed; top:16px; left:16px; z-index:200; width:300px; background:var(--panel); border:1px solid var(--amber); border-radius:12px; padding:14px; box-shadow:0 8px 32px rgba(0,0,0,.6);">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+    <div style="font-size:13px; font-weight:700;">📷 Scanner</div>
+    <button class="btn small secondary" id="qrCloseScanBtn" style="padding:4px 10px;">✕</button>
+  </div>
+  <div id="qrCameraView" style="width:100%; border-radius:8px; overflow:hidden; background:#111; min-height:180px; margin-bottom:10px;"></div>
+  <div id="qrScanStatus" style="font-size:11px; color:var(--muted); font-family:var(--mono); margin-bottom:8px; min-height:16px;"></div>
+  <div style="display:flex; gap:6px;">
+    <input type="text" id="qrManualInput" placeholder="Serienummer / QR..." style="flex:1; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:12px;">
+    <button class="btn small" id="qrManualConfirmBtn">OK</button>
   </div>
 </div>
 
@@ -2317,7 +2315,9 @@ let usbScanTimer = null;
 
 function openQrScanner(callback){
   qrScanCallback = callback;
-  document.getElementById('qrScanOverlay').classList.add('open');
+  document.getElementById('qrScanOverlay').style.display='block';
+  // shift job modal right if open
+  var jobMod=document.querySelector('#overlay .modal'); if(jobMod&&overlay.classList.contains('open')){ jobMod.style.marginLeft='320px'; jobMod.style.transition='margin-left .2s'; }
   document.getElementById('qrManualInput').value='';
   document.getElementById('qrScanStatus').textContent='';
   startCameraScanner();
@@ -2326,9 +2326,24 @@ function openQrScanner(callback){
 }
 
 function closeQrScanner(){
-  stopCameraScanner();
-  document.getElementById('qrScanOverlay').classList.remove('open');
+  // Always hide first — don't let camera errors block closing
+  var panel = document.getElementById('qrScanOverlay');
+  if(panel) panel.style.display='none';
+  var jobMod = document.querySelector('#overlay .modal');
+  if(jobMod) jobMod.style.marginLeft='';
   qrScanCallback = null;
+  // Stop camera gracefully in background
+  try{
+    if(html5QrScanner){
+      html5QrScanner.stop().then(function(){
+        try{ html5QrScanner.clear(); }catch(e){}
+        html5QrScanner = null;
+      }).catch(function(){
+        try{ html5QrScanner.clear(); }catch(e){}
+        html5QrScanner = null;
+      });
+    }
+  }catch(e){ html5QrScanner = null; }
 }
 
 function startCameraScanner(){
@@ -2352,11 +2367,16 @@ function startCameraScanner(){
 }
 
 function stopCameraScanner(){
-  if(html5QrScanner){
-    html5QrScanner.stop().catch(function(){});
-    html5QrScanner.clear();
-    html5QrScanner = null;
-  }
+  try{
+    if(html5QrScanner){
+      html5QrScanner.stop().then(function(){
+        try{ html5QrScanner.clear(); }catch(e){}
+        html5QrScanner = null;
+      }).catch(function(){
+        html5QrScanner = null;
+      });
+    }
+  }catch(e){ html5QrScanner = null; }
 }
 
 function handleScannedCode(code){
@@ -2385,9 +2405,7 @@ document.getElementById('qrManualConfirmBtn').addEventListener('click', function
   if(val) handleScannedCode(val);
 });
 
-document.getElementById('qrScanOverlay').addEventListener('click', function(e){
-  if(e.target===document.getElementById('qrScanOverlay')) closeQrScanner();
-});
+// QR panel is floating - no background click handler needed
 document.getElementById('qrCloseScanBtn').addEventListener('click', closeQrScanner);
 
 // ── Scan to add to job ────────────────────────────────────
