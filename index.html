@@ -529,8 +529,9 @@
   position: fixed; inset: 0; z-index: 1030;
   background: #000;
   display: none; flex-direction: column;
+  overflow: hidden;
 }
-#mobileQrView.open { display: flex; }
+#mobileQrView.open { display: flex !important; }
 #mobileQrCamera { flex: 1; }
 #mobileQrBar {
   background: var(--panel); padding: 14px 18px 40px;
@@ -562,6 +563,22 @@
 @media (max-width: 767px) {
   .app { display: none !important; }
   #mobileApp { display: flex !important; }
+  /* Desktop overlays must appear above mobile app shell */
+  .overlay { z-index: 1500 !important; }
+  .overlay .modal {
+    max-width: 100% !important;
+    width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    margin: 0 !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+  .overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  #mobileQrView, .m-modal-overlay { z-index: 1600 !important; }
+  #qrScanOverlay { z-index: 1600 !important; }
 }
 
 </style>
@@ -922,8 +939,8 @@
       </div>
       <div class="m-field"><label>Status</label>
         <div class="m-status-toggle">
-          <label id="mLabelTilbud"><input type="radio" name="mJobStatus" id="mJobStatusTilbud" value="tilbud"> Tilbud</label>
-          <label id="mLabelOrdre" style="border-left:1px solid var(--border);"><input type="radio" name="mJobStatus" id="mJobStatusOrdre" value="ordre" checked> Ordre</label>
+          <label id="mLabelTilbud" style="cursor:pointer;"><input type="radio" name="mJobStatus" id="mJobStatusTilbud" value="tilbud" style="display:none;"> Tilbud</label>
+          <label id="mLabelOrdre" style="border-left:1px solid var(--border);cursor:pointer;"><input type="radio" name="mJobStatus" id="mJobStatusOrdre" value="ordre" checked style="display:none;"> Ordre</label>
         </div>
       </div>
       <div class="m-field"><label>Udstyr</label>
@@ -942,7 +959,7 @@
 
 <!-- Mobile QR full-screen scanner -->
 <div id="mobileQrView">
-  <div id="mobileQrCamera"></div>
+  <div id="mobileQrCamera" style="width:100%;flex:1;"></div>
   <div id="mobileQrBar">
     <div id="mobileQrTitle">Scan QR / Stregkode</div>
     <div id="mobileQrStatus"></div>
@@ -3053,8 +3070,7 @@ function updateMJobStatusStyle(){
   if(isTilbud){lt.style.background='var(--amber-dim)';lt.style.color='var(--amber)';lo.style.background='';lo.style.color='';}
   else{lo.style.background='rgba(95,184,138,.15)';lo.style.color='#5fb88a';lt.style.background='';lt.style.color='';}
 }
-document.getElementById('mLabelTilbud').addEventListener('click', function(){document.getElementById('mJobStatusTilbud').checked=true;updateMJobStatusStyle();});
-document.getElementById('mLabelOrdre').addEventListener('click', function(){document.getElementById('mJobStatusOrdre').checked=true;updateMJobStatusStyle();});
+['mJobStatusTilbud','mJobStatusOrdre'].forEach(function(id){document.getElementById(id).addEventListener('change',function(){updateMJobStatusStyle();});});
 
 function renderMEquipList(filter){
   var f = filter.trim().toLowerCase();
@@ -3080,14 +3096,16 @@ function renderMEquipList(filter){
       if(cb.checked)mSelectedItems[k]=1;else delete mSelectedItems[k];
       renderMSelectedEquip();
     });})(key);
-    var nd=document.createElement('div');nd.style.flex='1';
+    var nd=document.createElement('div');nd.className='m-equip-info';
     nd.innerHTML='<div class="m-equip-name">'+(item.type==='pkg'?'📦 ':'')+escapeHtml(item.name)+'</div>'
       +'<div class="m-equip-cat">'+escapeHtml(item.category)+'</div>';
     row.appendChild(cb);row.appendChild(nd);
     if(checked){
+      var qw=document.createElement('div');qw.className='m-equip-qty-wrap';
+      var ql=document.createElement('span');ql.style.cssText='font-size:11px;color:var(--muted);';ql.textContent='×';
       var qi=document.createElement('input');qi.type='number';qi.className='m-equip-qty-input';qi.min='1';qi.value=mSelectedItems[key];
       (function(k){qi.addEventListener('change',function(){mSelectedItems[k]=parseInt(qi.value)||1;renderMSelectedEquip();});})(key);
-      row.appendChild(qi);
+      qw.appendChild(ql);qw.appendChild(qi);row.appendChild(qw);
     }
     cont.appendChild(row);
   });
@@ -3217,7 +3235,6 @@ function mHandleQrCode(code){
         ...EQUIPMENT.filter(function(e){return !e.package_id;}).map(function(e){return {label:e.name,id:e.id,type:'equip'};})]
       .map(function(i){return '<option value="'+i.type+':'+i.id+'">'+escapeHtml(i.label)+'</option>';}).join('');
     document.getElementById('mobileQrUnknown').classList.add('open');
-    document.getElementById('_mQrUnknownCode'+'_pending'+'_') ; // store for later
     document.getElementById('mobileQrUnknown').dataset.code=code;
   }
 }
