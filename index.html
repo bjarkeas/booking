@@ -168,6 +168,32 @@
   @media (max-width:640px){
     .row2, .row3{ grid-template-columns:1fr; }
   }
+
+  /* pakker */
+  .pkg-card{ border:1px solid var(--border); border-radius:9px; overflow:hidden; margin-bottom:8px; }
+  .pkg-head{ display:flex; align-items:center; gap:10px; padding:11px 14px; cursor:pointer; background:var(--panel-2); }
+  .pkg-head:hover{ filter:brightness(1.1); }
+  .pkg-badge{ font-size:10px; font-family:var(--mono); color:var(--muted); background:var(--panel); border:1px solid var(--border); padding:2px 7px; border-radius:10px; }
+  .pkg-chevron{ font-size:11px; color:var(--muted); transition:transform .15s; margin-left:4px; }
+  .pkg-chevron.open{ transform:rotate(90deg); }
+  .pkg-body{ padding:10px 14px; border-top:1px solid var(--border); display:none; }
+  .pkg-body.open{ display:block; }
+  .pkg-item-row{ display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid #252830; font-size:12.5px; }
+  .pkg-item-row:last-child{ border-bottom:none; }
+  .pkg-item-sn{ font-family:var(--mono); font-size:10.5px; color:var(--muted); }
+  /* kategorier */
+  .cat-row{ display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid #25282f; font-size:13px; }
+  .cat-row:last-child{ border-bottom:none; }
+  /* ob vogne */
+  .ob-card{ border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:14px; }
+  .ob-head{ padding:16px 18px; display:flex; align-items:center; gap:12px; background:var(--panel-2); }
+  .ob-badge{ width:38px; height:38px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; color:#fff; flex-shrink:0; }
+  .ob-booking-row{ display:flex; justify-content:space-between; align-items:center; padding:7px 10px; background:var(--panel-2); border-radius:7px; margin-bottom:5px; font-size:12.5px; }
+  .ob-booking-dates{ font-family:var(--mono); font-size:10.5px; color:var(--muted); }
+  .ob-section{ padding:12px 18px; border-bottom:1px solid var(--border); }
+  .ob-section:last-child{ border-bottom:none; }
+  .ob-section-title{ font-size:10.5px; color:var(--muted); font-family:var(--mono); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px; }
+  .ob-tag{ font-family:var(--mono); font-size:10px; padding:2px 7px; border-radius:10px; font-weight:700; }
 </style>
 </head>
 <body>
@@ -184,24 +210,21 @@
   </header>
 
   <nav class="tabs">
-    <button class="active" data-tab="jobs">Bookinger</button>
+    <button class="active" data-tab="jobs">Puljeudstyr</button>
+    <button data-tab="obvogne">OB Vogne</button>
     <button data-tab="avail">Tjek ledighed</button>
     <button data-tab="lager">Lager</button>
   </nav>
 
   <div id="tab-jobs">
     <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:14px; background:var(--panel); border:1px solid var(--border); border-radius:9px; padding:12px 14px;">
-      <div class="field" style="margin:0;">
-        <label>Vis jobs fra</label>
-        <input type="date" id="filterStart" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;">
-      </div>
-      <div class="field" style="margin:0;">
-        <label>til</label>
-        <input type="date" id="filterEnd" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;">
-      </div>
+      <div class="field" style="margin:0;"><label>Vis jobs fra</label><input type="date" id="filterStart" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;"></div>
+      <div class="field" style="margin:0;"><label>til</label><input type="date" id="filterEnd" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;"></div>
       <button class="btn small secondary" id="filterResetBtn" style="margin-bottom:1px;">Nulstil</button>
-      <div id="filterCount" style="font-size:11px; color:var(--muted); font-family:var(--mono); align-self:center; margin-left:4px;"></div>
+      <button class="btn small secondary" id="ganttToggleBtn" style="margin-bottom:1px;">📅 Vis tidslinje</button>
+      <div id="filterCount" style="font-size:11px; color:var(--muted); font-family:var(--mono); align-self:center;"></div>
     </div>
+    <div id="jobsGanttWrap" style="display:none; margin-bottom:14px;"></div>
     <div id="jobsLoading" class="loading">Henter bookinger...</div>
     <div id="jobsList"></div>
   </div>
@@ -227,15 +250,20 @@
     </div>
   </div>
 
+
   <div id="tab-lager" style="display:none;">
     <div class="panel">
       <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
-        <input type="text" id="lagerSearch" placeholder="Søg i lager..." style="flex:1; min-width:200px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 10px; border-radius:7px; font-size:13.5px;">
-        <button class="btn small" id="addEquipBtn">+ Tilføj udstyr</button>
-        <button class="btn small secondary" id="showStatsBtn">📊 Statistik</button>
+        <div style="font-size:13px; font-weight:700;">Lager <span id="lagerCount" style="font-size:10px; color:var(--muted); font-family:var(--mono); font-weight:400;"></span></div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <input type="text" id="lagerSearch" placeholder="Søg..." style="min-width:180px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;">
+          <button class="btn small secondary" id="addPkgBtn">+ Ny pakke</button>
+          <button class="btn small" id="addEquipBtn">+ Tilføj udstyr</button>
+          <button class="btn small secondary" onclick="openCatManager()">Kategorier</button>
+          <button class="btn small secondary" id="showStatsBtn">Statistik</button>
+        </div>
       </div>
       <div id="lagerNewRow" style="display:none; margin-bottom:14px;"></div>
-      <div id="lagerCount" style="font-size:11px; color:var(--muted); font-family:var(--mono); margin-bottom:8px;"></div>
       <div id="lagerList"></div>
     </div>
   </div>
@@ -243,37 +271,60 @@
   <div id="tab-stats" style="display:none;">
     <div class="panel" style="margin-bottom:14px;">
       <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
-        <div class="field" style="margin:0; min-width:120px;">
-          <label>År</label>
-          <select id="statsYear" style="width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 10px; border-radius:7px; font-size:13px;"></select>
-        </div>
-        <div class="field" style="margin:0; min-width:180px;">
-          <label>Kategori</label>
-          <select id="statsCat" style="width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 10px; border-radius:7px; font-size:13px;">
-            <option value="">Alle kategorier</option>
-          </select>
-        </div>
-        <div class="field" style="margin:0; min-width:160px;">
-          <label>Sorter efter</label>
-          <select id="statsSort" style="width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 10px; border-radius:7px; font-size:13px;">
-            <option value="total">Mest brugt i alt</option>
-            <option value="name">Navn (A-Z)</option>
-            <option value="peak">Højeste enkelt måned</option>
-          </select>
-        </div>
-        <div class="field" style="margin:0; min-width:160px;">
-          <label>Vis</label>
-          <select id="statsMetric" style="width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 10px; border-radius:7px; font-size:13px;">
-            <option value="days">Dage booket</option>
-            <option value="jobs">Antal jobs</option>
-          </select>
-        </div>
-        <button class="btn small secondary" id="statsExportBtn">⬇ Eksportér CSV</button>
-        <button class="btn small secondary" id="statsCloseBtn">✕ Luk statistik</button>
+        <div class="field" style="margin:0; min-width:120px;"><label>År</label><select id="statsYear" style="width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 10px; border-radius:7px; font-size:13px;"></select></div>
+        <div class="field" style="margin:0; min-width:180px;"><label>Kategori</label><select id="statsCat" style="width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 10px; border-radius:7px; font-size:13px;"><option value="">Alle kategorier</option></select></div>
+        <div class="field" style="margin:0; min-width:160px;"><label>Sorter efter</label><select id="statsSort" style="width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 10px; border-radius:7px; font-size:13px;"><option value="total">Mest brugt i alt</option><option value="name">Navn (A-Z)</option><option value="peak">Højeste enkelt måned</option></select></div>
+        <div class="field" style="margin:0; min-width:160px;"><label>Vis</label><select id="statsMetric" style="width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 10px; border-radius:7px; font-size:13px;"><option value="days">Dage booket</option><option value="jobs">Antal jobs</option></select></div>
+        <button class="btn small secondary" id="statsExportBtn">Eksportér CSV</button>
+        <button class="btn small secondary" id="statsCloseBtn">Luk statistik</button>
       </div>
     </div>
     <div id="statsSummary" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px;"></div>
     <div id="statsContent" class="loading">Beregner statistik...</div>
+  </div>
+
+  <div id="tab-obvogne" style="display:none;">
+    <div id="obvogneContent"></div>
+  </div>
+</div>
+
+<div class="overlay" id="catOverlay">
+  <div class="modal" style="max-width:480px;">
+    <h2>Administrer kategorier</h2>
+    <div style="margin:14px 0 8px; display:flex; gap:8px;">
+      <input type="text" id="newCatName" placeholder="Ny kategori navn..." style="flex:1; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 10px; border-radius:7px; font-size:13px;">
+      <button class="btn" id="addCatBtn">Tilføj</button>
+    </div>
+    <div id="catList" style="max-height:360px; overflow-y:auto;"></div>
+    <div class="modal-actions"><button class="btn secondary" id="closeCatBtn">Luk</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="obOverlay">
+  <div class="modal">
+    <h2 id="obModalTitle">Book OB vogn</h2>
+    <input type="hidden" id="obEditId">
+    <div class="row2">
+      <div class="field"><label>Beskrivelse / Job navn</label><input type="text" id="obName" placeholder="f.eks. Fodbold landskamp"></div>
+      <div class="field"><label>Hvem (initialer)</label><input type="text" id="obWho" placeholder="f.eks. BSAN"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Start dato</label><input type="date" id="obStart"></div>
+      <div class="field"><label>Slut dato</label><input type="date" id="obEnd"></div>
+    </div>
+    <div class="field"><label>Noter</label><textarea id="obNotes" style="min-height:50px;"></textarea></div>
+    <div class="field">
+      <label>Status</label>
+      <div style="display:flex; gap:8px; margin-top:2px;">
+        <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="obStatus" id="obStatusTilbud" value="tilbud" style="accent-color:var(--amber);"> Tilbud</label>
+        <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="obStatus" id="obStatusOrdre" value="ordre" checked style="accent-color:var(--green);"> Ordre</label>
+      </div>
+    </div>
+    <div id="obConflictBox"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="obCancelBtn">Annuller</button>
+      <button class="btn" id="obSaveBtn">Gem booking</button>
+    </div>
   </div>
 </div>
 
@@ -331,18 +382,22 @@
   <div class="modal">
     <h2 id="equipDetailTitle">Udstyr detaljer</h2>
     <input type="hidden" id="equipDetailIdx">
-
     <div style="display:flex; gap:16px; margin-bottom:14px; flex-wrap:wrap;">
       <div style="flex:0 0 120px;">
-        <img id="equipImgPreview" src="" style="width:120px; height:120px; border-radius:9px; object-fit:cover; background:var(--panel-2); border:1px solid var(--border); display:none;">
-        <div id="equipImgPlaceholder" style="width:120px; height:120px; border-radius:9px; background:var(--panel-2); border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:11px; text-align:center;">Intet billede</div>
-        <input type="file" id="equipImgFile" accept="image/*" style="margin-top:8px; font-size:11px; width:120px;">
-        <div id="equipImgStatus" style="font-size:10.5px; color:var(--muted); margin-top:4px; font-family:var(--mono);"></div>
+        <img id="equipImgPreview" src="" style="width:120px;height:120px;border-radius:9px;object-fit:cover;background:var(--panel-2);border:1px solid var(--border);display:none;">
+        <div id="equipImgPlaceholder" style="width:120px;height:120px;border-radius:9px;background:var(--panel-2);border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;text-align:center;">Intet billede</div>
+        <input type="file" id="equipImgFile" accept="image/*" style="margin-top:8px;font-size:11px;width:120px;">
+        <div id="equipImgStatus" style="font-size:10.5px;color:var(--muted);margin-top:4px;font-family:var(--mono);"></div>
       </div>
-      <div style="flex:1; min-width:240px;">
+      <div style="flex:1;min-width:240px;">
         <div class="row2">
           <div class="field"><label>Navn</label><input type="text" id="dName"></div>
-          <div class="field"><label>Kategori</label><input type="text" id="dCategory"></div>
+          <div class="field"><label>Kategori</label>
+            <div style="display:flex;gap:6px;">
+              <select id="dCategory" style="flex:1;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:7px;font-size:13px;"></select>
+              <button class="btn small secondary" type="button" onclick="openCatManager()">Rediger</button>
+            </div>
+          </div>
         </div>
         <div class="row2">
           <div class="field"><label>Antal i alt</label><input type="number" id="dQty" min="0"></div>
@@ -350,17 +405,15 @@
         </div>
         <div class="row2">
           <div class="field"><label>Serienummer</label><input type="text" id="dSerial" placeholder="f.eks. SN-9988231"></div>
-          <div class="field"><label>Strøm tilslutning</label><input type="text" id="dPower" placeholder="f.eks. 230V Schuko / 32A CEE"></div>
+          <div class="field"><label>Strøm tilslutning</label><input type="text" id="dPower" placeholder="f.eks. 230V Schuko"></div>
         </div>
       </div>
     </div>
-
     <div class="field">
       <label>Flere felter</label>
       <div id="customFieldsList"></div>
       <button class="btn small secondary" id="addCustomFieldBtn" style="margin-top:6px;">+ Tilføj felt</button>
     </div>
-
     <div class="modal-actions">
       <button class="btn secondary" id="equipDetailCancelBtn">Annuller</button>
       <button class="btn" id="equipDetailSaveBtn">Gem detaljer</button>
@@ -371,1131 +424,1345 @@
 <script>
 const EQUIPMENT_SEED = [{"name": "WL RACK 1 RX & TX (DNK 37)", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "WL RACK 2 RX & TX (Remote4)", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "WL RACK 3 RX & TX ( NY)", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "WL RACK 4 RX & TX ( NY)", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "WL RACK 5  RX", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "WL RACK 6  RX", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "WL KUFFERT 1 (DNK37)", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "WL KUFFERT 2 (Remote4)", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "WL KUFFERT 3 (OB3)", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "WL TX RACK INEAR 2 watt", "category": "TRÅDLØST LYD", "qty": 3}, {"name": "MFL RF Fiber TX/RX sæt WISYCOM", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "ANTENNE KUFFERT 1 WISYCOM", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "ANTENNE KUFFERT 2 WISYCOM", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "ANTENNE KUFFERT 3 RX WISYCOM", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "AKTIVE ANTENNER m. Filter 430-730 MHz WISYCOM 2stk.", "category": "TRÅDLØST LYD", "qty": 2}, {"name": "AKTIVE RF FILTRE m. Filter 430-730 MHz WISYCOM 4stk.", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "MCR 42 CL 1  m. HM WISYCOM", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "MCR 42 CL 2  m. HM WISYCOM", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "MCR 42 PULJE 1 m. BP WISYCOM", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "MCR 42 PULJE 2", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "TX Antenne Wisycom", "category": "TRÅDLØST LYD", "qty": 4}, {"name": "Antenne splitter 2wat.", "category": "TRÅDLØST LYD", "qty": 4}, {"name": "Remote 4 LQ 8x4W & Behringer lydmixer", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "INEAR SÆT 1 SENNHEISER 2000", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "INEAR SÆT 2 SENNHEISER 2000", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "INEAR SÆT 3 SENNHEISER 2000", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "INEAR SÆT 4 WISYCOM", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "Sound Device mixpre 10 Kuffert.", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "BIG EAR 2x KLOVER-MIK m. Mikrofoner DNK 47", "category": "MIKROFONER & IN-EAR", "qty": 1}, {"name": "DPA 6066 HEADSET Kuffert 1 5 STK.", "category": "MIKROFONER & IN-EAR", "qty": 3}, {"name": "HSP 4 SENNHEISER HEADSET Kasse 6 stk. AA", "category": "MIKROFONER & IN-EAR", "qty": 1}, {"name": "HSP 4 SENNHEISER HEADSET Kasse 6 stk. BB", "category": "MIKROFONER & IN-EAR", "qty": 1}, {"name": "HSP 4 SENNHEISER HEADSET Kasse 4 stk.", "category": "MIKROFONER & IN-EAR", "qty": 1}, {"name": "HSP 4 SENNHEISER HEADSET SØLV/SORT Kasse 5 stk. DD", "category": "MIKROFONER & IN-EAR", "qty": 1}, {"name": "Westone Audio Pro X10 IEM Earphones", "category": "MIKROFONER & IN-EAR", "qty": 20}, {"name": "N-EAR INEAR 5 stk.  Kuffert  AA", "category": "MIKROFONER & IN-EAR", "qty": 1}, {"name": "N-EAR INEAR 5 stk.  Kuffert  BB", "category": "MIKROFONER & IN-EAR", "qty": 1}, {"name": "Audio-Technica BP4029  MS Mikrofon", "category": "MIKROFONER & IN-EAR", "qty": 3}, {"name": "STAGEBOX YAMAHA RIO RI8-D", "category": "STAGEBOXE", "qty": 1}, {"name": "STAGEBOX YAMAHA RIO 1608-D", "category": "STAGEBOXE", "qty": 1}, {"name": "STAGEBOX YAMAHA RIO 1608-D2", "category": "STAGEBOXE", "qty": 1}, {"name": "STAGEBOX YAMAHA RIO 3224-D", "category": "STAGEBOXE", "qty": 1}, {"name": "Yamaha QL 1 32ch dante Mixer", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Yamaha CL 1 48ch dante Mixer  GL. OB 5", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "REMOTE 2 WL KASSE", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "REMOTE 2 WL WISYCOM TX / RX", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Remote 2 Clearcom Rack", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Remote 2 Teko Rack", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Remote 2 Nimbra Rack", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Remote 2 CCU Rack", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Remote 2 Kabel Skuffe skab 1+2", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Remote 2 KOMM Rack", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Remote 2 EKSTRA Micron Rack", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Remote 2 Lyd mixer Rack", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Remote 2 Computer Rack", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "STAGEBOX YAMAHA RIO 1608-D2 REMOT2", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "2 x Sony 3500 CCU og Kamera AA Remote 2", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "2 x Sony 3500 CCU og Kamera BB Remote 2", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "1 x Sony 3500 CCU og Kamera CC Remote 2", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Cannon Wide AA Remote 2", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Cannon Wide BB Remote 2", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Cannon 24x AA Remote 2", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Cannon 24x BB Remote 2", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "UPS EATON 5PX2200 1980 W", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "UPS EATON 5PX 3000 W", "category": "POWER", "qty": 1}, {"name": "UPS APC. A", "category": "POWER", "qty": 1}, {"name": "UPS APC. B", "category": "POWER", "qty": 1}, {"name": "UPS APC Lille i Kuffert", "category": "POWER", "qty": 1}, {"name": "UPS APC STOR A", "category": "POWER", "qty": 1}, {"name": "UPS APC STOR B", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 02 Delta 2 (1024Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 06 Delta 2 MAX (2048Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 07 Delta 2 (1024Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 08 Delta 2 (1024Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 09 Delta 3 1500 (1500Wh) - defekt", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 10 River 2 Max (512Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 11 Delta 3 Max+ (2048Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 12 Delta 3 Max+ (2048Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 13 Delta 3 Max+ (2048Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 14 Delta 3 Max+ (2048Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 15 Delta 2 (1024Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 16 River (288Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 17 Delta 3 Max+ (2048Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 18 Delta 3 Max+ (2048Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 19 Delta 3 Max+ (2048Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 20 Delta 3 Max+ (2048Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 21 Delta 3 Max+ (2048Wh)", "category": "POWER", "qty": 1}, {"name": "Bolero Pujle Beltpack 5 stk. Kasse AA", "category": "BOLERO", "qty": 1}, {"name": "Bolero Remote2 Beltpack 5 stk. Kasse BB", "category": "BOLERO", "qty": 1}, {"name": "Bolero Pujle Antenna # 1", "category": "BOLERO", "qty": 1}, {"name": "Bolero Pujle Antenna # 2", "category": "BOLERO", "qty": 1}, {"name": "Bolero Pujle Antenna # 1 SLAVE", "category": "BOLERO", "qty": 1}, {"name": "Bolero Pujle Antenna # DNK 47 SLAVE", "category": "BOLERO", "qty": 0}, {"name": "Bolero Pujle Antenna # OB 4  SLAVE", "category": "BOLERO", "qty": 1}, {"name": "Bolero Pujle Antenna # 4 SLAVE", "category": "BOLERO", "qty": 1}, {"name": "Bolero DNK 83 Antenne", "category": "BOLERO", "qty": 1}, {"name": "Bolero NSA SPARE", "category": "BOLERO", "qty": 1}, {"name": "Bolero NSA", "category": "BOLERO", "qty": 1}, {"name": "Bolero Medie Converter.  RJ45 -> LC", "category": "BOLERO", "qty": 6}, {"name": "Bolero AIR – Ultra Light Headset", "category": "BOLERO", "qty": 18}, {"name": "Bolero MAX – High Performance Headset", "category": "BOLERO", "qty": 15}, {"name": "Bolero OB4 Beltpack 5 stk.  UDLÅN", "category": "BOLERO", "qty": 1}, {"name": "Bolero OB4 Antenne UDLÅN", "category": "BOLERO", "qty": 1}, {"name": "Samsung Terrace Højlys TV 55''   AA", "category": "MONITOR", "qty": 1}, {"name": "Samsung Terrace Højlys TV 55''   BB", "category": "MONITOR", "qty": 1}, {"name": "Samsung Terrace Højlys TV 55''   CC", "category": "MONITOR", "qty": 1}, {"name": "Samsung 27\" Højlys monitor", "category": "MONITOR", "qty": 1}, {"name": "Samsung 32\" Højlys monitor A", "category": "MONITOR", "qty": 1}, {"name": "Kasse med 4x 50\" TV", "category": "MONITOR", "qty": 1}, {"name": "SWIT 21\"  4 K  A", "category": "MONITOR", "qty": 1}, {"name": "SWIT 21\"  4 K  B", "category": "MONITOR", "qty": 1}, {"name": "SWIT 17\" DNK 37", "category": "MONITOR", "qty": 1}, {"name": "Swit 9\" Monitor A", "category": "MONITOR", "qty": 1}, {"name": "Swit 9\" Monitor B", "category": "MONITOR", "qty": 1}, {"name": "Swit 9\" Monitor med Clearcom + Hi indvalg", "category": "MONITOR", "qty": 0}, {"name": "OSSE Monitor Pulje A", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje B", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje C", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje D", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje E", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje F", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje G", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje H", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje I", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje J", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje K 22\"", "category": "MONITOR", "qty": 1}, {"name": "I PAD APPLE  4G  nr: 1", "category": "MONITOR", "qty": 1}, {"name": "I PAD APPLE  4G  nr: 2", "category": "MONITOR", "qty": 1}, {"name": "NETGEAR 12 Port AV-Line  A", "category": "NETVÆRK", "qty": 1}, {"name": "NETGEAR 12 Port AV-Line  B", "category": "NETVÆRK", "qty": 1}, {"name": "NETGEAR 12 Port AV-Line  C", "category": "NETVÆRK", "qty": 1}, {"name": "NETGEAR 12 Port AV-Line  D", "category": "NETVÆRK", "qty": 1}, {"name": "NETGEAR 12 Port AV-Line  E", "category": "NETVÆRK", "qty": 1}, {"name": "NETGEAR 48 Port AV-Line  F", "category": "NETVÆRK", "qty": 1}, {"name": "NETGEAR 12 Port AV-Line PLAYHUS", "category": "NETVÆRK", "qty": 1}, {"name": "NETGEAR 16x SFP Port AV-Line  H", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink RV 1", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink RV 2", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink RV 3", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink RV 4", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink Mini 1", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink Mini 2", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink Mini 3", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink Mini 4", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink Mini 5", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink Mini 6", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 1", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 2", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 3", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 4", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 5", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 6", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 7", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 8", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 9", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 10", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 11", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 12", "category": "NETVÆRK", "qty": 1}, {"name": "NETGEAR WIFI 6 Outdoor", "category": "NETVÆRK", "qty": 1}, {"name": "ASUS Mesh router 1", "category": "NETVÆRK", "qty": 1}, {"name": "ASUS Mesh router 2", "category": "NETVÆRK", "qty": 1}, {"name": "ASUS Mesh router 3", "category": "NETVÆRK", "qty": 1}, {"name": "ASUS Mesh router 4", "category": "NETVÆRK", "qty": 1}, {"name": "ASUS Mesh router 5", "category": "NETVÆRK", "qty": 1}, {"name": "ASUS Mesh router 6", "category": "NETVÆRK", "qty": 1}, {"name": "ERECA Stage Racer 12 HD SDI RX/TX  2x RACK", "category": "SDI-DIVERSE", "qty": 1}, {"name": "Links Wireless camera System - 3 kasser", "category": "SDI-DIVERSE", "qty": 1}, {"name": "Swit link (Retur link)", "category": "SDI-DIVERSE", "qty": 1}, {"name": "RMA400 Pre-Amp / EMB", "category": "SDI-DIVERSE", "qty": 2}, {"name": "Broaman 3 - 2 rack", "category": "SDI-DIVERSE", "qty": 1}, {"name": "Canon x40 pulje optik", "category": "OPTIKER", "qty": 1}, {"name": "Canon x21 Pulje (Fra ENG)", "category": "OPTIKER", "qty": 1}, {"name": "Canon WIDE Pulje (Fra ENG)", "category": "OPTIKER", "qty": 1}, {"name": "Canon WIDE Pulje", "category": "OPTIKER", "qty": 1}, {"name": "Fujinon x21 Pulje A", "category": "OPTIKER", "qty": 1}, {"name": "Fujinon x21 Pulje B", "category": "OPTIKER", "qty": 1}, {"name": "SONY BRC-H900 Camara KOM-CAM DNK37", "category": "OPTIKER", "qty": 1}, {"name": "PTZ 10 + RCP 1", "category": "OPTIKER", "qty": 1}, {"name": "PTZ 11", "category": "OPTIKER", "qty": 1}, {"name": "PTZ 12", "category": "OPTIKER", "qty": 1}, {"name": "PTZ RCP 2", "category": "OPTIKER", "qty": 1}, {"name": "SONY PXW-X400 ENG Kamera A", "category": "KAMERA OG CCU", "qty": 1}, {"name": "SONY PXW-X400 ENG Kamera B", "category": "KAMERA OG CCU", "qty": 1}, {"name": "SONY X400 CCU AA (ENG)", "category": "KAMERA OG CCU", "qty": 1}, {"name": "SONY X400 CCU BB (ENG)", "category": "KAMERA OG CCU", "qty": 1}, {"name": "SONY X400 Kamera CCU bagpart AA (ENG)", "category": "KAMERA OG CCU", "qty": 1}, {"name": "SONY X400 Kamera CCU bagpart BB (ENG)", "category": "KAMERA OG CCU", "qty": 1}, {"name": "SONY FR7  Full-frame PTZ Camera A", "category": "KAMERA OG CCU", "qty": 1}, {"name": "SONY FR7  Full-frame PTZ Camera B", "category": "KAMERA OG CCU", "qty": 1}, {"name": "SONY FR7  PTZ Remote kontrol / RCP", "category": "KAMERA OG CCU", "qty": 1}, {"name": "Marshal kamera sæt 1 - vandtæt", "category": "KAMERA OG CCU", "qty": 1}, {"name": "Marshal kamera sæt 2", "category": "KAMERA OG CCU", "qty": 1}, {"name": "SMPTE 5-10 m Snut/kabel  Pulje", "category": "KABLER", "qty": 10}, {"name": "SMPTE 30 m Snut/kabel  Pulje", "category": "KABLER", "qty": 4}, {"name": "SMPTE 250 m Tromle Pulje", "category": "KABLER", "qty": 4}, {"name": "SMPTE 150 m Tromle Pulje", "category": "KABLER", "qty": 10}, {"name": "SMPTE 100 m Tromle Pulje", "category": "KABLER", "qty": 4}, {"name": "MX Fiber 5-10 m Snut/kabel Pulje", "category": "KABLER", "qty": 4}, {"name": "MX Fiber 10-20 m Snut/kabel Pulje", "category": "KABLER", "qty": 4}, {"name": "MX Fiber 300 m Tromle Pulje", "category": "KABLER", "qty": 4}, {"name": "MX Fiber 150 m Tromle Pulje", "category": "KABLER", "qty": 4}, {"name": "MX BOX -> LC", "category": "KABLER", "qty": 6}, {"name": "RJ 45 / Cat troler", "category": "KABLER", "qty": 6}, {"name": "BNC Tromler 7 x BNC", "category": "KABLER", "qty": 3}, {"name": "BNC Tromle Pulje 75m.", "category": "KABLER", "qty": 10}, {"name": "LC/LC 6 Par A 250m (12 fiber)", "category": "KABLER", "qty": 1}, {"name": "LC/LC 6 Par B 250m (12 fiber)", "category": "KABLER", "qty": 1}, {"name": "LC/LC 12 Par A 180m (24 fiber)", "category": "KABLER", "qty": 1}, {"name": "LC/LC 12 Par B 180m (24 fiber) bookes ved Dawall i KBH", "category": "KABLER", "qty": 1}, {"name": "Neutrik quad tromle 300 M AA", "category": "KABLER", "qty": 1}, {"name": "Neutrik quad tromle 300 M BB", "category": "KABLER", "qty": 1}, {"name": "Neutrik quad tromle 300 M CC", "category": "KABLER", "qty": 1}, {"name": "Neutrik quad tromle 300 M DD", "category": "KABLER", "qty": 1}, {"name": "Neutrik quad tromle 300 M E", "category": "KABLER", "qty": 1}, {"name": "Neutrik quad tromle 300 M F", "category": "KABLER", "qty": 1}, {"name": "Neutrik quad tromle 300 M G", "category": "KABLER", "qty": 1}, {"name": "32A 20 meter strømtromle alu. Kabel", "category": "KABLER", "qty": 12}, {"name": "DIV. Kabler i Housebox (Gl. Remote 4)", "category": "KABLER", "qty": 1}, {"name": "Fiilex 360 PRO Plus lamper OB3/Pulje", "category": "LYS", "qty": 1}, {"name": "Fiilex 360 PRO Plus lamper DNK 83", "category": "LYS", "qty": 1}, {"name": "Velvet LED 30 graders spot Remote 2", "category": "LYS", "qty": 2}, {"name": "Osprey Lite", "category": "STATIVER & GRIP", "qty": 3}, {"name": "Sachtler Hot Pod CF 10 Stativ Pulje A", "category": "STATIVER & GRIP", "qty": 1}, {"name": "Sachtler Hot Pod CF 10 Stativ Pulje B", "category": "STATIVER & GRIP", "qty": 1}, {"name": "Sachtler  20 Pulje A", "category": "STATIVER & GRIP", "qty": 1}, {"name": "Sachtler  20 Pulje B", "category": "STATIVER & GRIP", "qty": 1}, {"name": "Sachtler  20 Pulje C", "category": "STATIVER & GRIP", "qty": 1}, {"name": "Sanken 20", "category": "STATIVER & GRIP", "qty": 4}, {"name": "Manfrotto UdlæggerArme  OB3", "category": "STATIVER & GRIP", "qty": 2}, {"name": "MiniMax Udlæggerarme", "category": "STATIVER & GRIP", "qty": 2}, {"name": "Manfrotto push-Up stativ  OB3", "category": "STATIVER & GRIP", "qty": 2}, {"name": "Prosub jib til ENG + vægtklodser - 2 kasser", "category": "STATIVER & GRIP", "qty": 1}, {"name": "Gammel jib på hjul/tripod", "category": "STATIVER & GRIP", "qty": 1}, {"name": "Jern Stativer til TV", "category": "STATIVER & GRIP", "qty": 9}, {"name": "Unity Connect 4W Sæt 1", "category": "UNITY CONNECT", "qty": 1}, {"name": "Unity Connect 4W Sæt 2", "category": "UNITY CONNECT", "qty": 1}, {"name": "REMOTE 2 kommentering sæt", "category": "KOMMENTATOR BOKSE", "qty": 1}, {"name": "On-site kommentering sæt A", "category": "KOMMENTATOR BOKSE", "qty": 1}, {"name": "On-site kommentering sæt B", "category": "KOMMENTATOR BOKSE", "qty": 1}, {"name": "On-site kommentering sæt C", "category": "KOMMENTATOR BOKSE", "qty": 1}, {"name": "On-site kommentering sæt D", "category": "KOMMENTATOR BOKSE", "qty": 1}, {"name": "On-site kommentering sæt E (Remote Offtube)", "category": "KOMMENTATOR BOKSE", "qty": 1}, {"name": "On-site kommentering sæt F (Remote Offtube)", "category": "KOMMENTATOR BOKSE", "qty": 1}, {"name": "Teranex Up Cross down", "category": "Konverter", "qty": 2}, {"name": "Apple TV", "category": "Konverter", "qty": 1}, {"name": "Fiber Extension 3 stk. Sæt A", "category": "KAMERA", "qty": 1}, {"name": "Fiber Extension 3 stk. Sæt B", "category": "KAMERA", "qty": 1}, {"name": "Fiber Extension 2 stk. Sæt C", "category": "KAMERA", "qty": 1}, {"name": "2*2 m Pop-UP Telt med sider SORT.", "category": "TELTE", "qty": 2}, {"name": "3*3 m Pop-UP Telt med sider SORT.", "category": "TELTE", "qty": 2}, {"name": "3*3 m Pop-UP Telt med sider Hvid.", "category": "TELTE", "qty": 2}, {"name": "4*4m Pop-UP Telt med sider Hvid.", "category": "TELTE", "qty": 1}, {"name": "Vægt klodser til telt.", "category": "TELTE", "qty": 12}, {"name": "Pløkker", "category": "TELTE", "qty": 8}, {"name": "OB4 JIB", "category": "OB4", "qty": 1}, {"name": "OB3 Kamera Stativ", "category": "OB4", "qty": 1}]
 
-// ====== SUPABASE KONFIGURATION ======
-// Udfyld disse to linjer med dine egne værdier fra Supabase -> Project Settings -> API
+// ═══════════════════════════════════════════════════════════
+// STATE & SUPABASE
+// ═══════════════════════════════════════════════════════════
 const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_blZoSR5idK-yHYwPJTzvxg_Ea6Mbrvq';
-// =====================================
-
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ---- state ----
 let EQUIPMENT = [];
+let PACKAGES  = [];
+let CATEGORIES= [];
+let OB_VOGNE  = [];
+let OB_BOOKINGER = [];
 let jobs = [];
-let selectedItems = {}; // name -> qty
+let selectedItems = {};
 let editingJobId = null;
 let editingEquipName = null;
+let editingPkgId = null;
+let detailCurrentIdx = null;
+let detailPendingFile = null;
+let detailCustomFields = [];
+let currentObVognId = null;
 
-// ---- equipment (lager) <-> Supabase ----
+// ── Loaders ──────────────────────────────────────────────────
 async function loadEquipment(){
-  const { data, error } = await supa.from('equipment').select('*').order('category').order('name');
-  if(error){ console.error(error); EQUIPMENT = []; return; }
-  EQUIPMENT = data;
-
-  if(EQUIPMENT.length === 0){
-    // første gang: fyld databasen med listen fra Excel-arket
-    const seedRows = EQUIPMENT_SEED.map(it=>({name: it.name, category: it.category, qty: it.qty}));
-    const { data: inserted, error: insErr } = await supa.from('equipment').insert(seedRows).select();
-    if(!insErr) EQUIPMENT = inserted;
-  }
+  try{
+    const {data,error} = await supa.from('equipment').select('*').order('category').order('name');
+    if(error){ console.error(error); EQUIPMENT=[]; return; }
+    EQUIPMENT = data;
+    if(EQUIPMENT.length===0){
+      const seedRows = EQUIPMENT_SEED.map(it=>({name:it.name,category:it.category,qty:it.qty}));
+      const {data:ins,error:ie} = await supa.from('equipment').insert(seedRows).select();
+      if(!ie) EQUIPMENT=ins;
+    }
+  }catch(e){ console.error(e); EQUIPMENT=[]; }
 }
-
-// ---- jobs (bookinger) <-> Supabase ----
-function dbJobToApp(j){
-  return { id:j.id, name:j.name, who:j.who, start:j.start_date, end:j.end_date, notes:j.notes, items:j.items||[] };
+async function loadPackages(){
+  try{
+    const {data,error} = await supa.from('packages').select('*').order('category').order('name');
+    if(error){ console.warn('loadPackages:',error.message); PACKAGES=[]; return; }
+    PACKAGES=data||[];
+  }catch(e){ console.warn(e); PACKAGES=[]; }
+}
+async function loadCategories(){
+  try{
+    const {data,error} = await supa.from('categories').select('*').order('sort_order').order('name');
+    if(error){ console.warn('loadCategories:',error.message); CATEGORIES=[]; }
+    else { CATEGORIES=data||[]; }
+  }catch(e){ console.warn(e); CATEGORIES=[]; }
+  populateCategoryDropdowns();
+}
+async function loadObVogne(){
+  try{
+    const {data,error} = await supa.from('ob_vogne').select('*').order('name');
+    if(error){ console.warn('loadObVogne:',error.message); OB_VOGNE=[]; return; }
+    OB_VOGNE=data||[];
+  }catch(e){ console.warn(e); OB_VOGNE=[]; }
+}
+async function loadObBookinger(){
+  try{
+    const {data,error} = await supa.from('ob_bookinger').select('*').order('start_date');
+    if(error){ console.warn('loadObBookinger:',error.message); OB_BOOKINGER=[]; return; }
+    OB_BOOKINGER=data||[];
+  }catch(e){ console.warn(e); OB_BOOKINGER=[]; }
 }
 async function loadJobs(){
-  const { data, error } = await supa.from('jobs').select('*').order('start_date');
-  if(error){ console.error(error); jobs = []; return; }
-  jobs = data.map(dbJobToApp);
+  try{
+    const {data,error} = await supa.from('jobs').select('*').order('start_date');
+    if(error){ console.error(error); jobs=[]; return; }
+    jobs = data.map(function(j){ return {id:j.id,name:j.name,who:j.who,start:j.start_date,end:j.end_date,notes:j.notes,items:j.items||[],status:j.status||'ordre'}; });
+  }catch(e){ console.error(e); jobs=[]; }
 }
 
+// ── Helpers ──────────────────────────────────────────────────
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function addMonths(d,n){ const dt=new Date(d+'T00:00:00'); dt.setMonth(dt.getMonth()+n); return dt.toISOString().slice(0,10); }
 function fmtDate(d){
   if(!d) return '—';
-  const dt = new Date(d+'T00:00:00');
-  return dt.toLocaleDateString('da-DK', {day:'2-digit', month:'short', year:'numeric'});
+  return new Date(d+'T00:00:00').toLocaleDateString('da-DK',{day:'2-digit',month:'short',year:'numeric'});
+}
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
+}
+function datesOverlap(s1,e1,s2,e2){ return s1<=e2 && s2<=e1; }
+function totalQty(name){ const it=EQUIPMENT.find(function(i){return i.name===name;}); return it?it.qty:1; }
+function obVognById(id){ return OB_VOGNE.find(function(v){return v.id===id;}); }
+function obBookingConflict(obVognId,start,end,excludeId){
+  if(!obVognId||!start||!end) return null;
+  return OB_BOOKINGER.find(function(b){
+    if(b.id===excludeId) return false;
+    if(b.ob_vogn_id!==obVognId) return false;
+    return b.start_date<=end && b.end_date>=start;
+  })||null;
+}
+function bookedQty(name,start,end,excludeJobId){
+  let sum=0; const users=[];
+  jobs.forEach(function(j){
+    if(j.id===excludeJobId||!j.start||!j.end) return;
+    if(!datesOverlap(start,end,j.start,j.end)) return;
+    const f=(j.items||[]).find(function(it){return it.name===name;});
+    if(f){ sum+=f.qty; users.push(j.name+' ('+f.qty+')'); }
+  });
+  return {sum,users};
+}
+function populateCategoryDropdowns(){
+  const opts = CATEGORIES.map(function(c){return '<option value="'+escapeHtml(c.name)+'">'+escapeHtml(c.name)+'</option>';}).join('');
+  ['dCategory','newEquipCat'].forEach(function(id){
+    const el=document.getElementById(id); if(!el) return;
+    const cur=el.value; el.innerHTML=opts; if(cur) el.value=cur;
+  });
+  const sc=document.getElementById('statsCat');
+  if(sc){ const cur=sc.value; sc.innerHTML='<option value="">Alle kategorier</option>'+opts; if(cur) sc.value=cur; }
+}
+function moveEquipToPackage(equipId, packageId){
+  return supa.from('equipment').update({package_id:packageId||null}).eq('id',equipId).then(function(){return loadEquipment();});
+}
+function deletePackage(pkgId){
+  return supa.from('equipment').update({package_id:null}).eq('package_id',pkgId).then(function(){
+    return supa.from('packages').delete().eq('id',pkgId);
+  }).then(function(){ return Promise.all([loadPackages(),loadEquipment()]); });
+}
+function initFilterDates(){
+  const t=todayStr();
+  const fs=document.getElementById('filterStart'); if(fs) fs.value=t;
+  const fe=document.getElementById('filterEnd'); if(fe) fe.value=addMonths(t,1);
 }
 
-function datesOverlap(s1,e1,s2,e2){
-  return s1 <= e2 && s2 <= e1;
-}
-
-function totalQty(name){
-  const it = EQUIPMENT.find(i=>i.name===name);
-  return it ? it.qty : 1;
-}
-
-// booked qty for item in date range, excluding a job id
-function bookedQty(name, start, end, excludeJobId){
-  let sum = 0;
-  const users = [];
-  for(const j of jobs){
-    if(j.id === excludeJobId) continue;
-    if(!j.start || !j.end) continue;
-    if(!datesOverlap(start, end, j.start, j.end)) continue;
-    const found = (j.items||[]).find(it=>it.name===name);
-    if(found){
-      sum += found.qty;
-      users.push(j.name + ' (' + found.qty + ')');
-    }
-  }
-  return {sum, users};
-}
-
-// ---- tabs ----
-document.querySelectorAll('nav.tabs button').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+// ═══════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════
+document.querySelectorAll('nav.tabs button').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('nav.tabs button').forEach(function(b){ b.classList.remove('active'); });
     btn.classList.add('active');
-    const tab = btn.dataset.tab;
-    document.getElementById('tab-jobs').style.display = tab==='jobs' ? 'block':'none';
-    document.getElementById('tab-avail').style.display = tab==='avail' ? 'block':'none';
-    document.getElementById('tab-lager').style.display = tab==='lager' ? 'block':'none';
-    if(tab==='lager') renderLager(document.getElementById('lagerSearch').value);
+    var tab = btn.dataset.tab;
+    ['jobs','avail','lager','stats','obvogne'].forEach(function(t){
+      var el=document.getElementById('tab-'+t); if(el) el.style.display='none';
+    });
+    var panel=document.getElementById('tab-'+tab);
+    if(panel) panel.style.display='block';
+    if(tab==='lager') Promise.all([loadPackages(),loadEquipment()]).then(function(){ renderLager(document.getElementById('lagerSearch').value||''); });
+    if(tab==='obvogne'){
+      var obC=document.getElementById('obvogneContent');
+      if(obC) obC.innerHTML='<div class="loading">Henter OB Vogne...</div>';
+      Promise.all([loadObVogne(),loadObBookinger()]).then(function(){
+        try{ renderObVogne(); }
+        catch(e){ console.error('renderObVogne fejl:',e); if(obC) obC.innerHTML='<div class="empty"><div class="big">⚠️</div>Fejl: '+e.message+'<br><small>Tjek F12 Console</small></div>'; }
+      }).catch(function(e){ console.error('OB load fejl:',e); });
+    }
   });
 });
 
-// ---- render job list ----
+
+// ═══════════════════════════════════════════════════════════
+// JOB LIST (Puljeudstyr)
+// ═══════════════════════════════════════════════════════════
 function renderJobs(){
-  const list = document.getElementById('jobsList');
-  document.getElementById('jobsLoading').style.display = 'none';
+  const list=document.getElementById('jobsList');
+  const loading=document.getElementById('jobsLoading');
+  if(loading) loading.style.display='none';
 
-  const filterStart = document.getElementById('filterStart').value;
-  const filterEnd   = document.getElementById('filterEnd').value;
-
-  // filter: show jobs that overlap with the selected period
-  const visible = jobs.filter(j => {
-    if(!j.start || !j.end) return true;
-    if(filterStart && j.end   < filterStart) return false;
-    if(filterEnd   && j.start > filterEnd)   return false;
+  const fStart=document.getElementById('filterStart'); const fEnd=document.getElementById('filterEnd');
+  const fs=fStart?fStart.value:''; const fe=fEnd?fEnd.value:'';
+  const visible=jobs.filter(function(j){
+    if(!j.start||!j.end) return true;
+    if(fs && j.end<fs) return false;
+    if(fe && j.start>fe) return false;
     return true;
-  });
+  }).sort(function(a,b){ return (b.start||'').localeCompare(a.start||''); });
 
-  const countEl = document.getElementById('filterCount');
-  if(countEl) countEl.textContent = visible.length + ' af ' + jobs.length + ' jobs';
+  const countEl=document.getElementById('filterCount');
+  if(countEl) countEl.textContent=visible.length+' af '+jobs.length+' jobs';
+  // gantt renders on demand
 
-  if(jobs.length === 0){
-    list.innerHTML = '<div class="empty"><div class="big">📋</div>Ingen bookinger endnu.<br>Klik "+ Nyt job" for at oprette den første.</div>';
-    return;
-  }
+  if(jobs.length===0){ list.innerHTML='<div class="empty"><div class="big">📋</div>Ingen bookinger endnu.</div>'; return; }
+  if(visible.length===0){ list.innerHTML='<div class="empty"><div class="big">🔍</div>Ingen jobs i den valgte periode.</div>'; return; }
 
-  if(visible.length === 0){
-    list.innerHTML = '<div class="empty"><div class="big">🔍</div>Ingen jobs i den valgte periode.</div>';
-    return;
-  }
-
-  const sorted = [...visible].sort((a,b)=> (b.start||'').localeCompare(a.start||''));
-
-  list.innerHTML = sorted.map(j=>{
-    const itemCount = (j.items||[]).length;
-    const totalQtyAll = (j.items||[]).reduce((s,i)=>s+i.qty,0);
-
-    // check conflicts for this job's items right now
-    let conflictCount = 0;
-    (j.items||[]).forEach(it=>{
-      const {sum} = bookedQty(it.name, j.start, j.end, j.id);
-      if(sum + it.qty > totalQty(it.name)) conflictCount++;
+  list.innerHTML='';
+  visible.forEach(function(j){
+    const itemCount=(j.items||[]).length;
+    const totalQtyAll=(j.items||[]).reduce(function(s,i){return s+i.qty;},0);
+    let conflictCount=0;
+    (j.items||[]).forEach(function(it){
+      if(it.isPkg) return;
+      const bq=bookedQty(it.name,j.start,j.end,j.id);
+      if(bq.sum+it.qty>totalQty(it.name)) conflictCount++;
     });
 
-    const itemsHtml = (j.items||[]).map(it=>{
-      const eq = EQUIPMENT.find(e=>e.name===it.name);
-      return `<div class="item-row">
-        <div><div>${escapeHtml(it.name)}</div><div class="cat">${eq?escapeHtml(eq.category):''}</div></div>
-        <div class="item-qty">×${it.qty}</div>
-      </div>`;
-    }).join('') || '<div class="empty" style="padding:16px;">Intet udstyr tilføjet</div>';
+    const itemsHtml=(j.items||[]).map(function(it){
+      const eq=EQUIPMENT.find(function(e){return e.name===it.name;});
+      const isPkg=it.isPkg;
+      return '<div class="item-row"><div><div>'+(isPkg?'📦 ':'')+escapeHtml(it.name)+'</div>'
+        +(eq?'<div class="cat">'+escapeHtml(eq.category)+'</div>':'')
+        +'</div><div class="item-qty">×'+it.qty+'</div></div>';
+    }).join('')||'<div class="empty" style="padding:16px;">Intet udstyr tilføjet</div>';
 
-    return `<div class="job-card" data-id="${j.id}">
-      <div class="job-head" onclick="toggleJob('${j.id}')">
-        <div>
-          <div class="job-title">${escapeHtml(j.name||'(uden navn)')} ${j.who?('· '+escapeHtml(j.who)):''}</div>
-          <div class="job-meta">${fmtDate(j.start)} → ${fmtDate(j.end)}</div>
-        </div>
-        ${conflictCount>0
-          ? `<div class="job-conflict-badge">⚠ ${conflictCount} konflikt${conflictCount>1?'er':''}</div>`
-          : `<div class="job-count">${itemCount} stk. udstyr · ${totalQtyAll} i alt</div>`}
-      </div>
-      <div class="job-body" id="body-${j.id}">
-        ${j.notes ? `<div class="notes">${escapeHtml(j.notes)}</div>` : ''}
-        ${itemsHtml}
-        <div class="job-actions">
-          <button class="btn small secondary" onclick="event.stopPropagation(); openEdit('${j.id}')">Rediger</button>
-          <button class="btn small secondary" onclick="event.stopPropagation(); openCopy('${j.id}')">Kopiér job</button>
-          <button class="btn small" onclick="event.stopPropagation(); printPackList('${j.id}')" style="background:var(--panel-2); color:var(--amber); border:1px solid var(--amber-dim);">📄 Pakkeliste</button>
-          <button class="btn small danger" onclick="event.stopPropagation(); deleteJob('${j.id}')">Slet job</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+    const card=document.createElement('div'); card.className='job-card'; card.dataset.id=j.id;
+    const isTilbudJob=j.status==='tilbud';
+    if(isTilbudJob) card.style.borderLeft='3px solid var(--amber)';
+    card.innerHTML='<div class="job-head" onclick="toggleJob(\''+j.id+'\')">'
+      +'<div><div class="job-title">'+(isTilbudJob?'<span style="background:#5c4521;color:var(--amber);font-size:9px;padding:1px 6px;border-radius:4px;font-family:var(--mono);font-weight:700;margin-right:5px;">TILBUD</span>':'')+escapeHtml(j.name||'(uden navn)')+(j.who?' · '+escapeHtml(j.who):'')+'</div>'
+      +'<div class="job-meta">'+fmtDate(j.start)+' → '+fmtDate(j.end)+'</div></div>'
+      +(conflictCount>0?'<div class="job-conflict-badge">⚠ '+conflictCount+' konflikt'+(conflictCount>1?'er':'')+'</div>'
+        :'<div class="job-count">'+itemCount+' stk. · '+totalQtyAll+' i alt</div>')
+      +'</div>'
+      +'<div class="job-body" id="body-'+j.id+'">'
+      +(j.notes?'<div class="notes">'+escapeHtml(j.notes)+'</div>':'')
+      +itemsHtml
+      +'<div class="job-actions">'
+      +(isTilbudJob?'<button class="btn small" style="font-size:11px;background:var(--green);color:#0a1f14;" onclick="event.stopPropagation();convertJobToOrdre(\''+j.id+'\')">&#8594; Ordre</button>':'')
+      +'<button class="btn small secondary" onclick="event.stopPropagation();openEdit(\''+j.id+'\')">Rediger</button>'
+      +'<button class="btn small secondary" onclick="event.stopPropagation();openCopy(\''+j.id+'\')">Kopiér job</button>'
+      +'<button class="btn small" onclick="event.stopPropagation();printPackList(\''+j.id+'\')" style="background:var(--panel-2);color:var(--amber);border:1px solid var(--amber-dim);">📄 Pakkeliste</button>'
+      +'<button class="btn small danger" onclick="event.stopPropagation();deleteJob(\''+j.id+'\')">Slet</button>'
+      +'</div></div>';
+    list.appendChild(card);
+  });
 }
 
 function toggleJob(id){
-  const body = document.getElementById('body-'+id);
-  body.classList.toggle('open');
+  const b=document.getElementById('body-'+id); if(b) b.classList.toggle('open');
 }
 
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
+// ── Filter bar ─────────────────────────────────────────────
+document.getElementById('filterStart').addEventListener('change', function(){ renderJobs(); maybeRerenderGantt(); });
+document.getElementById('filterEnd').addEventListener('change', function(){ renderJobs(); maybeRerenderGantt(); });
+document.getElementById('filterResetBtn').addEventListener('click', function(){ initFilterDates(); renderJobs(); maybeRerenderGantt(); });
 
-// ---- modal: open/close ----
-const overlay = document.getElementById('overlay');
+// ═══════════════════════════════════════════════════════════
+// JOB MODAL (new / edit / copy)
+// ═══════════════════════════════════════════════════════════
+const overlay=document.getElementById('overlay');
 
 function openNew(){
-  editingJobId = null;
-  selectedItems = {};
-  document.getElementById('modalTitle').textContent = 'Nyt job';
-  document.getElementById('jobName').value = '';
-  document.getElementById('jobWho').value = '';
-  document.getElementById('jobStart').value = todayStr();
-  document.getElementById('jobEnd').value = '';
-  document.getElementById('jobNotes').value = '';
-  document.getElementById('equipSearch').value = '';
-  renderEquipList('');
-  renderSelectedStrip();
-  renderConflicts();
+  editingJobId=null; selectedItems={};
+  document.getElementById('modalTitle').textContent='Nyt job';
+  document.getElementById('jobName').value='';
+  document.getElementById('jobWho').value='';
+  document.getElementById('jobStart').value=todayStr();
+  document.getElementById('jobEnd').value='';
+  document.getElementById('jobNotes').value='';
+  document.getElementById('equipSearch').value='';
+  renderEquipList(''); renderSelectedStrip(); renderConflicts();
   overlay.classList.add('open');
 }
-
 function openEdit(id){
-  const j = jobs.find(x=>x.id===id);
-  if(!j) return;
-  editingJobId = id;
-  selectedItems = {};
-  (j.items||[]).forEach(it=> selectedItems[it.name] = it.qty);
-  document.getElementById('modalTitle').textContent = 'Rediger job';
-  document.getElementById('jobName').value = j.name || '';
-  document.getElementById('jobWho').value = j.who || '';
-  document.getElementById('jobStart').value = j.start || '';
-  document.getElementById('jobEnd').value = j.end || '';
-  document.getElementById('jobNotes').value = j.notes || '';
-  document.getElementById('equipSearch').value = '';
-  renderEquipList('');
-  renderSelectedStrip();
-  renderConflicts();
+  const j=jobs.find(function(x){return x.id===id;}); if(!j) return;
+  editingJobId=id; selectedItems={};
+  (j.items||[]).forEach(function(it){
+    if(it.isPkg){ const p=PACKAGES.find(function(p){return p.name===it.name;}); if(p) selectedItems['PKG:'+p.id]=it.qty; else selectedItems[it.name]=it.qty; }
+    else selectedItems[it.name]=it.qty;
+  });
+  document.getElementById('modalTitle').textContent='Rediger job';
+  document.getElementById('jobName').value=j.name||'';
+  document.getElementById('jobWho').value=j.who||'';
+  document.getElementById('jobStart').value=j.start||'';
+  document.getElementById('jobEnd').value=j.end||'';
+  document.getElementById('jobNotes').value=j.notes||'';
+  var jst=j.status||'ordre'; document.getElementById('jobStatusOrdre').checked=jst==='ordre'; document.getElementById('jobStatusTilbud').checked=jst==='tilbud';
+  document.getElementById('equipSearch').value='';
+  renderEquipList(''); renderSelectedStrip(); renderConflicts();
   overlay.classList.add('open');
 }
-
 function openCopy(id){
-  const j = jobs.find(x=>x.id===id);
-  if(!j) return;
-  editingJobId = null; // gemmes som NYT job
-  selectedItems = {};
-  (j.items||[]).forEach(it=> selectedItems[it.name] = it.qty); // genbrug udstyret
-  document.getElementById('modalTitle').textContent = 'Kopiér job: ' + (j.name||'');
-  document.getElementById('jobName').value = (j.name ? j.name + ' (kopi)' : '');
-  document.getElementById('jobWho').value = j.who || '';
-  document.getElementById('jobStart').value = todayStr(); // nye datoer skal udfyldes
-  document.getElementById('jobEnd').value = '';
-  document.getElementById('jobNotes').value = j.notes || '';
-  document.getElementById('equipSearch').value = '';
-  renderEquipList('');
-  renderSelectedStrip();
-  renderConflicts();
+  const j=jobs.find(function(x){return x.id===id;}); if(!j) return;
+  editingJobId=null; selectedItems={};
+  (j.items||[]).forEach(function(it){
+    if(it.isPkg){ const p=PACKAGES.find(function(p){return p.name===it.name;}); if(p) selectedItems['PKG:'+p.id]=it.qty; else selectedItems[it.name]=it.qty; }
+    else selectedItems[it.name]=it.qty;
+  });
+  document.getElementById('modalTitle').textContent='Kopiér: '+j.name;
+  document.getElementById('jobName').value=(j.name||'')+' (kopi)';
+  document.getElementById('jobWho').value=j.who||'';
+  document.getElementById('jobStart').value=todayStr();
+  document.getElementById('jobEnd').value='';
+  document.getElementById('jobNotes').value=j.notes||'';
+  document.getElementById('equipSearch').value='';
+  renderEquipList(''); renderSelectedStrip(); renderConflicts();
   overlay.classList.add('open');
 }
-
-function closeModal(){
-  overlay.classList.remove('open');
-}
+function closeModal(){ overlay.classList.remove('open'); }
 document.getElementById('newJobBtn').addEventListener('click', openNew);
 document.getElementById('cancelBtn').addEventListener('click', closeModal);
-overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeModal(); });
+overlay.addEventListener('click', function(e){ if(e.target===overlay) closeModal(); });
 
-// ---- equipment picker ----
+// ── Equipment picker ────────────────────────────────────────
 function renderEquipList(filter){
-  const container = document.getElementById('equipList');
-  const f = filter.trim().toLowerCase();
-  const start = document.getElementById('jobStart').value;
-  const end = document.getElementById('jobEnd').value;
+  const container=document.getElementById('equipList');
+  const f=filter.trim().toLowerCase();
+  const start=document.getElementById('jobStart').value;
+  const end=document.getElementById('jobEnd').value;
 
-  const filtered = EQUIPMENT.filter(it => !f || it.name.toLowerCase().includes(f) || it.category.toLowerCase().includes(f));
+  const items=[];
+  PACKAGES.forEach(function(pkg){ items.push({type:'pkg',obj:pkg,category:pkg.category,name:pkg.name}); });
+  EQUIPMENT.filter(function(e){return !e.package_id;}).forEach(function(e){ items.push({type:'equip',obj:e,category:e.category,name:e.name}); });
+  items.sort(function(a,b){ const c=a.category.localeCompare(b.category,'da'); return c!==0?c:a.name.localeCompare(b.name,'da'); });
+  const filtered=items.filter(function(it){return !f||it.name.toLowerCase().includes(f)||it.category.toLowerCase().includes(f);});
 
-  let lastCat = null;
-  let html = '';
-  if(filtered.length === 0){
-    html = '<div class="empty" style="padding:20px;">Ingen match</div>';
-  }
-  filtered.forEach(it=>{
-    if(it.category !== lastCat){
-      html += `<div class="equip-cat">${escapeHtml(it.category)}</div>`;
-      lastCat = it.category;
+  if(filtered.length===0){ container.innerHTML='<div class="empty" style="padding:20px;">Ingen match</div>'; return; }
+  container.innerHTML=''; let lastCat=null;
+
+  filtered.forEach(function(item){
+    if(item.category!==lastCat){
+      const cd=document.createElement('div'); cd.className='equip-cat'; cd.textContent=item.category;
+      container.appendChild(cd); lastCat=item.category;
     }
-    const checked = selectedItems.hasOwnProperty(it.name);
-    const qty = checked ? selectedItems[it.name] : 1;
+    const key=item.type==='pkg'?'PKG:'+item.obj.id:item.obj.name;
+    const checked=selectedItems.hasOwnProperty(key);
+    const qty=checked?selectedItems[key]:1;
+    const row=document.createElement('div'); row.className='equip-item';
 
-    let warnHtml = '';
-    let warnClass = '';
-    if(checked && start && end){
-      const {sum} = bookedQty(it.name, start, end, editingJobId);
-      const free = it.qty - sum;
-      if(qty > free){
-        warnClass = 'warn';
-        warnHtml = `<div class="warn-text">kun ${Math.max(free,0)} ledig</div>`;
+    const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=checked;
+    cb.style.cssText='accent-color:var(--amber);width:15px;height:15px;flex-shrink:0;';
+    cb.addEventListener('change',function(){
+      if(cb.checked) selectedItems[key]=1; else delete selectedItems[key];
+      renderEquipList(filter); renderSelectedStrip(); renderConflicts();
+    });
+    row.appendChild(cb);
+
+    if(item.type==='pkg'){
+      const pkg=item.obj;
+      const contents=EQUIPMENT.filter(function(e){return e.package_id===pkg.id;});
+      const ni=document.createElement('div'); ni.style.flex='1';
+      const ne=document.createElement('div'); ne.className='name'; ne.textContent='📦 '+pkg.name;
+      const sub=document.createElement('div'); sub.style.cssText='font-size:10px;color:var(--muted);';
+      sub.textContent=contents.length+' stk.';
+      ni.appendChild(ne); ni.appendChild(sub); row.appendChild(ni);
+      const sv=document.createElement('div'); sv.className='stock'; sv.textContent='pakke'; row.appendChild(sv);
+    } else {
+      const equip=item.obj;
+      // OB tag
+      if(equip.ob_vogn_id){
+        const v=obVognById(equip.ob_vogn_id);
+        if(v){
+          const tag=document.createElement('span'); tag.className='ob-tag';
+          const conflict=start&&end?obBookingConflict(v.id,start,end,null):null;
+          tag.style.cssText='background:'+v.color+'22;color:'+v.color+';border:1px solid '+v.color+'44;';
+          tag.textContent=conflict?'🚐 '+v.name+' BOOKET':'🚐 '+v.name;
+          row.appendChild(tag);
+        }
       }
+      const ne=document.createElement('div'); ne.className='name'; ne.textContent=equip.name; row.appendChild(ne);
+      if(checked&&start&&end){
+        const bq=bookedQty(equip.name,start,end,editingJobId);
+        if(qty>equip.qty-bq.sum){ row.classList.add('warn'); const w=document.createElement('div'); w.className='warn-text'; w.textContent='kun '+Math.max(equip.qty-bq.sum,0)+' ledig'; row.appendChild(w); }
+      }
+      const sv=document.createElement('div'); sv.className='stock'; sv.textContent='af '+equip.qty; row.appendChild(sv);
     }
-
-    html += `<div class="equip-item ${warnClass}">
-      <input type="checkbox" data-name="${escapeHtml(it.name)}" ${checked?'checked':''} onchange="toggleEquip(this)">
-      <div class="name">${escapeHtml(it.name)}</div>
-      ${warnHtml}
-      <div class="stock">af ${it.qty}</div>
-      ${checked ? `<input type="number" class="qty-input" min="1" max="${it.qty}" value="${qty}" data-name="${escapeHtml(it.name)}" onchange="updateQty(this)">` : ''}
-    </div>`;
+    if(checked){
+      const qi=document.createElement('input'); qi.type='number'; qi.className='qty-input'; qi.min='1'; qi.value=qty;
+      qi.addEventListener('change',function(){selectedItems[key]=parseInt(qi.value)||1; renderSelectedStrip(); renderConflicts(); renderEquipList(filter);});
+      row.appendChild(qi);
+    }
+    container.appendChild(row);
   });
-  container.innerHTML = html;
-}
-
-function toggleEquip(checkbox){
-  const name = checkbox.dataset.name;
-  if(checkbox.checked){
-    selectedItems[name] = 1;
-  } else {
-    delete selectedItems[name];
-  }
-  renderEquipList(document.getElementById('equipSearch').value);
-  renderSelectedStrip();
-  renderConflicts();
-}
-
-function updateQty(input){
-  const name = input.dataset.name;
-  let v = parseInt(input.value) || 1;
-  if(v < 1) v = 1;
-  selectedItems[name] = v;
-  renderSelectedStrip();
-  renderConflicts();
-  renderEquipList(document.getElementById('equipSearch').value);
-}
-
-function removeSelected(name){
-  delete selectedItems[name];
-  renderEquipList(document.getElementById('equipSearch').value);
-  renderSelectedStrip();
-  renderConflicts();
 }
 
 function renderSelectedStrip(){
-  const strip = document.getElementById('selectedStrip');
-  const names = Object.keys(selectedItems);
-  if(names.length===0){
-    strip.innerHTML = '';
-    return;
-  }
-  strip.innerHTML = names.map(n=>
-    `<div class="chip">${escapeHtml(n)} ×${selectedItems[n]} <button onclick="removeSelected('${n.replace(/'/g,"\\'")}')">&times;</button></div>`
-  ).join('');
+  const strip=document.getElementById('selectedStrip');
+  const names=Object.keys(selectedItems);
+  if(!names.length){ strip.innerHTML=''; return; }
+  strip.innerHTML='';
+  names.forEach(function(n){
+    const label=n.startsWith('PKG:')?(PACKAGES.find(function(p){return p.id===n.slice(4);})||{name:'pakke'}).name+' (pakke)':n;
+    const chip=document.createElement('div'); chip.className='chip';
+    chip.textContent=label+' ×'+selectedItems[n]+' ';
+    const btn=document.createElement('button'); btn.textContent='×';
+    btn.onclick=function(){ delete selectedItems[n]; renderSelectedStrip(); renderEquipList(document.getElementById('equipSearch').value||''); renderConflicts(); };
+    chip.appendChild(btn); strip.appendChild(chip);
+  });
 }
-
-document.getElementById('equipSearch').addEventListener('input', (e)=>{
-  renderEquipList(e.target.value);
-});
-document.getElementById('jobStart').addEventListener('change', ()=>{ renderEquipList(document.getElementById('equipSearch').value); renderConflicts(); });
-document.getElementById('jobEnd').addEventListener('change', ()=>{ renderEquipList(document.getElementById('equipSearch').value); renderConflicts(); });
 
 function renderConflicts(){
-  const box = document.getElementById('conflictBox');
-  const start = document.getElementById('jobStart').value;
-  const end = document.getElementById('jobEnd').value;
-  const names = Object.keys(selectedItems);
-
-  if(!start || !end || names.length===0){
-    box.innerHTML = '';
-    return;
-  }
-  if(start > end){
-    box.innerHTML = '<div class="conflict-box">Slut dato skal være efter start dato.</div>';
-    return;
-  }
-
-  const conflicts = [];
-  names.forEach(name=>{
-    const qty = selectedItems[name];
-    const {sum, users} = bookedQty(name, start, end, editingJobId);
-    const free = totalQty(name) - sum;
-    if(qty > free){
-      conflicts.push(`⚠ ${name}: ønsker ${qty}, kun ${Math.max(free,0)} ledige (booket af: ${users.join(', ')||'—'})`);
-    }
+  const box=document.getElementById('conflictBox');
+  const start=document.getElementById('jobStart').value;
+  const end=document.getElementById('jobEnd').value;
+  if(!start||!end||!Object.keys(selectedItems).length){ box.innerHTML=''; return; }
+  if(start>end){ box.innerHTML='<div class="conflict-box">Slut dato skal være efter start dato.</div>'; return; }
+  const conflicts=[];
+  Object.keys(selectedItems).forEach(function(n){
+    if(n.startsWith('PKG:')) return;
+    const qty=selectedItems[n];
+    const bq=bookedQty(n,start,end,editingJobId);
+    const free=totalQty(n)-bq.sum;
+    if(qty>free) conflicts.push('⚠ '+n+': ønsker '+qty+', kun '+Math.max(free,0)+' ledige'+(bq.users.length?' ('+bq.users.join(', ')+')':''));
   });
-
-  if(conflicts.length===0){
-    box.innerHTML = '<div class="conflict-box"><span class="ok">✓ Ingen konflikter — alt udstyr er ledigt i perioden.</span></div>';
-  } else {
-    box.innerHTML = '<div class="conflict-box">' + conflicts.map(c=>escapeHtml(c)).join('<br>') + '</div>';
-  }
+  if(conflicts.length===0) box.innerHTML='<div class="conflict-box"><span class="ok">✓ Ingen konflikter.</span></div>';
+  else box.innerHTML='<div class="conflict-box">'+conflicts.map(function(c){return escapeHtml(c);}).join('<br>')+'</div>';
 }
 
-// ---- save / delete ----
-document.getElementById('saveJobBtn').addEventListener('click', async ()=>{
-  const name = document.getElementById('jobName').value.trim();
-  const who = document.getElementById('jobWho').value.trim();
-  const start = document.getElementById('jobStart').value;
-  const end = document.getElementById('jobEnd').value;
-  const notes = document.getElementById('jobNotes').value.trim();
+document.getElementById('equipSearch').addEventListener('input', function(e){ renderEquipList(e.target.value); });
+document.getElementById('jobStart').addEventListener('change', function(){ renderEquipList(document.getElementById('equipSearch').value||''); renderConflicts(); });
+document.getElementById('jobEnd').addEventListener('change', function(){ renderEquipList(document.getElementById('equipSearch').value||''); renderConflicts(); });
 
+// ── Save / Delete job ───────────────────────────────────────
+document.getElementById('saveJobBtn').addEventListener('click', async function(){
+  const name=document.getElementById('jobName').value.trim();
+  const who=document.getElementById('jobWho').value.trim();
+  const start=document.getElementById('jobStart').value;
+  const end=document.getElementById('jobEnd').value;
+  const notes=document.getElementById('jobNotes').value.trim();
   if(!name){ alert('Skriv et job navn.'); return; }
-  if(!start || !end){ alert('Vælg start- og slutdato.'); return; }
-  if(start > end){ alert('Slut dato skal være efter start dato.'); return; }
-
-  const items = Object.keys(selectedItems).map(n=>({name:n, qty:selectedItems[n]}));
-  const row = { name, who, start_date:start, end_date:end, notes, items };
-
-  const btn = document.getElementById('saveJobBtn');
-  btn.disabled = true; btn.textContent = 'Gemmer...';
-
+  if(!start||!end){ alert('Vælg start- og slutdato.'); return; }
+  if(start>end){ alert('Slutdato skal være efter startdato.'); return; }
+  const items=Object.keys(selectedItems).map(function(n){
+    if(n.startsWith('PKG:')){ const p=PACKAGES.find(function(p){return p.id===n.slice(4);}); return {name:p?p.name:n,qty:selectedItems[n],isPkg:true}; }
+    return {name:n,qty:selectedItems[n]};
+  });
+  const btn=document.getElementById('saveJobBtn');
+  btn.disabled=true; btn.textContent='Gemmer...';
   try{
-    if(editingJobId){
-      const { error } = await supa.from('jobs').update(row).eq('id', editingJobId);
-      if(error) throw error;
-    } else {
-      const { error } = await supa.from('jobs').insert(row);
-      if(error) throw error;
-    }
-    await loadJobs();
-    renderJobs();
-    closeModal();
-  }catch(e){
-    console.error(e);
-    alert('Der opstod en fejl ved gem. Tjek at SUPABASE_URL og SUPABASE_ANON_KEY er sat korrekt øverst i filen.');
-  }finally{
-    btn.disabled = false; btn.textContent = 'Gem job';
-  }
+    var sv2=document.querySelector('input[name="jobStatus"]:checked');
+    const row={name,who,start_date:start,end_date:end,notes,items,status:sv2?sv2.value:'ordre'};
+    if(editingJobId){ const {error}=await supa.from('jobs').update(row).eq('id',editingJobId); if(error) throw error; }
+    else { const {error}=await supa.from('jobs').insert(row); if(error) throw error; }
+    await loadJobs(); renderJobs(); closeModal();
+  }catch(e){ console.error(e); alert('Fejl: '+(e.message||JSON.stringify(e))); }
+  finally{ btn.disabled=false; btn.textContent='Gem job'; }
 });
 
 async function deleteJob(id){
-  if(!confirm('Slet dette job? Det kan ikke fortrydes.')) return;
-  const { error } = await supa.from('jobs').delete().eq('id', id);
-  if(error){ console.error(error); alert('Kunne ikke slette job.'); return; }
-  await loadJobs();
-  renderJobs();
+  if(!confirm('Slet dette job?')) return;
+  await supa.from('jobs').delete().eq('id',id);
+  await loadJobs(); renderJobs();
 }
 
-// ---- availability tab ----
+
+// ═══════════════════════════════════════════════════════════
+// AVAILABILITY TAB
+// ═══════════════════════════════════════════════════════════
 function renderAvailMatches(filter){
-  const box = document.getElementById('availMatches');
-  const f = filter.trim().toLowerCase();
+  const box=document.getElementById('availMatches');
+  const f=filter.trim().toLowerCase();
   if(!f){ box.style.display='none'; box.innerHTML=''; return; }
-  const matches = EQUIPMENT.filter(it=>it.name.toLowerCase().includes(f)).slice(0,12);
-  if(matches.length===0){ box.style.display='none'; return; }
+  const matches=[...PACKAGES.filter(function(p){return p.name.toLowerCase().includes(f);}),
+                 ...EQUIPMENT.filter(function(e){return e.name.toLowerCase().includes(f);})].slice(0,10);
+  if(!matches.length){ box.style.display='none'; return; }
   box.style.display='block';
-  box.innerHTML = '<div class="panel" style="margin-top:8px; padding:8px;">' + matches.map(m=>
-    `<div class="equip-item" style="cursor:pointer;" onclick="selectAvailItem('${m.name.replace(/'/g,"\\'")}')">
-      <div class="name">${escapeHtml(m.name)}</div>
-      <div class="stock">${escapeHtml(m.category)}</div>
-    </div>`
-  ).join('') + '</div>';
+  box.innerHTML='<div class="panel" style="margin-top:8px;padding:8px;">'
+    +matches.map(function(m){ return '<div class="equip-item" style="cursor:pointer;" onclick="selectAvailItem(\''+m.name.replace(/'/g,"\\'")+'\')">'
+      +'<div class="name">'+escapeHtml(m.name)+'</div></div>'; }).join('')+'</div>';
 }
-
-let availSelectedName = null;
 function selectAvailItem(name){
-  availSelectedName = name;
-  document.getElementById('availSearch').value = name;
-  document.getElementById('availMatches').style.display = 'none';
+  document.getElementById('availSearch').value=name;
+  document.getElementById('availMatches').style.display='none';
   runAvailCheck();
 }
-
 function runAvailCheck(){
-  const result = document.getElementById('availResult');
-  const start = document.getElementById('availStart').value;
-  const end = document.getElementById('availEnd').value;
-  const q = document.getElementById('availSearch').value.trim();
-
+  const result=document.getElementById('availResult');
+  const start=document.getElementById('availStart').value;
+  const end=document.getElementById('availEnd').value;
+  const q=document.getElementById('availSearch').value.trim();
   if(!q){ result.innerHTML=''; return; }
-
-  const eq = EQUIPMENT.find(i=>i.name.toLowerCase() === q.toLowerCase()) ||
-             EQUIPMENT.find(i=>i.name.toLowerCase().includes(q.toLowerCase()));
-  if(!eq){ result.innerHTML = '<div class="empty">Intet udstyr matcher "'+escapeHtml(q)+'"</div>'; return; }
-
-  if(!start || !end){
-    result.innerHTML = `<div class="avail-row"><div>${escapeHtml(eq.name)}</div><div class="avail-free">${eq.qty} stk. i alt — vælg datoer</div></div>`;
-    return;
-  }
-
-  const {sum, users} = bookedQty(eq.name, start, end, null);
-  const free = eq.qty - sum;
-  result.innerHTML = `<div class="avail-row">
-      <div>
-        <div>${escapeHtml(eq.name)}</div>
-        ${users.length? `<div class="avail-used-by">Booket: ${escapeHtml(users.join(', '))}</div>`:''}
-      </div>
-      <div class="avail-free ${free>0?'ok':'bad'}">${free} / ${eq.qty} ledige</div>
-    </div>`;
+  const eq=EQUIPMENT.find(function(i){return i.name.toLowerCase()===q.toLowerCase();})||EQUIPMENT.find(function(i){return i.name.toLowerCase().includes(q.toLowerCase());});
+  if(!eq){ result.innerHTML='<div class="empty">Intet matcher "'+escapeHtml(q)+'"</div>'; return; }
+  if(!start||!end){ result.innerHTML='<div class="avail-row"><div>'+escapeHtml(eq.name)+'</div><div class="avail-free">'+eq.qty+' stk. — vælg datoer</div></div>'; return; }
+  const bq=bookedQty(eq.name,start,end,null);
+  const free=eq.qty-bq.sum;
+  result.innerHTML='<div class="avail-row"><div><div>'+escapeHtml(eq.name)+'</div>'
+    +(bq.users.length?'<div class="avail-used-by">Booket: '+escapeHtml(bq.users.join(', '))+'</div>':'')
+    +'</div><div class="avail-free '+(free>0?'ok':'bad')+'">'+free+' / '+eq.qty+' ledige</div></div>';
 }
-
-document.getElementById('availSearch').addEventListener('input', (e)=>{ renderAvailMatches(e.target.value); runAvailCheck(); });
+document.getElementById('availSearch').addEventListener('input', function(e){ renderAvailMatches(e.target.value); runAvailCheck(); });
 document.getElementById('availStart').addEventListener('change', runAvailCheck);
 document.getElementById('availEnd').addEventListener('change', runAvailCheck);
+document.getElementById('availStart').value=todayStr();
 
-// ---- lager (equipment) tab ----
+// ═══════════════════════════════════════════════════════════
+// LAGER (unified equipment + packages list)
+// ═══════════════════════════════════════════════════════════
+function togglePkg(id){
+  const b=document.getElementById('pkgbody-'+id); if(b) b.classList.toggle('open');
+  const c=document.getElementById('chev-'+id); if(c) c.classList.toggle('open');
+}
+
 function renderLager(filter){
-  const list = document.getElementById('lagerList');
-  const countEl = document.getElementById('lagerCount');
-  const f = (filter||'').trim().toLowerCase();
+  const list=document.getElementById('lagerList');
+  const countEl=document.getElementById('lagerCount');
+  const f=(filter||'').trim().toLowerCase();
 
-  const filtered = EQUIPMENT.filter(it => !f || it.name.toLowerCase().includes(f) || it.category.toLowerCase().includes(f));
-  countEl.textContent = filtered.length + ' af ' + EQUIPMENT.length + ' stk. udstyr i lageret';
+  const items=[];
+  PACKAGES.forEach(function(pkg){ items.push({type:'pkg',obj:pkg,category:pkg.category,name:pkg.name}); });
+  EQUIPMENT.filter(function(e){return !e.package_id;}).forEach(function(e){ items.push({type:'equip',obj:e,category:e.category,name:e.name}); });
+  items.sort(function(a,b){ const c=a.category.localeCompare(b.category,'da'); return c!==0?c:a.name.localeCompare(b.name,'da'); });
+  const filtered=items.filter(function(it){return !f||it.name.toLowerCase().includes(f)||it.category.toLowerCase().includes(f);});
 
-  if(EQUIPMENT.length === 0){
-    list.innerHTML = '<div class="empty">Lageret er tomt. Klik "+ Tilføj udstyr" for at starte.</div>';
-    return;
-  }
-  if(filtered.length === 0){
-    list.innerHTML = '<div class="empty">Ingen match på "'+escapeHtml(filter)+'"</div>';
-    return;
-  }
+  const total=PACKAGES.length+EQUIPMENT.filter(function(e){return !e.package_id;}).length;
+  if(countEl) countEl.textContent=filtered.length+' af '+total+' ('+PACKAGES.length+' pakker, '+EQUIPMENT.filter(function(e){return !e.package_id;}).length+' udstyr)';
 
-  let lastCat = null;
-  let html = '';
-  filtered.forEach((it, idx)=>{
-    const realIdx = EQUIPMENT.indexOf(it);
-    if(it.category !== lastCat){
-      html += `<div class="equip-cat">${escapeHtml(it.category)}</div>`;
-      lastCat = it.category;
+  list.innerHTML=''; let lastCat=null;
+
+  filtered.forEach(function(item){
+    if(item.category!==lastCat){
+      const cd=document.createElement('div'); cd.className='equip-cat'; cd.textContent=item.category;
+      list.appendChild(cd); lastCat=item.category;
     }
-    if(editingEquipName === it.name){
-      html += `<div class="equip-item" style="gap:8px;">
-        <input type="text" id="editName_${realIdx}" value="${escapeHtml(it.name)}" style="flex:1; background:var(--bg); border:1px solid var(--border); color:var(--text); padding:6px 8px; border-radius:5px; font-size:12.5px;">
-        <input type="text" id="editCat_${realIdx}" value="${escapeHtml(it.category)}" style="width:160px; background:var(--bg); border:1px solid var(--border); color:var(--text); padding:6px 8px; border-radius:5px; font-size:12.5px;">
-        <input type="number" id="editQty_${realIdx}" value="${it.qty}" min="0" class="qty-input" style="width:60px;">
-        <button class="btn small" onclick="saveEquipEdit(${realIdx})">Gem</button>
-        <button class="btn small secondary" onclick="editingEquipName=null; renderLager(document.getElementById('lagerSearch').value);">Fortryd</button>
-      </div>`;
+    if(item.type==='pkg'){
+      const pkg=item.obj;
+      const contents=EQUIPMENT.filter(function(e){return e.package_id===pkg.id;});
+      const card=document.createElement('div'); card.className='pkg-card'; card.style.marginBottom='6px';
+      const head=document.createElement('div'); head.className='pkg-head'; head.style.borderRadius='8px';
+      head.innerHTML=(pkg.image_url?'<img src="'+escapeHtml(pkg.image_url)+'" style="width:28px;height:28px;border-radius:4px;object-fit:cover;flex-shrink:0;">':'')
+        +'<span style="font-size:15px;flex-shrink:0;">📦</span>'
+        +'<div style="flex:1;"><div style="font-weight:700;font-size:13.5px;">'+escapeHtml(pkg.name)+'</div>'
+        +'<div style="font-size:10.5px;color:var(--muted);">'+contents.length+' stk.'+(pkg.tv2_number?' · TV2: '+escapeHtml(pkg.tv2_number):'')+'</div></div>'
+        +'<span class="pkg-badge">'+contents.length+' stk.</span>';
+
+      const bEdit=document.createElement('button'); bEdit.className='btn small secondary'; bEdit.textContent='Rediger'; bEdit.style.fontSize='11px';
+      bEdit.addEventListener('click', function(e){ e.stopPropagation(); openPkgDetail(pkg.id); }); head.appendChild(bEdit);
+
+      const bDel=document.createElement('button'); bDel.className='btn small danger'; bDel.textContent='Slet'; bDel.style.fontSize='11px';
+      bDel.addEventListener('click', function(e){ e.stopPropagation();
+        const cnt=EQUIPMENT.filter(function(x){return x.package_id===pkg.id;}).length;
+        if(!confirm('Slet "'+pkg.name+'"?'+(cnt>0?'\n'+cnt+' stykker flyttes til løst lager.':''))) return;
+        deletePackage(pkg.id).then(function(){ renderLager(document.getElementById('lagerSearch').value||''); });
+      }); head.appendChild(bDel);
+
+      // OB vogn dropdown
+      if(OB_VOGNE.length>0){
+        const obSel=document.createElement('select'); obSel.className='btn small secondary'; obSel.style.cssText='font-size:11px;padding:3px 6px;';
+        const cur=pkg.ob_vogn_id?obVognById(pkg.ob_vogn_id):null;
+        obSel.innerHTML='<option value="">'+(cur?'🚐 '+cur.name:'— Pulje')+'</option>'
+          +(pkg.ob_vogn_id?'<option value="__remove__">Fjern fra OB</option>':'')
+          +OB_VOGNE.filter(function(v){return v.id!==pkg.ob_vogn_id;}).map(function(v){return '<option value="'+v.id+'">🚐 '+escapeHtml(v.name)+'</option>';}).join('');
+        if(cur){ obSel.style.color=cur.color; obSel.style.borderColor=cur.color; }
+        obSel.addEventListener('change', async function(){
+          if(!obSel.value) return; obSel.disabled=true;
+          await supa.from('packages').update({ob_vogn_id:obSel.value==='__remove__'?null:obSel.value}).eq('id',pkg.id);
+          await loadPackages(); renderLager(document.getElementById('lagerSearch').value||'');
+        }); head.appendChild(obSel);
+      }
+
+      const chev=document.createElement('span'); chev.className='pkg-chevron'; chev.id='chev-'+pkg.id; chev.innerHTML='&#9654;'; head.appendChild(chev);
+      head.addEventListener('click', function(){ togglePkg(pkg.id); });
+      card.appendChild(head);
+
+      const body=document.createElement('div'); body.className='pkg-body'; body.id='pkgbody-'+pkg.id;
+      if(contents.length===0){ body.innerHTML='<div style="font-size:11.5px;color:var(--muted);padding:6px 0;">Tom pakke</div>'; }
+      else{
+        contents.forEach(function(it){
+          const row=document.createElement('div'); row.className='pkg-item-row';
+          const nd=document.createElement('div');
+          nd.innerHTML='<div>'+escapeHtml(it.name)+'</div>'+([it.serial_number?'SN: '+it.serial_number:'',it.tv2_number?'TV2: '+it.tv2_number:''].filter(Boolean).length?'<div class="pkg-item-sn">'+escapeHtml([it.serial_number?'SN: '+it.serial_number:'',it.tv2_number?'TV2: '+it.tv2_number:''].filter(Boolean).join(' · '))+'</div>':'');
+          row.appendChild(nd);
+          const sel=document.createElement('select'); sel.className='btn small secondary'; sel.style.cssText='font-size:11px;padding:3px 5px;margin-left:auto;';
+          sel.innerHTML='<option value="'+pkg.id+'">— I denne pakke</option><option value="">Flyt til løst udstyr</option>'
+            +PACKAGES.filter(function(p){return p.id!==pkg.id;}).map(function(p){return '<option value="'+p.id+'">'+escapeHtml(p.name)+'</option>';}).join('');
+          sel.addEventListener('change', async function(){ sel.disabled=true; await moveEquipToPackage(it.id,sel.value||null); renderLager(document.getElementById('lagerSearch').value||''); });
+          row.appendChild(sel); body.appendChild(row);
+        });
+      }
+      const loose=EQUIPMENT.filter(function(e){return !e.package_id;});
+      if(loose.length>0){
+        const asel=document.createElement('select'); asel.className='btn small secondary'; asel.style.cssText='font-size:11px;margin-top:8px;';
+        asel.innerHTML='<option value="">+ Tilføj løst udstyr</option>'+loose.map(function(e){return '<option value="'+e.id+'">'+escapeHtml(e.name)+'</option>';}).join('');
+        asel.addEventListener('change', async function(){ if(!asel.value) return; await moveEquipToPackage(asel.value,pkg.id); renderLager(document.getElementById('lagerSearch').value||''); document.getElementById('pkgbody-'+pkg.id).classList.add('open'); const c=document.getElementById('chev-'+pkg.id); if(c) c.classList.add('open'); });
+        body.appendChild(asel);
+      }
+      card.appendChild(body); list.appendChild(card);
+
     } else {
-      const thumb = it.image_url ? `<img src="${escapeHtml(it.image_url)}" style="width:30px;height:30px;border-radius:5px;object-fit:cover;flex-shrink:0;">` : '';
-      html += `<div class="equip-item">
-        ${thumb}
-        <div class="name">${escapeHtml(it.name)}</div>
-        <div class="stock">${it.qty} stk.</div>
-        <button class="btn small secondary" onclick="openEquipDetail(${realIdx})">Detaljer</button>
-        <button class="btn small secondary" onclick="editingEquipName='${it.name.replace(/'/g,"\\'")}'; renderLager(document.getElementById('lagerSearch').value);">Rediger</button>
-        <button class="btn small danger" onclick="deleteEquip(${realIdx})">Slet</button>
-      </div>`;
+      const equip=item.obj;
+      const realIdx=EQUIPMENT.indexOf(equip);
+      const row=document.createElement('div'); row.className='equip-item';
+      if(equip.image_url){ const img=document.createElement('img'); img.src=equip.image_url; img.style.cssText='width:30px;height:30px;border-radius:5px;object-fit:cover;flex-shrink:0;'; row.appendChild(img); }
+      const ne=document.createElement('div'); ne.className='name'; ne.textContent=equip.name; row.appendChild(ne);
+      const sv=document.createElement('div'); sv.className='stock'; sv.textContent=equip.qty+' stk.'; row.appendChild(sv);
+      const actions=document.createElement('div'); actions.style.cssText='margin-left:auto;display:flex;gap:5px;align-items:center;';
+      // Move to package
+      if(PACKAGES.length>0){
+        const ms=document.createElement('select'); ms.className='btn small secondary'; ms.style.cssText='font-size:11px;padding:4px 6px;';
+        ms.innerHTML='<option value="">Flyt til pakke...</option>'+PACKAGES.map(function(p){return '<option value="'+p.id+'">📦 '+escapeHtml(p.name)+'</option>';}).join('');
+        ms.addEventListener('change', async function(){ if(!ms.value) return; ms.disabled=true; await moveEquipToPackage(equip.id,ms.value); renderLager(document.getElementById('lagerSearch').value||''); });
+        actions.appendChild(ms);
+      }
+      // OB vogn
+      if(OB_VOGNE.length>0){
+        const ov=document.createElement('select'); ov.className='btn small secondary'; ov.style.cssText='font-size:11px;padding:4px 6px;';
+        const cur=equip.ob_vogn_id?obVognById(equip.ob_vogn_id):null;
+        ov.innerHTML='<option value="">'+(cur?'🚐 '+cur.name:'OB Vogn...')+'</option>'
+          +(equip.ob_vogn_id?'<option value="__remove__">Fjern fra OB</option>':'')
+          +OB_VOGNE.filter(function(v){return v.id!==equip.ob_vogn_id;}).map(function(v){return '<option value="'+v.id+'">🚐 '+escapeHtml(v.name)+'</option>';}).join('');
+        if(cur){ ov.style.color=cur.color; ov.style.borderColor=cur.color; }
+        ov.addEventListener('change', async function(){ if(!ov.value) return; ov.disabled=true; await supa.from('equipment').update({ob_vogn_id:ov.value==='__remove__'?null:ov.value}).eq('id',equip.id); await loadEquipment(); renderLager(document.getElementById('lagerSearch').value||''); });
+        actions.appendChild(ov);
+      }
+      const bd=document.createElement('button'); bd.className='btn small secondary'; bd.textContent='Detaljer'; bd.addEventListener('click', function(){ openEquipDetail(realIdx); }); actions.appendChild(bd);
+      const br=document.createElement('button'); br.className='btn small secondary'; br.textContent='Rediger'; br.addEventListener('click', function(){ editingEquipName=equip.name; renderLager(document.getElementById('lagerSearch').value||''); }); actions.appendChild(br);
+      const bx=document.createElement('button'); bx.className='btn small danger'; bx.textContent='Slet'; bx.addEventListener('click', function(){ deleteEquip(realIdx); }); actions.appendChild(bx);
+      row.appendChild(actions); list.appendChild(row);
     }
   });
-  list.innerHTML = html;
 }
 
-async function saveEquipEdit(idx){
-  const item = EQUIPMENT[idx];
-  const name = document.getElementById('editName_'+idx).value.trim();
-  const category = document.getElementById('editCat_'+idx).value.trim() || 'Diverse';
-  let qty = parseInt(document.getElementById('editQty_'+idx).value);
-  if(!name){ alert('Navn må ikke være tomt.'); return; }
-  if(isNaN(qty) || qty < 0) qty = 0;
-
-  const { error } = await supa.from('equipment').update({name, category, qty}).eq('id', item.id);
-  if(error){ console.error(error); alert('Kunne ikke gemme ændringen.'); return; }
-  await loadEquipment();
-  editingEquipName = null;
-  renderLager(document.getElementById('lagerSearch').value);
-  renderJobs();
-}
-
-async function deleteEquip(idx){
-  const it = EQUIPMENT[idx];
-  if(!confirm('Slet "'+it.name+'" fra lageret? Dette fjerner det ikke fra eksisterende jobs.')) return;
-  const { error } = await supa.from('equipment').delete().eq('id', it.id);
-  if(error){ console.error(error); alert('Kunne ikke slette.'); return; }
-  await loadEquipment();
-  renderLager(document.getElementById('lagerSearch').value);
-}
-
-document.getElementById('lagerSearch').addEventListener('input', (e)=> renderLager(e.target.value));
-
-document.getElementById('addEquipBtn').addEventListener('click', ()=>{
-  const row = document.getElementById('lagerNewRow');
-  row.style.display = 'block';
-  row.innerHTML = `<div class="panel" style="padding:12px; background:var(--panel-2);">
-    <div class="row3">
-      <div class="field"><label>Navn</label><input type="text" id="newEquipName" placeholder="f.eks. WL RACK 7"></div>
-      <div class="field"><label>Kategori</label><input type="text" id="newEquipCat" placeholder="f.eks. TRÅDLØST LYD"></div>
-      <div class="field"><label>Antal</label><input type="number" id="newEquipQty" value="1" min="0"></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn small secondary" onclick="document.getElementById('lagerNewRow').style.display='none';">Annuller</button>
-      <button class="btn small" onclick="confirmAddEquip()">Tilføj</button>
-    </div>
-  </div>`;
-  document.getElementById('newEquipName').focus();
+document.getElementById('lagerSearch').addEventListener('input', function(e){ renderLager(e.target.value); });
+document.getElementById('addEquipBtn').addEventListener('click', function(){
+  const row=document.getElementById('lagerNewRow'); row.style.display='block';
+  row.innerHTML='<div class="panel" style="padding:12px;background:var(--panel-2);">'
+    +'<div class="row3"><div class="field"><label>Navn</label><input type="text" id="newEquipName" placeholder="f.eks. WL RACK 7"></div>'
+    +'<div class="field"><label>Kategori</label><select id="newEquipCat" style="width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:7px;font-size:13px;"></select></div>'
+    +'<div class="field"><label>Antal</label><input type="number" id="newEquipQty" value="1" min="0"></div></div>'
+    +'<div class="modal-actions"><button class="btn small secondary" onclick="document.getElementById(\'lagerNewRow\').style.display=\'none\';">Annuller</button>'
+    +'<button class="btn small" onclick="confirmAddEquip()">Tilføj</button></div></div>';
+  populateCategoryDropdowns();
 });
+document.getElementById('addPkgBtn').addEventListener('click', function(){ openPkgDetail(null); });
 
 async function confirmAddEquip(){
-  const name = document.getElementById('newEquipName').value.trim();
-  const category = document.getElementById('newEquipCat').value.trim() || 'Diverse';
-  let qty = parseInt(document.getElementById('newEquipQty').value);
+  const name=document.getElementById('newEquipName').value.trim();
+  const category=document.getElementById('newEquipCat').value||'Diverse';
+  let qty=parseInt(document.getElementById('newEquipQty').value); if(isNaN(qty)||qty<0) qty=0;
   if(!name){ alert('Skriv et navn.'); return; }
-  if(isNaN(qty) || qty < 0) qty = 0;
-  if(EQUIPMENT.some(e=>e.name.toLowerCase()===name.toLowerCase())){ alert('Der findes allerede udstyr med det navn.'); return; }
-
-  const { error } = await supa.from('equipment').insert({name, category, qty});
-  if(error){ console.error(error); alert('Kunne ikke tilføje udstyr.'); return; }
+  if(EQUIPMENT.some(function(e){return e.name.toLowerCase()===name.toLowerCase();})){alert('Findes allerede.');return;}
+  const {error}=await supa.from('equipment').insert({name,category,qty});
+  if(error){ alert('Fejl: '+error.message); return; }
   await loadEquipment();
-  document.getElementById('lagerNewRow').style.display = 'none';
-  renderLager(document.getElementById('lagerSearch').value);
+  document.getElementById('lagerNewRow').style.display='none';
+  renderLager(document.getElementById('lagerSearch').value||'');
+}
+async function saveEquipEdit(idx){
+  const it=EQUIPMENT[idx];
+  const name=document.getElementById('editName_'+idx).value.trim();
+  const category=document.getElementById('editCat_'+idx).value.trim()||'Diverse';
+  let qty=parseInt(document.getElementById('editQty_'+idx).value); if(isNaN(qty)||qty<0) qty=0;
+  if(!name){ alert('Navn må ikke være tomt.'); return; }
+  const {error}=await supa.from('equipment').update({name,category,qty}).eq('id',it.id);
+  if(error){ alert('Fejl: '+error.message); return; }
+  await loadEquipment(); editingEquipName=null; renderLager(document.getElementById('lagerSearch').value||''); renderJobs();
+}
+async function deleteEquip(idx){
+  const it=EQUIPMENT[idx];
+  if(!confirm('Slet "'+it.name+'"?')) return;
+  await supa.from('equipment').delete().eq('id',it.id);
+  await loadEquipment(); renderLager(document.getElementById('lagerSearch').value||'');
 }
 
-// ---- equipment detail modal ----
-const equipOverlay = document.getElementById('equipOverlay');
-let detailCustomFields = []; // [{label, value}]
-let detailCurrentIdx = null;
-let detailPendingFile = null;
 
+// ═══════════════════════════════════════════════════════════
+// EQUIP DETAIL MODAL
+// ═══════════════════════════════════════════════════════════
+const equipOverlay=document.getElementById('equipOverlay');
 function openEquipDetail(idx){
-  const it = EQUIPMENT[idx];
-  if(!it) return;
-  detailCurrentIdx = idx;
-  detailPendingFile = null;
-  document.getElementById('equipDetailTitle').textContent = 'Detaljer: ' + it.name;
-  document.getElementById('dName').value = it.name || '';
-  document.getElementById('dCategory').value = it.category || '';
-  document.getElementById('dQty').value = it.qty || 0;
-  document.getElementById('dTv2').value = it.tv2_number || '';
-  document.getElementById('dSerial').value = it.serial_number || '';
-  document.getElementById('dPower').value = it.power_connection || '';
-  document.getElementById('equipImgFile').value = '';
-  document.getElementById('equipImgStatus').textContent = '';
-
-  const preview = document.getElementById('equipImgPreview');
-  const placeholder = document.getElementById('equipImgPlaceholder');
-  if(it.image_url){
-    preview.src = it.image_url; preview.style.display='block'; placeholder.style.display='none';
-  } else {
-    preview.style.display='none'; placeholder.style.display='flex';
-  }
-
-  detailCustomFields = (it.custom_fields && it.custom_fields.length) ? it.custom_fields.map(f=>({...f})) : [];
-  renderCustomFields();
-
+  const it=EQUIPMENT[idx]; if(!it) return;
+  detailCurrentIdx=idx; detailPendingFile=null; editingPkgId=null;
+  document.getElementById('equipDetailTitle').textContent='Detaljer: '+it.name;
+  document.getElementById('dName').value=it.name||'';
+  document.getElementById('dQty').value=it.qty||0;
+  document.getElementById('dTv2').value=it.tv2_number||'';
+  document.getElementById('dSerial').value=it.serial_number||'';
+  document.getElementById('dPower').value=it.power_connection||'';
+  document.getElementById('equipImgFile').value='';
+  document.getElementById('equipImgStatus').textContent='';
+  const pv=document.getElementById('equipImgPreview'); const ph=document.getElementById('equipImgPlaceholder');
+  if(it.image_url){pv.src=it.image_url;pv.style.display='block';ph.style.display='none';}
+  else{pv.style.display='none';ph.style.display='flex';}
+  detailCustomFields=(it.custom_fields&&it.custom_fields.length)?it.custom_fields.map(function(f){return{...f};}):[];
+  renderCustomFields(); populateCategoryDropdowns();
+  const cs=document.getElementById('dCategory'); if(cs) cs.value=it.category||'Diverse';
+  document.getElementById('equipDetailSaveBtn').dataset.mode='equipment';
   equipOverlay.classList.add('open');
 }
-
 function renderCustomFields(){
-  const container = document.getElementById('customFieldsList');
-  if(detailCustomFields.length === 0){
-    container.innerHTML = '<div style="font-size:11.5px; color:var(--muted);">Ingen ekstra felter endnu.</div>';
-    return;
-  }
-  container.innerHTML = detailCustomFields.map((f, i)=>`
-    <div style="display:flex; gap:8px; margin-bottom:6px;">
-      <input type="text" placeholder="Feltnavn" value="${escapeHtml(f.label)}" style="width:140px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:7px 9px; border-radius:6px; font-size:12.5px;" onchange="detailCustomFields[${i}].label=this.value">
-      <input type="text" placeholder="Værdi" value="${escapeHtml(f.value)}" style="flex:1; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:7px 9px; border-radius:6px; font-size:12.5px;" onchange="detailCustomFields[${i}].value=this.value">
-      <button class="btn small danger" onclick="detailCustomFields.splice(${i},1); renderCustomFields();">&times;</button>
-    </div>
-  `).join('');
+  const c=document.getElementById('customFieldsList');
+  if(!detailCustomFields.length){ c.innerHTML='<div style="font-size:11.5px;color:var(--muted);">Ingen ekstra felter.</div>'; return; }
+  c.innerHTML='';
+  detailCustomFields.forEach(function(f,i){
+    const row=document.createElement('div'); row.style.cssText='display:flex;gap:8px;margin-bottom:6px;';
+    const l=document.createElement('input'); l.type='text'; l.placeholder='Feltnavn'; l.value=f.label; l.style.cssText='width:140px;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:7px 9px;border-radius:6px;font-size:12.5px;';
+    l.addEventListener('change',function(){detailCustomFields[i].label=l.value;});
+    const v=document.createElement('input'); v.type='text'; v.placeholder='Værdi'; v.value=f.value; v.style.cssText='flex:1;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:7px 9px;border-radius:6px;font-size:12.5px;';
+    v.addEventListener('change',function(){detailCustomFields[i].value=v.value;});
+    const btn=document.createElement('button'); btn.className='btn small danger'; btn.textContent='×';
+    btn.addEventListener('click',function(){detailCustomFields.splice(i,1);renderCustomFields();});
+    row.appendChild(l); row.appendChild(v); row.appendChild(btn); c.appendChild(row);
+  });
+}
+document.getElementById('addCustomFieldBtn').addEventListener('click', function(){ detailCustomFields.push({label:'',value:''}); renderCustomFields(); });
+document.getElementById('equipImgFile').addEventListener('change', function(e){
+  const file=e.target.files[0]; if(!file) return; detailPendingFile=file;
+  const reader=new FileReader(); reader.onload=function(){
+    const pv=document.getElementById('equipImgPreview'); pv.src=reader.result; pv.style.display='block';
+    document.getElementById('equipImgPlaceholder').style.display='none';
+  }; reader.readAsDataURL(file);
+});
+document.getElementById('equipDetailCancelBtn').addEventListener('click', function(){ equipOverlay.classList.remove('open'); });
+equipOverlay.addEventListener('click', function(e){ if(e.target===equipOverlay) equipOverlay.classList.remove('open'); });
+
+document.getElementById('equipDetailSaveBtn').addEventListener('click', async function(){
+  const mode=document.getElementById('equipDetailSaveBtn').dataset.mode;
+  if(mode==='package'){ await savePkgFromOverlay(); return; }
+  const it=EQUIPMENT[detailCurrentIdx]; if(!it) return;
+  const btn=document.getElementById('equipDetailSaveBtn'); btn.disabled=true; btn.textContent='Gemmer...';
+  try{
+    let image_url=it.image_url||null;
+    if(detailPendingFile){
+      const ext=detailPendingFile.name.split('.').pop();
+      const path='equip_'+it.id+'_'+Date.now()+'.'+ext;
+      const {error:ue}=await supa.storage.from('udstyr-billeder').upload(path,detailPendingFile,{upsert:true});
+      if(!ue){ const {data:pub}=supa.storage.from('udstyr-billeder').getPublicUrl(path); image_url=pub.publicUrl; }
+    }
+    const name=document.getElementById('dName').value.trim();
+    const category=document.getElementById('dCategory').value||'Diverse';
+    let qty=parseInt(document.getElementById('dQty').value); if(isNaN(qty)||qty<0) qty=0;
+    const custom_fields=detailCustomFields.filter(function(f){return f.label.trim()||f.value.trim();});
+    const {error}=await supa.from('equipment').update({name,category,qty,tv2_number:document.getElementById('dTv2').value.trim(),serial_number:document.getElementById('dSerial').value.trim(),power_connection:document.getElementById('dPower').value.trim(),image_url,custom_fields}).eq('id',it.id);
+    if(error) throw error;
+    await loadEquipment(); equipOverlay.classList.remove('open'); renderLager(document.getElementById('lagerSearch').value||''); renderJobs();
+  }catch(e){ console.error(e); alert('Fejl: '+(e.message||JSON.stringify(e))); }
+  finally{ btn.disabled=false; btn.textContent='Gem detaljer'; }
+});
+
+// ── Package detail (reuses equip overlay) ─────────────────
+function openPkgDetail(id){
+  const pkg=id?PACKAGES.find(function(p){return p.id===id;}):null;
+  editingPkgId=id||null; detailCurrentIdx=null; detailPendingFile=null;
+  document.getElementById('equipDetailTitle').textContent=pkg?'Rediger pakke: '+pkg.name:'Ny pakke';
+  document.getElementById('dName').value=pkg?pkg.name:'';
+  document.getElementById('dQty').value=pkg?pkg.qty:1;
+  document.getElementById('dTv2').value=pkg?(pkg.tv2_number||''):'';
+  document.getElementById('dSerial').value=pkg?(pkg.serial_number||''):'';
+  document.getElementById('dPower').value=pkg?(pkg.power_connection||''):'';
+  document.getElementById('equipImgFile').value='';
+  document.getElementById('equipImgStatus').textContent='';
+  const pv=document.getElementById('equipImgPreview'); const ph=document.getElementById('equipImgPlaceholder');
+  if(pkg&&pkg.image_url){pv.src=pkg.image_url;pv.style.display='block';ph.style.display='none';}
+  else{pv.style.display='none';ph.style.display='flex';}
+  detailCustomFields=(pkg&&pkg.custom_fields)?pkg.custom_fields.map(function(f){return{...f};}):[];
+  renderCustomFields(); populateCategoryDropdowns();
+  const cs=document.getElementById('dCategory'); if(cs) cs.value=pkg?pkg.category:'Diverse';
+  document.getElementById('equipDetailSaveBtn').dataset.mode='package';
+  equipOverlay.classList.add('open');
+}
+async function savePkgFromOverlay(){
+  const btn=document.getElementById('equipDetailSaveBtn'); btn.disabled=true; btn.textContent='Gemmer...';
+  try{
+    const name=document.getElementById('dName').value.trim();
+    const category=document.getElementById('dCategory').value||'Diverse';
+    let qty=parseInt(document.getElementById('dQty').value); if(isNaN(qty)||qty<1) qty=1;
+    if(!name){ alert('Skriv et navn.'); btn.disabled=false; btn.textContent='Gem detaljer'; return; }
+    const existing=editingPkgId?PACKAGES.find(function(p){return p.id===editingPkgId;}):null;
+    let image_url=existing?(existing.image_url||null):null;
+    if(detailPendingFile){
+      const ext=detailPendingFile.name.split('.').pop();
+      const path='pkg_'+(editingPkgId||Date.now())+'_'+Date.now()+'.'+ext;
+      const {error:ue}=await supa.storage.from('udstyr-billeder').upload(path,detailPendingFile,{upsert:true});
+      if(!ue){ const {data:pub}=supa.storage.from('udstyr-billeder').getPublicUrl(path); image_url=pub.publicUrl; }
+    }
+    const row={name,category,qty,tv2_number:document.getElementById('dTv2').value.trim(),serial_number:document.getElementById('dSerial').value.trim(),power_connection:document.getElementById('dPower').value.trim(),image_url,custom_fields:detailCustomFields.filter(function(f){return f.label.trim()||f.value.trim();})};
+    if(editingPkgId){ const {error}=await supa.from('packages').update(row).eq('id',editingPkgId); if(error) throw error; }
+    else { const {error}=await supa.from('packages').insert(row); if(error) throw error; }
+    await loadPackages(); equipOverlay.classList.remove('open'); renderLager(document.getElementById('lagerSearch').value||'');
+  }catch(e){ console.error(e); alert('Fejl: '+(e.message||JSON.stringify(e))); }
+  finally{ btn.disabled=false; btn.textContent='Gem detaljer'; }
 }
 
-document.getElementById('addCustomFieldBtn').addEventListener('click', ()=>{
-  detailCustomFields.push({label:'', value:''});
-  renderCustomFields();
+
+// ═══════════════════════════════════════════════════════════
+// CATEGORIES
+// ═══════════════════════════════════════════════════════════
+function openCatManager(){
+  renderCatList();
+  document.getElementById('catOverlay').classList.add('open');
+}
+function renderCatList(){
+  const list=document.getElementById('catList');
+  list.innerHTML='';
+  if(!CATEGORIES.length){ list.innerHTML='<div class="empty" style="padding:16px 0;">Ingen kategorier.</div>'; return; }
+  CATEGORIES.forEach(function(cat){
+    const row=document.createElement('div'); row.className='cat-row';
+    const nm=document.createElement('span'); nm.style.flex='1'; nm.textContent=cat.name; row.appendChild(nm);
+    const br=document.createElement('button'); br.className='btn small secondary'; br.textContent='Omdøb';
+    br.addEventListener('click', function(){
+      const n=prompt('Nyt navn for "'+cat.name+'":', cat.name); if(!n||n.trim()===cat.name) return;
+      supa.from('categories').update({name:n.trim()}).eq('id',cat.id).then(function(){
+        return Promise.all([supa.from('equipment').update({category:n.trim()}).eq('category',cat.name), supa.from('packages').update({category:n.trim()}).eq('category',cat.name)]);
+      }).then(function(){ return Promise.all([loadCategories(),loadEquipment(),loadPackages()]); }).then(function(){ renderCatList(); renderLager(document.getElementById('lagerSearch').value||''); });
+    }); row.appendChild(br);
+    const bd=document.createElement('button'); bd.className='btn small danger'; bd.textContent='Slet';
+    bd.addEventListener('click', function(){
+      const inUse=EQUIPMENT.filter(function(e){return e.category===cat.name;}).length+PACKAGES.filter(function(p){return p.category===cat.name;}).length;
+      if(inUse>0){ alert(cat.name+' bruges af '+inUse+' stykker. Flyt dem til anden kategori foerst.'); return; }
+      if(!confirm('Slet "'+cat.name+'"?')) return;
+      supa.from('categories').delete().eq('id',cat.id).then(function(){ return loadCategories(); }).then(function(){ renderCatList(); });
+    }); row.appendChild(bd);
+    list.appendChild(row);
+  });
+}
+document.getElementById('addCatBtn').addEventListener('click', async function(){
+  const name=document.getElementById('newCatName').value.trim();
+  if(!name){ alert('Skriv et navn.'); return; }
+  if(CATEGORIES.find(function(c){return c.name.toLowerCase()===name.toLowerCase();})){alert('Findes allerede.');return;}
+  await supa.from('categories').insert({name,sort_order:CATEGORIES.length*10});
+  document.getElementById('newCatName').value='';
+  await loadCategories(); renderCatList();
+});
+document.getElementById('closeCatBtn').addEventListener('click', function(){ document.getElementById('catOverlay').classList.remove('open'); });
+document.getElementById('catOverlay').addEventListener('click', function(e){ if(e.target===document.getElementById('catOverlay')) document.getElementById('catOverlay').classList.remove('open'); });
+
+// ═══════════════════════════════════════════════════════════
+// STATISTIK
+// ═══════════════════════════════════════════════════════════
+const MONTHS_DA=['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
+function bookedDaysInMonth(job,year,month){
+  if(!job.start||!job.end) return 0;
+  const ms=new Date(year,month,1),me=new Date(year,month+1,0);
+  const js=new Date(job.start+'T00:00:00'),je=new Date(job.end+'T00:00:00');
+  const os=js>ms?js:ms,oe=je<me?je:me;
+  if(oe<os) return 0;
+  return Math.round((oe-os)/(1000*60*60*24))+1;
+}
+function initStatsControls(){
+  const years=new Set([new Date().getFullYear(),new Date().getFullYear()-1]);
+  jobs.forEach(function(j){if(j.start) years.add(parseInt(j.start.slice(0,4)));});
+  const ys=document.getElementById('statsYear');
+  ys.innerHTML=[...years].sort(function(a,b){return b-a;}).map(function(y){return '<option value="'+y+'">'+y+'</option>';}).join('');
+}
+function renderStats(){ initStatsControls(); computeAndRenderStats(); }
+function computeAndRenderStats(){
+  const year=parseInt(document.getElementById('statsYear').value);
+  const catFilter=document.getElementById('statsCat').value;
+  const sort=document.getElementById('statsSort').value;
+  const metric=document.getElementById('statsMetric').value;
+  let equipment=EQUIPMENT; if(catFilter) equipment=equipment.filter(function(e){return e.category===catFilter;});
+  const itemMap={};
+  equipment.forEach(function(eq){ itemMap[eq.name]={name:eq.name,cat:eq.category,monthly:Array(12).fill(0),total:0,peak:0}; });
+  jobs.forEach(function(job){
+    if(!job.start) return;
+    const jy=parseInt(job.start.slice(0,4)),ey=job.end?parseInt(job.end.slice(0,4)):jy;
+    if(jy>year||ey<year) return;
+    (job.items||[]).forEach(function(it){
+      if(!itemMap[it.name]) return;
+      for(let m=0;m<12;m++){
+        let val=metric==='days'?bookedDaysInMonth(job,year,m)*it.qty:0;
+        if(metric==='jobs'){ const ms=new Date(year,m,1),me=new Date(year,m+1,0),js=new Date(job.start+'T00:00:00'),je=job.end?new Date(job.end+'T00:00:00'):js; if(js<=me&&je>=ms) val=1; }
+        itemMap[it.name].monthly[m]+=val; itemMap[it.name].total+=val;
+      }
+    });
+  });
+  Object.values(itemMap).forEach(function(it){it.peak=Math.max(...it.monthly);});
+  let items=Object.values(itemMap).filter(function(it){return it.total>0;});
+  if(sort==='total') items.sort(function(a,b){return b.total-a.total;});
+  else if(sort==='name') items.sort(function(a,b){return a.name.localeCompare(b.name);});
+  else items.sort(function(a,b){return b.peak-a.peak;});
+  const totalDays=items.reduce(function(s,i){return s+i.total;},0);
+  const topItem=items[0];
+  const byMonth=Array(12).fill(0); items.forEach(function(it){it.monthly.forEach(function(v,m){byMonth[m]+=v;});});
+  const maxMonth=Math.max(...byMonth);
+  const peakM=byMonth.indexOf(maxMonth);
+  document.getElementById('statsSummary').innerHTML=[
+    {label:metric==='days'?'Totale lejedage':'Totale job-bookinger',val:totalDays.toLocaleString('da-DK')},
+    {label:'Aktive stykker udstyr',val:items.length},
+    {label:'Mest brugte udstyr',val:topItem?topItem.name.slice(0,28)+(topItem.name.length>28?'…':''):'—'},
+    {label:'Travleste måned',val:maxMonth>0?MONTHS_DA[peakM]+' ('+maxMonth+')':'—'}
+  ].map(function(s){return '<div class="panel" style="padding:12px 14px;"><div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">'+s.label+'</div><div style="font-size:16px;font-weight:800;color:var(--amber);">'+escapeHtml(String(s.val))+'</div></div>';}).join('');
+  if(!items.length){ document.getElementById('statsContent').innerHTML='<div class="empty">Ingen bookinger i '+year+'</div>'; return; }
+  const gMax=Math.max(...items.flatMap(function(i){return i.monthly;}),1);
+  const ml=metric==='days'?'dage':'jobs';
+  document.getElementById('statsContent').innerHTML='<div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;">'+items.length+' stykker udstyr med bookinger i '+year+'</div>'
+    +items.map(function(it){
+      const bars=it.monthly.map(function(v,m){const pct=Math.round((v/gMax)*100); return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="font-size:8px;color:'+(v>0?'var(--amber)':'var(--muted)')+';">'+(v>0?v:'')+'</div><div style="width:100%;background:var(--border);border-radius:2px;height:28px;display:flex;align-items:flex-end;"><div style="width:100%;height:'+pct+'%;background:'+(pct>66?'var(--amber)':pct>33?'#b07d2a':'#5c4521')+';border-radius:2px;min-height:'+(v>0?2:0)+'px;"></div></div><div style="font-size:7.5px;color:var(--muted);font-family:var(--mono);">'+MONTHS_DA[m]+'</div></div>';}).join('');
+      return '<div style="background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><div><div style="font-size:13px;font-weight:700;">'+escapeHtml(it.name)+'</div><div style="font-size:10px;color:var(--muted);font-family:var(--mono);">'+escapeHtml(it.cat)+'</div></div><div style="text-align:right;flex-shrink:0;"><div style="font-size:16px;font-weight:800;color:var(--amber);font-family:var(--mono);">'+it.total+'</div><div style="font-size:9px;color:var(--muted);">'+ml+' i '+year+'</div></div></div><div style="display:flex;gap:3px;align-items:flex-end;height:58px;">'+bars+'</div></div>';
+    }).join('');
+}
+document.getElementById('statsExportBtn').addEventListener('click', function(){
+  const year=parseInt(document.getElementById('statsYear').value);
+  const header=['Udstyr','Kategori',...MONTHS_DA.map(function(m){return m+' '+year;}),'Total'].join(';');
+  const rows=Object.values((function(){const m={};EQUIPMENT.forEach(function(eq){m[eq.name]={name:eq.name,cat:eq.category,monthly:Array(12).fill(0)};});jobs.forEach(function(job){if(!job.start) return;const jy=parseInt(job.start.slice(0,4)),ey=job.end?parseInt(job.end.slice(0,4)):jy;if(jy>year||ey<year) return;(job.items||[]).forEach(function(it){if(!m[it.name]) return;for(let mo=0;mo<12;mo++) m[it.name].monthly[mo]+=bookedDaysInMonth(job,year,mo)*it.qty;});});return m;})()).filter(function(i){return i.monthly.some(function(v){return v>0;});}).map(function(i){const t=i.monthly.reduce(function(s,v){return s+v;},0);return ['"'+i.name+'"','"'+i.cat+'"',...i.monthly,t].join(';');});
+  const blob=new Blob(['\uFEFF'+[header,...rows].join('\n')],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='udstyr-statistik-'+year+'.csv'; a.click(); URL.revokeObjectURL(url);
+});
+['statsYear','statsCat','statsSort','statsMetric'].forEach(function(id){ document.getElementById(id).addEventListener('change', computeAndRenderStats); });
+document.getElementById('showStatsBtn').addEventListener('click', function(){
+  ['jobs','avail','lager','obvogne'].forEach(function(t){var el=document.getElementById('tab-'+t);if(el)el.style.display='none';});
+  document.getElementById('tab-stats').style.display='block'; renderStats();
+  document.querySelectorAll('nav.tabs button').forEach(function(b){b.classList.remove('active');});
+});
+document.getElementById('statsCloseBtn').addEventListener('click', function(){
+  document.getElementById('tab-stats').style.display='none';
+  document.getElementById('tab-lager').style.display='block';
+  document.querySelectorAll('nav.tabs button').forEach(function(b){b.classList.toggle('active',b.dataset.tab==='lager');});
 });
 
-document.getElementById('equipImgFile').addEventListener('change', (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  detailPendingFile = file;
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    const preview = document.getElementById('equipImgPreview');
-    preview.src = reader.result; preview.style.display='block';
-    document.getElementById('equipImgPlaceholder').style.display='none';
-  };
-  reader.readAsDataURL(file);
-});
 
-document.getElementById('equipDetailCancelBtn').addEventListener('click', ()=> equipOverlay.classList.remove('open'));
-equipOverlay.addEventListener('click', (e)=>{ if(e.target===equipOverlay) equipOverlay.classList.remove('open'); });
+// ═══════════════════════════════════════════════════════════
+// OB VOGNE - GANTT + BOOKING
+// ═══════════════════════════════════════════════════════════
+function renderGantt(containerEl){
+  const DAYS_BACK=7, DAYS_TOTAL=84, COL_W=28;
+  const today=new Date(); today.setHours(0,0,0,0);
+  const startDate=new Date(today); startDate.setDate(startDate.getDate()-DAYS_BACK);
+  const days=[]; for(var i=0;i<DAYS_TOTAL;i++){var d=new Date(startDate);d.setDate(d.getDate()+i);days.push(d);}
+  const DA_M=['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+  const DA_D=['Sø','Ma','Ti','On','To','Fr','Lø'];
+  const todayIdx=DAYS_BACK;
+  const wrapper=document.createElement('div');
+  wrapper.style.cssText='overflow-x:auto;border:1px solid var(--border);border-radius:10px;margin-bottom:18px;';
+  const table=document.createElement('div');
+  table.style.cssText='display:grid;grid-template-columns:90px repeat('+DAYS_TOTAL+','+COL_W+'px);min-width:'+(90+DAYS_TOTAL*COL_W)+'px;font-size:11px;';
 
-document.getElementById('equipDetailSaveBtn').addEventListener('click', async ()=>{
-  const it = EQUIPMENT[detailCurrentIdx];
-  if(!it) return;
-  const btn = document.getElementById('equipDetailSaveBtn');
-  btn.disabled = true; btn.textContent = 'Gemmer...';
-  const statusEl = document.getElementById('equipImgStatus');
+  // Month header
+  var corner=document.createElement('div'); corner.style.cssText='background:var(--panel-2);border-bottom:1px solid var(--border);padding:4px 0;'; table.appendChild(corner);
+  var lastMonth=-1;
+  days.forEach(function(d,i){
+    var c=document.createElement('div');
+    c.style.cssText='border-bottom:1px solid var(--border);border-left:1px solid '+(i===todayIdx?'var(--amber)':'var(--border)')+';text-align:center;padding:2px 0;background:var(--panel-2);font-family:var(--mono);color:'+(i===todayIdx?'var(--amber)':'var(--muted)')+';font-size:9.5px;font-weight:'+(d.getMonth()!==lastMonth?700:400)+';';
+    if(d.getMonth()!==lastMonth){c.textContent=DA_M[d.getMonth()];lastMonth=d.getMonth();}
+    table.appendChild(c);
+  });
 
-  try{
-    let image_url = it.image_url || null;
+  // Day header
+  var dCorner=document.createElement('div'); dCorner.style.cssText='background:var(--panel-2);border-bottom:1px solid var(--border);padding:3px 6px;color:var(--muted);font-family:var(--mono);'; dCorner.textContent='Vogn'; table.appendChild(dCorner);
+  days.forEach(function(d,i){
+    var isWE=d.getDay()===0||d.getDay()===6, isT=i===todayIdx;
+    var c=document.createElement('div');
+    c.style.cssText='border-bottom:2px solid '+(isT?'var(--amber)':'var(--border)')+';border-left:1px solid '+(isT?'var(--amber)':'var(--border)')+';text-align:center;padding:2px 0;background:'+(isT?'rgba(232,163,61,.08)':isWE?'rgba(255,255,255,.02)':'var(--panel-2)')+';font-family:var(--mono);color:'+(isT?'var(--amber)':isWE?'#6b6f7a':'var(--muted)')+';font-size:9.5px;';
+    c.textContent=d.getDate()+' '+DA_D[d.getDay()]; table.appendChild(c);
+  });
 
-    if(detailPendingFile){
-      statusEl.textContent = 'Uploader billede...';
-      const ext = detailPendingFile.name.split('.').pop();
-      const path = 'equip_' + it.id + '_' + Date.now() + '.' + ext;
-      const { error: upErr } = await supa.storage.from('udstyr-billeder').upload(path, detailPendingFile, {upsert:true});
-      if(upErr){
-        statusEl.textContent = '';
-        alert('Kunne ikke uploade billede. Tjek at bucket "udstyr-billeder" findes og er public. (' + upErr.message + ')');
+  // Rows
+  OB_VOGNE.forEach(function(vogn,ri){
+    var isLast=ri===OB_VOGNE.length-1;
+    var border=isLast?'none':'1px solid var(--border)';
+    var lc=document.createElement('div');
+    lc.style.cssText='padding:8px 10px;border-bottom:'+border+';display:flex;align-items:center;gap:7px;background:var(--panel);';
+    var dot=document.createElement('span'); dot.style.cssText='width:9px;height:9px;border-radius:50%;background:'+vogn.color+';flex-shrink:0;box-shadow:0 0 5px '+vogn.color+'88;'; lc.appendChild(dot);
+    var nm=document.createElement('span'); nm.style.cssText='font-weight:700;font-size:12px;'; nm.textContent=vogn.name; lc.appendChild(nm);
+    table.appendChild(lc);
+
+    var vb=OB_BOOKINGER.filter(function(b){return b.ob_vogn_id===vogn.id;});
+    var dayMap={};
+    vb.forEach(function(b){
+      var bs=new Date(b.start_date+'T00:00:00'),be=new Date(b.end_date+'T00:00:00'),cur=new Date(bs);
+      while(cur<=be){dayMap[cur.toISOString().slice(0,10)]=b;cur.setDate(cur.getDate()+1);}
+    });
+
+    var i=0;
+    while(i<DAYS_TOTAL){
+      var d=days[i],iso=d.toISOString().slice(0,10),isT=i===todayIdx,isWE=d.getDay()===0||d.getDay()===6,booking=dayMap[iso];
+      if(booking){
+        var span=0;
+        while(i+span<DAYS_TOTAL&&days[i+span].toISOString().slice(0,10)>=booking.start_date&&days[i+span].toISOString().slice(0,10)<=booking.end_date) span++;
+        var isTilbud=booking.status==='tilbud';
+        var color=isTilbud?'#e8a33d':'#5fb88a',bg=isTilbud?'rgba(232,163,61,.18)':'rgba(95,184,138,.18)';
+        var block=document.createElement('div');
+        block.style.cssText='grid-column:span '+span+';border-bottom:'+border+';background:'+bg+';border-left:3px solid '+color+';padding:3px 5px;display:flex;align-items:center;cursor:pointer;overflow:hidden;';
+        block.title=(isTilbud?'TILBUD: ':'')+booking.name+(booking.who?' ('+booking.who+')':'')+'\n'+fmtDate(booking.start_date)+' → '+fmtDate(booking.end_date);
+        var lbl=document.createElement('span'); lbl.style.cssText='font-size:10px;font-weight:700;color:'+color+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;';
+        lbl.textContent=(isTilbud?'◐ ':'● ')+booking.name; block.appendChild(lbl);
+        (function(v,b){ block.addEventListener('click',function(){openObModal(v.id,b);}); })(vogn,booking);
+        table.appendChild(block); i+=Math.max(span,1);
       } else {
-        const { data: pub } = supa.storage.from('udstyr-billeder').getPublicUrl(path);
-        image_url = pub.publicUrl;
+        var c=document.createElement('div');
+        c.style.cssText='border-bottom:'+border+';border-left:1px solid '+(isT?'var(--amber)':'var(--border)')+';background:'+(isT?'rgba(232,163,61,.04)':isWE?'rgba(255,255,255,.01)':'transparent')+';';
+        table.appendChild(c); i++;
       }
     }
+  });
 
-    const name = document.getElementById('dName').value.trim();
-    const category = document.getElementById('dCategory').value.trim() || 'Diverse';
-    let qty = parseInt(document.getElementById('dQty').value);
-    if(isNaN(qty) || qty < 0) qty = 0;
-    const tv2_number = document.getElementById('dTv2').value.trim();
-    const serial_number = document.getElementById('dSerial').value.trim();
-    const power_connection = document.getElementById('dPower').value.trim();
-    const custom_fields = detailCustomFields.filter(f=>f.label.trim() || f.value.trim());
+  wrapper.appendChild(table);
+  var legend=document.createElement('div');
+  legend.style.cssText='display:flex;gap:16px;padding:8px 12px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);';
+  legend.innerHTML='<span style="color:#5fb88a;">● Ordre</span><span style="color:#e8a33d;">◐ Tilbud</span><span>Klik på blok for at redigere</span>';
+  wrapper.appendChild(legend);
+  containerEl.appendChild(wrapper);
+}
 
-    const { error } = await supa.from('equipment').update({
-      name, category, qty, tv2_number, serial_number, power_connection, image_url, custom_fields
-    }).eq('id', it.id);
-
-    if(error) throw error;
-
-    await loadEquipment();
-    statusEl.textContent = '';
-    equipOverlay.classList.remove('open');
-    renderLager(document.getElementById('lagerSearch').value);
-    renderJobs();
-  }catch(e){
-    console.error(e);
-    alert('Der opstod en fejl ved gem af detaljer.');
-  }finally{
-    btn.disabled = false; btn.textContent = 'Gem detaljer';
+function renderObVogne(){
+  var container=document.getElementById('obvogneContent'); if(!container) return;
+  container.innerHTML='';
+  if(!OB_VOGNE.length){
+    container.innerHTML='<div class="empty"><div class="big">🚐</div>Ingen OB-vogne. Kør supabase_ob_vogne.sql.</div>'; return;
   }
+  try{ renderGantt(container); } catch(e){ console.error("renderGantt fejl:",e); }
+  var sh=document.createElement('div');
+  sh.style.cssText='font-size:11px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;';
+  sh.textContent='Vogne & Bookinger'; container.appendChild(sh);
+
+  var today=todayStr();
+  OB_VOGNE.forEach(function(vogn){
+    var equip=EQUIPMENT.filter(function(e){return e.ob_vogn_id===vogn.id;});
+    var pkgs=PACKAGES.filter(function(p){return p.ob_vogn_id===vogn.id;});
+    var upcoming=OB_BOOKINGER.filter(function(b){return b.ob_vogn_id===vogn.id&&b.end_date>=today;}).sort(function(a,b){return a.start_date.localeCompare(b.start_date);});
+    var active=upcoming.filter(function(b){return b.start_date<=today;});
+
+    var card=document.createElement('div'); card.className='ob-card';
+    var head=document.createElement('div'); head.className='ob-head';
+    var badge=document.createElement('div'); badge.className='ob-badge'; badge.style.background=vogn.color||'#e8a33d'; badge.textContent=vogn.name; head.appendChild(badge);
+    var tw=document.createElement('div'); tw.style.flex='1';
+    tw.innerHTML='<div style="font-weight:700;font-size:15px;">'+escapeHtml(vogn.name)+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);">'+(equip.length+pkgs.length)+' stk. udstyr/pakker'
+      +(active.length?'<span style="color:var(--red);margin-left:8px;">● BOOKET: '+escapeHtml(active[0].name)+'</span>':'')+'</div>';
+    head.appendChild(tw);
+    var bb=document.createElement('button'); bb.className='btn small'; bb.textContent='+ Book '+vogn.name;
+    (function(v){ bb.addEventListener('click',function(){openObModal(v.id,null);}); })(vogn);
+    head.appendChild(bb); card.appendChild(head);
+
+    var body=document.createElement('div'); body.style.cssText='border-top:1px solid var(--border);';
+
+    // Bookings section
+    var bs=document.createElement('div'); bs.className='ob-section';
+    bs.innerHTML='<div class="ob-section-title">Bookinger ('+upcoming.length+')</div>';
+    if(!upcoming.length){ var emp=document.createElement('div'); emp.style.cssText='font-size:12px;color:var(--muted);'; emp.textContent='Ingen kommende bookinger'; bs.appendChild(emp); }
+    else upcoming.forEach(function(b){
+      var brow=document.createElement('div'); brow.className='ob-booking-row';
+      var isAct=b.start_date<=today&&b.end_date>=today;
+      var isTilbud=b.status==='tilbud';
+      var left=document.createElement('div');
+      left.innerHTML=(isAct?'<span style="color:var(--red);">● </span>':'')
+        +(isTilbud?'<span style="background:#5c4521;color:var(--amber);font-size:9.5px;padding:1px 6px;border-radius:8px;font-family:var(--mono);font-weight:700;margin-right:5px;">TILBUD</span>':'')
+        +escapeHtml(b.name)+(b.who?'<span style="color:var(--muted);"> · '+escapeHtml(b.who)+'</span>':'');
+      brow.appendChild(left);
+      var right=document.createElement('div'); right.style.cssText='display:flex;align-items:center;gap:8px;';
+      var dates=document.createElement('div'); dates.className='ob-booking-dates'; dates.textContent=fmtDate(b.start_date)+' → '+fmtDate(b.end_date); right.appendChild(dates);
+      if(isTilbud){
+        var bc=document.createElement('button'); bc.className='btn small'; bc.textContent='→ Ordre'; bc.style.cssText='font-size:11px;background:var(--green);color:#0a1f14;';
+        (function(bb2,v){ bc.addEventListener('click', async function(){ if(!confirm('Konverter til ordre?')) return; await supa.from('ob_bookinger').update({status:'ordre'}).eq('id',bb2.id); await loadObBookinger(); renderObVogne(); }); })(b,vogn);
+        right.appendChild(bc);
+      }
+      var be=document.createElement('button'); be.className='btn small secondary'; be.textContent='Rediger'; be.style.fontSize='11px';
+      (function(bb2,v){ be.addEventListener('click',function(){openObModal(v.id,bb2);}); })(b,vogn); right.appendChild(be);
+      var bd2=document.createElement('button'); bd2.className='btn small danger'; bd2.textContent='Slet'; bd2.style.fontSize='11px';
+      (function(bb2){ bd2.addEventListener('click', async function(){ if(!confirm('Slet "'+bb2.name+'"?')) return; await supa.from('ob_bookinger').delete().eq('id',bb2.id); await loadObBookinger(); renderObVogne(); }); })(b);
+      right.appendChild(bd2); brow.appendChild(right); bs.appendChild(brow);
+    });
+    body.appendChild(bs);
+
+    // Contents section
+    var cs=document.createElement('div'); cs.className='ob-section';
+    cs.innerHTML='<div class="ob-section-title">Indhold ('+(equip.length+pkgs.length)+')</div>';
+    if(equip.length+pkgs.length===0){ var em2=document.createElement('div'); em2.style.cssText='font-size:12px;color:var(--muted);'; em2.textContent='Intet udstyr tilknyttet. Gå til Lager.'; cs.appendChild(em2); }
+    else{
+      var grid=document.createElement('div'); grid.style.cssText='display:flex;flex-wrap:wrap;gap:5px;';
+      pkgs.forEach(function(p){ var ch=document.createElement('div'); ch.style.cssText='background:var(--amber-dim);color:var(--amber);border-radius:6px;padding:3px 9px;font-size:11.5px;font-family:var(--mono);'; ch.textContent='📦 '+p.name; grid.appendChild(ch); });
+      equip.forEach(function(e){ var ch=document.createElement('div'); ch.style.cssText='background:var(--panel-2);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11.5px;font-family:var(--mono);'; ch.textContent=e.name; grid.appendChild(ch); });
+      cs.appendChild(grid);
+    }
+    body.appendChild(cs); card.appendChild(body); container.appendChild(card);
+  });
+}
+
+// OB Booking modal
+function openObModal(vognId,ob){
+  currentObVognId=vognId;
+  var vogn=obVognById(vognId);
+  document.getElementById('obModalTitle').textContent=ob?'Rediger — '+vogn.name:'Ny booking — '+vogn.name;
+  document.getElementById('obEditId').value=ob?ob.id:'';
+  document.getElementById('obName').value=ob?ob.name:'';
+  document.getElementById('obWho').value=ob?(ob.who||''):'';
+  document.getElementById('obStart').value=ob?ob.start_date:todayStr();
+  document.getElementById('obEnd').value=ob?ob.end_date:'';
+  document.getElementById('obNotes').value=ob?(ob.notes||''):'';
+  var st=ob?(ob.status||'ordre'):'ordre';
+  document.getElementById('obStatusOrdre').checked=st==='ordre';
+  document.getElementById('obStatusTilbud').checked=st==='tilbud';
+  renderObConflicts();
+  document.getElementById('obOverlay').classList.add('open');
+}
+function renderObConflicts(){
+  var box=document.getElementById('obConflictBox');
+  var start=document.getElementById('obStart').value,end=document.getElementById('obEnd').value;
+  var excl=document.getElementById('obEditId').value||null;
+  if(!start||!end||!currentObVognId){box.innerHTML='';return;}
+  var c=obBookingConflict(currentObVognId,start,end,excl);
+  box.innerHTML=c?'<div class="conflict-box">⚠ Overlapper: <strong>'+escapeHtml(c.name)+'</strong> ('+fmtDate(c.start_date)+' → '+fmtDate(c.end_date)+')</div>'
+    :'<div class="conflict-box"><span class="ok">✓ Ingen konflikter.</span></div>';
+}
+document.getElementById('obStart').addEventListener('change',renderObConflicts);
+document.getElementById('obEnd').addEventListener('change',renderObConflicts);
+document.getElementById('obCancelBtn').addEventListener('click',function(){document.getElementById('obOverlay').classList.remove('open');});
+document.getElementById('obOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('obOverlay')) document.getElementById('obOverlay').classList.remove('open');});
+document.getElementById('obSaveBtn').addEventListener('click', async function(){
+  var btn=document.getElementById('obSaveBtn');
+  var name=document.getElementById('obName').value.trim(),who=document.getElementById('obWho').value.trim();
+  var start=document.getElementById('obStart').value,end=document.getElementById('obEnd').value;
+  var notes=document.getElementById('obNotes').value.trim(),editId=document.getElementById('obEditId').value;
+  var sv=document.querySelector('input[name="obStatus"]:checked');
+  var status=sv?sv.value:'ordre';
+  if(!name){alert('Skriv et navn.');return;} if(!start||!end){alert('Vælg datoer.');return;} if(start>end){alert('Slutdato skal være efter startdato.');return;}
+  btn.disabled=true; btn.textContent='Gemmer...';
+  try{
+    var row={ob_vogn_id:currentObVognId,name,who,start_date:start,end_date:end,notes,status};
+    if(editId){var {error}=await supa.from('ob_bookinger').update(row).eq('id',editId);if(error) throw error;}
+    else {var {error}=await supa.from('ob_bookinger').insert(row);if(error) throw error;}
+    await loadObBookinger(); document.getElementById('obOverlay').classList.remove('open'); renderObVogne();
+  }catch(e){console.error(e);alert('Fejl: '+(e.message||JSON.stringify(e)));}
+  finally{btn.disabled=false;btn.textContent='Gem booking';}
 });
 
-// ---- pakkeliste (print/PDF) ----
+
+// ═══════════════════════════════════════════════════════════
+// PAKKELISTE (print/PDF)
+// ═══════════════════════════════════════════════════════════
 function printPackList(id){
-  const j = jobs.find(x=>x.id===id);
-  if(!j) return;
-
-  // group items by category
-  const grouped = {};
-  (j.items||[]).forEach(it=>{
-    const eq = EQUIPMENT.find(e=>e.name===it.name);
-    const cat = eq ? eq.category : 'Diverse';
+  var j=jobs.find(function(x){return x.id===id;}); if(!j) return;
+  var grouped={};
+  (j.items||[]).forEach(function(it){
+    var eq=EQUIPMENT.find(function(e){return e.name===it.name;}),cat=eq?eq.category:'Diverse';
     if(!grouped[cat]) grouped[cat]=[];
-    grouped[cat].push({...it, eq});
+    grouped[cat].push({...it,eq});
   });
-  const cats = Object.keys(grouped).sort();
-  const totalItems = (j.items||[]).reduce((s,i)=>s+i.qty,0);
-
-  const catHtml = cats.map(cat=>{
-    const rows = grouped[cat].map((it,idx)=>{
-      const eq = it.eq||{};
-      return `<tr class="${idx%2===0?'even':'odd'}">
-        <td class="check"><span class="checkbox"></span></td>
-        <td class="itemname">${esc(it.name)}</td>
-        <td class="qty">${it.qty}</td>
-        <td class="serial">${esc(eq.serial_number||'')}</td>
-        <td class="tv2">${esc(eq.tv2_number||'')}</td>
-        <td class="notes-col"></td>
-      </tr>`;
+  var cats=Object.keys(grouped).sort();
+  var total=(j.items||[]).reduce(function(s,i){return s+i.qty;},0);
+  function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  var catHtml=cats.map(function(cat){
+    var rows=grouped[cat].map(function(it,idx){
+      var eq=it.eq||{};
+      return '<tr class="'+(idx%2===0?'even':'odd')+'"><td class="check"><span class="checkbox"></span></td><td class="itemname">'+(it.isPkg?'📦 ':'')+esc(it.name)+'</td><td class="qty">'+it.qty+'</td><td class="serial">'+esc(eq.serial_number||'')+'</td><td class="tv2">'+esc(eq.tv2_number||'')+'</td><td class="notes-col"></td></tr>';
     }).join('');
-    return `<tbody>
-      <tr class="cat-header"><td colspan="6">${esc(cat)}</td></tr>
-      ${rows}
-    </tbody>`;
+    return '<tbody><tr class="cat-header"><td colspan="6">'+esc(cat)+'</td></tr>'+rows+'</tbody>';
   }).join('');
-
-  const now = new Date().toLocaleDateString('da-DK',{day:'2-digit',month:'long',year:'numeric'});
-  const startFmt = j.start ? new Date(j.start+'T00:00:00').toLocaleDateString('da-DK',{day:'2-digit',month:'long',year:'numeric'}) : '—';
-  const endFmt   = j.end   ? new Date(j.end  +'T00:00:00').toLocaleDateString('da-DK',{day:'2-digit',month:'long',year:'numeric'}) : '—';
-
-  const html = `<!DOCTYPE html>
-<html lang="da">
-<head>
-<meta charset="UTF-8">
-<title>Pakkeliste — ${esc(j.name||'Job')}</title>
-<style>
-  *{box-sizing:border-box; margin:0; padding:0;}
-  body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; font-size:10pt; color:#1a1a1a; background:#fff; padding:0;}
-
-  @page{size:A4; margin:18mm 16mm 18mm 16mm;}
-
-  .page{max-width:210mm; margin:0 auto; padding:16mm 14mm;}
-
-  /* header */
-  .top-bar{display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #1a1a1a; padding-bottom:10px; margin-bottom:14px;}
-  .job-title{font-size:22pt; font-weight:800; letter-spacing:-0.02em; line-height:1.1;}
-  .job-sub{font-size:9pt; color:#555; margin-top:4px;}
-  .logo-area{text-align:right; font-size:8pt; color:#777; line-height:1.7;}
-  .logo-area strong{font-size:11pt; color:#1a1a1a; display:block; font-weight:800; letter-spacing:.05em;}
-
-  /* meta grid */
-  .meta-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:0; margin-bottom:16px; border:1px solid #ddd; border-radius:4px; overflow:hidden;}
-  .meta-cell{padding:8px 10px; border-right:1px solid #ddd;}
-  .meta-cell:last-child{border-right:none;}
-  .meta-label{font-size:7.5pt; text-transform:uppercase; letter-spacing:.06em; color:#888; margin-bottom:2px;}
-  .meta-value{font-size:10.5pt; font-weight:700;}
-
-  /* notes */
-  .notes-box{background:#f9f9f9; border:1px solid #ddd; border-radius:4px; padding:8px 10px; margin-bottom:16px; font-size:9pt; color:#444; white-space:pre-wrap;}
-  .notes-label{font-size:7.5pt; text-transform:uppercase; letter-spacing:.06em; color:#888; margin-bottom:3px;}
-
-  /* table */
-  table{width:100%; border-collapse:collapse; font-size:9pt;}
-  thead tr{background:#1a1a1a; color:#fff;}
-  thead th{padding:7px 8px; text-align:left; font-weight:700; font-size:8pt; text-transform:uppercase; letter-spacing:.04em;}
-  thead th.qty, thead th.check{text-align:center;}
-  .cat-header td{background:#e8e8e8; font-weight:800; font-size:8.5pt; text-transform:uppercase; letter-spacing:.06em; padding:5px 8px; color:#1a1a1a;}
-  tr.even td{background:#fff;}
-  tr.odd td{background:#f6f6f6;}
-  td{padding:6px 8px; border-bottom:1px solid #e0e0e0; vertical-align:middle;}
-  td.check{text-align:center; width:24px;}
-  td.qty{text-align:center; font-weight:700; width:36px;}
-  td.serial{color:#555; font-size:8.5pt; width:22%;}
-  td.tv2{color:#555; font-size:8.5pt; width:14%;}
-  td.notes-col{width:18%;}
-  .checkbox{display:inline-block; width:13px; height:13px; border:1.5px solid #aaa; border-radius:2px;}
-
-  /* summary */
-  .summary{margin-top:14px; display:flex; justify-content:flex-end;}
-  .summary-box{border:1px solid #ddd; border-radius:4px; padding:8px 14px; font-size:9pt; text-align:right;}
-  .summary-box span{font-weight:800; font-size:12pt;}
-
-  /* signature */
-  .sig-row{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-top:24px; padding-top:14px; border-top:1px solid #ddd;}
-  .sig-box{border-bottom:1px solid #999; padding-bottom:28px; font-size:8pt; color:#888;}
-  .sig-label{margin-top:4px;}
-
-  /* footer */
-  .footer{margin-top:20px; border-top:1px solid #ddd; padding-top:6px; font-size:7.5pt; color:#aaa; display:flex; justify-content:space-between;}
-
-  @media print{
-    body{padding:0;}
-    .page{padding:0;}
-    .no-print{display:none;}
-    tr.even td, tr.odd td{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
-    thead tr{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
-    .cat-header td{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
-  }
-</style>
-</head>
-<body>
-<div class="page">
-
-  <div class="top-bar">
-    <div>
-      <div class="job-title">${esc(j.name||'Job')}</div>
-      <div class="job-sub">Pakkeliste · Udstyr OB Pulje</div>
-    </div>
-    <div class="logo-area">
-      <strong>TV 2</strong>
-      OB PULJE<br>
-      Udskrevet: ${now}
-    </div>
-  </div>
-
-  <div class="meta-grid">
-    <div class="meta-cell"><div class="meta-label">Ansvarlig</div><div class="meta-value">${esc(j.who||'—')}</div></div>
-    <div class="meta-cell"><div class="meta-label">Start dato</div><div class="meta-value">${startFmt}</div></div>
-    <div class="meta-cell"><div class="meta-label">Slut dato</div><div class="meta-value">${endFmt}</div></div>
-    <div class="meta-cell"><div class="meta-label">Udstyr i alt</div><div class="meta-value">${(j.items||[]).length} poster · ${totalItems} stk.</div></div>
-  </div>
-
-  ${j.notes ? `<div class="notes-box"><div class="notes-label">Noter</div>${esc(j.notes)}</div>` : ''}
-
-  <table>
-    <thead>
-      <tr>
-        <th class="check">✓</th>
-        <th>Udstyr</th>
-        <th class="qty">Antal</th>
-        <th>Serienummer</th>
-        <th>TV2 nr.</th>
-        <th>Bemærkninger</th>
-      </tr>
-    </thead>
-    ${catHtml}
-  </table>
-
-  <div class="summary">
-    <div class="summary-box">
-      Total udstyr: <span>${totalItems}</span> stk. fordelt på ${(j.items||[]).length} poster
-    </div>
-  </div>
-
-  <div class="sig-row">
-    <div class="sig-box"><div class="sig-label">Pakket af / Dato</div></div>
-    <div class="sig-box"><div class="sig-label">Modtaget af / Dato</div></div>
-    <div class="sig-box"><div class="sig-label">Returneret af / Dato</div></div>
-  </div>
-
-  <div class="footer">
-    <div>Job ID: ${esc(j.id||'')}</div>
-    <div>TV 2 OB Pulje Udstyrsbooking</div>
-  </div>
-
-  <div class="no-print" style="margin-top:24px; text-align:center;">
-    <button onclick="window.print()" style="background:#1a1a1a; color:#fff; border:none; padding:12px 28px; font-size:13px; font-weight:700; border-radius:7px; cursor:pointer; letter-spacing:.02em;">
-      🖨 Udskriv / Gem som PDF
-    </button>
-    <p style="margin-top:10px; font-size:11px; color:#888;">I udskriftsdialog: vælg "Gem som PDF" som printer</p>
-  </div>
-
-</div>
-</body>
-</html>`;
-
-  function esc(s){ return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-  const win = window.open('','_blank','width=900,height=1100');
-  win.document.write(html);
-  win.document.close();
+  var now=new Date().toLocaleDateString('da-DK',{day:'2-digit',month:'long',year:'numeric'});
+  var html='<!DOCTYPE html><html lang="da"><head><meta charset="UTF-8"><title>Pakkeliste — '+esc(j.name||'Job')+'</title><style>'
+    +'*{box-sizing:border-box;margin:0;padding:0;}body{font-family:\'Helvetica Neue\',sans-serif;font-size:10pt;color:#1a1a1a;}'
+    +'@page{size:A4;margin:18mm 16mm;}'
+    +'.top-bar{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1a1a1a;padding-bottom:10px;margin-bottom:14px;}'
+    +'.job-title{font-size:22pt;font-weight:800;}.logo{text-align:right;font-size:8pt;color:#777;}'
+    +'.meta-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #ddd;border-radius:4px;overflow:hidden;margin-bottom:16px;}'
+    +'.meta-cell{padding:8px 10px;border-right:1px solid #ddd;}.meta-cell:last-child{border-right:none;}'
+    +'.meta-label{font-size:7.5pt;text-transform:uppercase;color:#888;margin-bottom:2px;}.meta-value{font-size:10.5pt;font-weight:700;}'
+    +'table{width:100%;border-collapse:collapse;font-size:9pt;}'
+    +'thead tr{background:#1a1a1a;color:#fff;}thead th{padding:7px 8px;text-align:left;font-size:8pt;text-transform:uppercase;}'
+    +'.cat-header td{background:#e8e8e8;font-weight:800;font-size:8.5pt;text-transform:uppercase;padding:5px 8px;}'
+    +'tr.even td{background:#fff;}tr.odd td{background:#f6f6f6;}'
+    +'td{padding:6px 8px;border-bottom:1px solid #e0e0e0;}'
+    +'td.qty{text-align:center;font-weight:700;width:36px;}td.check{text-align:center;width:24px;}'
+    +'td.serial,td.tv2{color:#555;font-size:8.5pt;}td.notes-col{width:18%;}'
+    +'.checkbox{display:inline-block;width:13px;height:13px;border:1.5px solid #aaa;border-radius:2px;}'
+    +'.sig-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:24px;padding-top:14px;border-top:1px solid #ddd;}'
+    +'.sig-box{border-bottom:1px solid #999;padding-bottom:28px;font-size:8pt;color:#888;}'
+    +'.no-print{text-align:center;margin-top:24px;}@media print{.no-print{display:none;}}'
+    +'</style></head><body><div style="max-width:210mm;margin:0 auto;padding:16mm 14mm;">'
+    +'<div class="top-bar"><div><div class="job-title">'+esc(j.name||'Job')+'</div><div style="font-size:9pt;color:#555;">Pakkeliste · Udstyr OB Pulje</div></div>'
+    +'<div class="logo"><strong>TV 2</strong><br>OB PULJE<br>Udskrevet: '+now+'</div></div>'
+    +'<div class="meta-grid">'
+    +'<div class="meta-cell"><div class="meta-label">Ansvarlig</div><div class="meta-value">'+esc(j.who||'—')+'</div></div>'
+    +'<div class="meta-cell"><div class="meta-label">Start dato</div><div class="meta-value">'+fmtDate(j.start)+'</div></div>'
+    +'<div class="meta-cell"><div class="meta-label">Slut dato</div><div class="meta-value">'+fmtDate(j.end)+'</div></div>'
+    +'<div class="meta-cell"><div class="meta-label">Udstyr i alt</div><div class="meta-value">'+(j.items||[]).length+' poster · '+total+' stk.</div></div>'
+    +'</div>'
+    +(j.notes?'<div style="background:#f9f9f9;border:1px solid #ddd;border-radius:4px;padding:8px 10px;margin-bottom:16px;font-size:9pt;">'+esc(j.notes)+'</div>':'')
+    +'<table><thead><tr><th class="check">✓</th><th>Udstyr</th><th class="qty">Antal</th><th>Serienummer</th><th>TV2 nr.</th><th>Bemærkninger</th></tr></thead>'
+    +catHtml+'</table>'
+    +'<div style="display:flex;justify-content:flex-end;margin-top:14px;"><div style="border:1px solid #ddd;border-radius:4px;padding:8px 14px;font-size:9pt;">Total: <strong>'+total+'</strong> stk.</div></div>'
+    +'<div class="sig-row"><div class="sig-box">Pakket af / Dato</div><div class="sig-box">Modtaget af / Dato</div><div class="sig-box">Returneret af / Dato</div></div>'
+    +'<div class="no-print"><button onclick="window.print()" style="background:#1a1a1a;color:#fff;border:none;padding:12px 28px;font-size:13px;font-weight:700;border-radius:7px;cursor:pointer;">Udskriv / Gem som PDF</button></div>'
+    +'</div></body></html>';
+  var win=window.open('','_blank','width=900,height=1100');
+  win.document.write(html); win.document.close();
 }
 
-// ---- statistik ----
-const MONTHS_DA = ['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
-
-function bookedDaysInMonth(job, year, month){
-  // returns overlap days between job period and the given month
-  if(!job.start || !job.end) return 0;
-  const mStart = new Date(year, month, 1);
-  const mEnd   = new Date(year, month+1, 0); // last day of month
-  const jStart = new Date(job.start+'T00:00:00');
-  const jEnd   = new Date(job.end+'T00:00:00');
-  const overlapStart = jStart > mStart ? jStart : mStart;
-  const overlapEnd   = jEnd   < mEnd   ? jEnd   : mEnd;
-  if(overlapEnd < overlapStart) return 0;
-  return Math.round((overlapEnd - overlapStart)/(1000*60*60*24)) + 1;
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+async function convertJobToOrdre(id){
+  if(!confirm('Konverter dette tilbud til ordre?')) return;
+  var res=await supa.from('jobs').update({status:'ordre'}).eq('id',id);
+  if(res.error){ alert('Fejl: '+res.error.message); return; }
+  await loadJobs(); renderJobs();
 }
 
-function initStatsControls(){
-  // populate year selector
-  const years = new Set();
-  const thisYear = new Date().getFullYear();
-  years.add(thisYear); years.add(thisYear-1);
-  jobs.forEach(j=>{ if(j.start) years.add(parseInt(j.start.slice(0,4))); });
-  const yearSel = document.getElementById('statsYear');
-  yearSel.innerHTML = [...years].sort((a,b)=>b-a).map(y=>`<option value="${y}">${y}</option>`).join('');
+// ═══════════════════════════════════════════════════════════
+// JOBS GANTT (Puljeudstyr tidslinje)
+// ═══════════════════════════════════════════════════════════
+function renderJobsGantt(){
+  var wrap = document.getElementById('jobsGanttWrap');
+  if(!wrap) return;
+  wrap.innerHTML = '';
 
-  // populate category selector
-  const cats = new Set(EQUIPMENT.map(e=>e.category));
-  const catSel = document.getElementById('statsCat');
-  catSel.innerHTML = '<option value="">Alle kategorier</option>' +
-    [...cats].sort().map(c=>`<option value="${c}">${escapeHtml(c)}</option>`).join('');
-}
+  var fStart = document.getElementById('filterStart').value;
+  var fEnd   = document.getElementById('filterEnd').value;
 
-function renderStats(){
-  initStatsControls();
-  computeAndRenderStats();
-}
+  // Only show jobs in current filter period
+  var visible = jobs.filter(function(j){
+    if(!j.start||!j.end) return false;
+    if(fStart && j.end   < fStart) return false;
+    if(fEnd   && j.start > fEnd)   return false;
+    return true;
+  }).sort(function(a,b){ return a.start.localeCompare(b.start); });
 
-function computeAndRenderStats(){
-  const year   = parseInt(document.getElementById('statsYear').value);
-  const catFilter = document.getElementById('statsCat').value;
-  const sort   = document.getElementById('statsSort').value;
-  const metric = document.getElementById('statsMetric').value; // 'days' or 'jobs'
-
-  // build per-item monthly data
-  const itemMap = {}; // name -> {cat, monthly:[12 numbers], total}
-
-  let equipment = EQUIPMENT;
-  if(catFilter) equipment = equipment.filter(e=>e.category===catFilter);
-
-  equipment.forEach(eq=>{
-    itemMap[eq.name] = {name:eq.name, cat:eq.category, monthly:Array(12).fill(0), total:0, peak:0};
-  });
-
-  jobs.forEach(job=>{
-    if(!job.start) return;
-    const jYear = parseInt(job.start.slice(0,4));
-    const jEndYear = job.end ? parseInt(job.end.slice(0,4)) : jYear;
-    if(jYear > year || jEndYear < year) return; // job not in this year at all
-
-    (job.items||[]).forEach(it=>{
-      if(!itemMap[it.name]) return; // filtered out
-      for(let m=0; m<12; m++){
-        let val = 0;
-        if(metric === 'days'){
-          val = bookedDaysInMonth(job, year, m) * it.qty;
-        } else {
-          // count job once per month it overlaps
-          const mStart = new Date(year, m, 1);
-          const mEnd   = new Date(year, m+1, 0);
-          const jS = new Date(job.start+'T00:00:00');
-          const jE = job.end ? new Date(job.end+'T00:00:00') : jS;
-          if(jS <= mEnd && jE >= mStart) val = 1;
-        }
-        itemMap[it.name].monthly[m] += val;
-        itemMap[it.name].total += val;
-      }
-    });
-  });
-
-  // compute peak
-  Object.values(itemMap).forEach(it=>{
-    it.peak = Math.max(...it.monthly);
-  });
-
-  let items = Object.values(itemMap).filter(it=>it.total>0);
-
-  if(sort==='total') items.sort((a,b)=>b.total-a.total);
-  else if(sort==='name') items.sort((a,b)=>a.name.localeCompare(b.name));
-  else if(sort==='peak') items.sort((a,b)=>b.peak-a.peak);
-
-  // summary cards
-  const totalDays = items.reduce((s,i)=>s+i.total,0);
-  const topItem = items[0];
-  const activeCount = items.length;
-  const peakMonth = (() => {
-    const byMonth = Array(12).fill(0);
-    items.forEach(it=>it.monthly.forEach((v,m)=>byMonth[m]+=v));
-    const max = Math.max(...byMonth);
-    return {month: MONTHS_DA[byMonth.indexOf(max)], val: max};
-  })();
-
-  document.getElementById('statsSummary').innerHTML = [
-    {label: metric==='days'?'Totale lejedage':'Totale job-bookinger', val: totalDays.toLocaleString('da-DK')},
-    {label: 'Aktive stykker udstyr', val: activeCount},
-    {label: 'Mest brugte udstyr', val: topItem ? topItem.name.slice(0,28)+(topItem.name.length>28?'…':'') : '—'},
-    {label: 'Travleste måned', val: peakMonth.val > 0 ? `${peakMonth.month} (${peakMonth.val})` : '—'},
-  ].map(s=>`<div class="panel" style="padding:12px 14px;">
-    <div style="font-size:10px; color:var(--muted); font-family:var(--mono); text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px;">${s.label}</div>
-    <div style="font-size:16px; font-weight:800; color:var(--amber);">${escapeHtml(String(s.val))}</div>
-  </div>`).join('');
-
-  if(items.length===0){
-    document.getElementById('statsContent').innerHTML =
-      '<div class="empty"><div class="big">📊</div>Ingen bookinger fundet for '+year+(catFilter?' i kategorien '+escapeHtml(catFilter):'')+'</div>';
+  if(!visible.length){
+    wrap.innerHTML = '<div style="font-size:11px;color:var(--muted);font-family:var(--mono);padding:6px 0;">Ingen jobs i perioden at vise i tidslinje.</div>';
     return;
   }
 
-  // find global max for bar scaling
-  const globalMax = Math.max(...items.flatMap(i=>i.monthly), 1);
-  const metricLabel = metric==='days' ? 'dage' : 'jobs';
+  // Date range for gantt = filter period or ±7 days around jobs
+  var gStart = fStart || visible[0].start;
+  var gEnd   = fEnd   || visible[visible.length-1].end;
 
-  const rows = items.map(it=>{
-    const bars = it.monthly.map((v,m)=>{
-      const pct = Math.round((v/globalMax)*100);
-      const title = `${MONTHS_DA[m]}: ${v} ${metricLabel}`;
-      return `<div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;">
-        <div style="font-size:8px; color:${v>0?'var(--amber)':'var(--muted)'}; font-family:var(--mono); font-weight:${v>0?700:400};">${v>0?v:''}</div>
-        <div title="${title}" style="width:100%; background:var(--border); border-radius:2px; height:28px; display:flex; align-items:flex-end;">
-          <div style="width:100%; height:${pct}%; background:${pct>66?'var(--amber)':pct>33?'#b07d2a':'#5c4521'}; border-radius:2px; min-height:${v>0?2:0}px; transition:height .2s;"></div>
-        </div>
-        <div style="font-size:7.5px; color:var(--muted); font-family:var(--mono);">${MONTHS_DA[m]}</div>
-      </div>`;
-    }).join('');
+  // Parse to Date objects
+  var startDt = new Date(gStart+'T00:00:00');
+  var endDt   = new Date(gEnd  +'T00:00:00');
+  var DAYS    = Math.min(Math.round((endDt-startDt)/(1000*60*60*24))+1, 120);
+  var COL_W   = Math.max(Math.floor((window.innerWidth - 140) / DAYS), 12);
+  COL_W       = Math.min(COL_W, 32);
 
-    return `<div style="background:var(--panel); border:1px solid var(--border); border-radius:9px; padding:12px 14px; margin-bottom:8px;">
-      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; gap:10px;">
-        <div>
-          <div style="font-size:13px; font-weight:700;">${escapeHtml(it.name)}</div>
-          <div style="font-size:10px; color:var(--muted); font-family:var(--mono); margin-top:1px;">${escapeHtml(it.cat)}</div>
-        </div>
-        <div style="text-align:right; flex-shrink:0;">
-          <div style="font-size:16px; font-weight:800; color:var(--amber); font-family:var(--mono);">${it.total}</div>
-          <div style="font-size:9px; color:var(--muted);">${metricLabel} i ${year}</div>
-        </div>
-      </div>
-      <div style="display:flex; gap:3px; align-items:flex-end; height:58px;">${bars}</div>
-    </div>`;
-  }).join('');
+  var days = [];
+  for(var i=0;i<DAYS;i++){
+    var d=new Date(startDt); d.setDate(d.getDate()+i); days.push(d);
+  }
 
-  document.getElementById('statsContent').innerHTML = `
-    <div style="font-size:11px; color:var(--muted); font-family:var(--mono); margin-bottom:10px;">
-      Viser ${items.length} stykker udstyr med bookinger i ${year} · ${metric==='days'?'Målt i dage':'Målt i antal jobs'}
-    </div>
-    ${rows}`;
-}
+  var DA_M=['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+  var DA_D=['Sø','Ma','Ti','On','To','Fr','Lø'];
+  var todayStr2 = todayStr();
 
-// export CSV
-document.getElementById('statsExportBtn').addEventListener('click', ()=>{
-  const year = parseInt(document.getElementById('statsYear').value);
-  const catFilter = document.getElementById('statsCat').value;
-  const metric = document.getElementById('statsMetric').value;
+  var wrapper=document.createElement('div');
+  wrapper.style.cssText='overflow-x:auto;border:1px solid var(--border);border-radius:10px;';
 
-  const itemMap = {};
-  let equipment = EQUIPMENT;
-  if(catFilter) equipment = equipment.filter(e=>e.category===catFilter);
-  equipment.forEach(eq=>{ itemMap[eq.name]={name:eq.name, cat:eq.category, monthly:Array(12).fill(0)}; });
+  var table=document.createElement('div');
+  table.style.cssText='display:grid;grid-template-columns:140px repeat('+DAYS+','+COL_W+'px);min-width:'+(140+DAYS*COL_W)+'px;font-size:11px;';
 
-  jobs.forEach(job=>{
-    if(!job.start) return;
-    const jYear = parseInt(job.start.slice(0,4));
-    const jEndYear = job.end ? parseInt(job.end.slice(0,4)) : jYear;
-    if(jYear > year || jEndYear < year) return;
-    (job.items||[]).forEach(it=>{
-      if(!itemMap[it.name]) return;
-      for(let m=0; m<12; m++){
-        if(metric==='days'){
-          itemMap[it.name].monthly[m] += bookedDaysInMonth(job, year, m) * it.qty;
-        } else {
-          const mStart=new Date(year,m,1), mEnd=new Date(year,m+1,0);
-          const jS=new Date(job.start+'T00:00:00'), jE=job.end?new Date(job.end+'T00:00:00'):jS;
-          if(jS<=mEnd && jE>=mStart) itemMap[it.name].monthly[m]+=1;
-        }
+  // Month header row
+  var c0=document.createElement('div'); c0.style.cssText='background:var(--panel-2);border-bottom:1px solid var(--border);padding:3px 6px;font-size:9px;color:var(--muted);font-family:var(--mono);display:flex;align-items:center;';c0.textContent='Job'; table.appendChild(c0);
+  var lastM=-1;
+  days.forEach(function(d,i){
+    var isToday=d.toISOString().slice(0,10)===todayStr2;
+    var c=document.createElement('div');
+    c.style.cssText='border-bottom:1px solid var(--border);border-left:1px solid '+(isToday?'var(--amber)':'var(--border)')+';text-align:center;padding:2px 0;background:var(--panel-2);font-family:var(--mono);color:'+(isToday?'var(--amber)':'var(--muted)')+';font-size:9px;font-weight:'+(d.getMonth()!==lastM?700:400)+';';
+    if(d.getMonth()!==lastM){c.textContent=DA_M[d.getMonth()];lastM=d.getMonth();}
+    table.appendChild(c);
+  });
+
+  // Day header row
+  var dh=document.createElement('div'); dh.style.cssText='background:var(--panel-2);border-bottom:2px solid var(--border);padding:2px 4px;color:var(--muted);font-family:var(--mono);font-size:9px;'; dh.textContent=''; table.appendChild(dh);
+  days.forEach(function(d,i){
+    var isToday=d.toISOString().slice(0,10)===todayStr2;
+    var isWE=d.getDay()===0||d.getDay()===6;
+    var c=document.createElement('div');
+    c.style.cssText='border-bottom:2px solid '+(isToday?'var(--amber)':'var(--border)')+';border-left:1px solid '+(isToday?'var(--amber)':'var(--border)')+';text-align:center;padding:1px 0;background:'+(isToday?'rgba(232,163,61,.1)':isWE?'rgba(255,255,255,.02)':'var(--panel-2)')+';font-family:var(--mono);color:'+(isToday?'var(--amber)':isWE?'#6b6f7a':'var(--muted)')+';font-size:8px;';
+    c.textContent=d.getDate()+(COL_W>18?' '+DA_D[d.getDay()]:'');
+    table.appendChild(c);
+  });
+
+  // Job rows
+  visible.forEach(function(j, ri){
+    var isLast = ri===visible.length-1;
+    var border = isLast?'none':'1px solid var(--border)';
+    var isTilbud = j.status==='tilbud';
+
+    // Label cell
+    var lc=document.createElement('div');
+    lc.style.cssText='padding:5px 8px;border-bottom:'+border+';display:flex;align-items:center;gap:6px;background:var(--panel);cursor:pointer;overflow:hidden;';
+    lc.title=j.name+(j.who?' ('+j.who+')':'');
+    if(isTilbud){
+      var tb=document.createElement('span'); tb.style.cssText='background:#5c4521;color:var(--amber);font-size:8px;padding:1px 4px;border-radius:4px;font-family:var(--mono);font-weight:700;flex-shrink:0;'; tb.textContent='T'; lc.appendChild(tb);
+    }
+    var nm=document.createElement('span'); nm.style.cssText='font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'; nm.textContent=j.name; lc.appendChild(nm);
+    lc.addEventListener('click', function(){ toggleJob(j.id); document.getElementById('body-'+j.id).scrollIntoView({behavior:'smooth',block:'nearest'}); });
+    table.appendChild(lc);
+
+    // Day cells
+    var jobStart = j.start; var jobEnd = j.end;
+    var inBlock = false; var span = 0;
+    var i = 0;
+    while(i < DAYS){
+      var iso = days[i].toISOString().slice(0,10);
+      var isToday = iso === todayStr2;
+      var isWE = days[i].getDay()===0||days[i].getDay()===6;
+
+      if(iso >= jobStart && iso <= jobEnd){
+        // Count span
+        span = 0;
+        while(i+span < DAYS && days[i+span].toISOString().slice(0,10) <= jobEnd) span++;
+        span = Math.max(span, 1);
+
+        var color  = isTilbud ? '#e8a33d' : '#5fb88a';
+        var bg     = isTilbud ? 'rgba(232,163,61,.2)' : 'rgba(95,184,138,.2)';
+        var border2= isTilbud ? '2px dashed '+color : '3px solid '+color;
+
+        var block=document.createElement('div');
+        block.style.cssText='grid-column:span '+span+';border-bottom:'+border+';background:'+bg+';border-left:'+border2+';padding:3px 5px;display:flex;align-items:center;cursor:pointer;overflow:hidden;';
+        block.title=j.name+'\n'+fmtDate(j.start)+' → '+fmtDate(j.end)+(j.who?'\n'+j.who:'');
+        var lbl=document.createElement('span'); lbl.style.cssText='font-size:10px;font-weight:700;color:'+color+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;';
+        lbl.textContent=(j.who||'');
+        block.appendChild(lbl);
+        block.addEventListener('click', (function(jj){ return function(){ openEdit(jj.id); }; })(j));
+        table.appendChild(block);
+        i += span;
+      } else {
+        var ec=document.createElement('div');
+        ec.style.cssText='border-bottom:'+border+';border-left:1px solid '+(isToday?'var(--amber)':'var(--border)')+';background:'+(isToday?'rgba(232,163,61,.04)':isWE?'rgba(255,255,255,.01)':'transparent')+';';
+        table.appendChild(ec);
+        i++;
       }
-    });
+    }
   });
 
-  const label = metric==='days'?'Dage booket':'Antal jobs';
-  const header = ['Udstyr','Kategori',...MONTHS_DA.map(m=>m+' '+year),'Total'].join(';');
-  const rows = Object.values(itemMap).filter(i=>i.monthly.some(v=>v>0)).map(i=>{
-    const total = i.monthly.reduce((s,v)=>s+v,0);
-    return ['"'+i.name+'"', '"'+i.cat+'"', ...i.monthly, total].join(';');
-  });
-  const csv = [header,...rows].join('\n');
-  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href=url; a.download=`udstyr-statistik-${year}.csv`; a.click();
-  URL.revokeObjectURL(url);
-});
+  wrapper.appendChild(table);
 
-document.getElementById('showStatsBtn').addEventListener('click', ()=>{
-  const statsPanel = document.getElementById('tab-stats');
-  const lagerPanel = document.getElementById('tab-lager');
-  statsPanel.style.display = 'block';
-  lagerPanel.style.display = 'none';
-  renderStats();
-});
-
-document.getElementById('statsCloseBtn').addEventListener('click', ()=>{
-  document.getElementById('tab-stats').style.display = 'none';
-  document.getElementById('tab-lager').style.display = 'block';
-});
-
-['statsYear','statsCat','statsSort','statsMetric'].forEach(id=>{
-  document.getElementById(id).addEventListener('change', computeAndRenderStats);
-});
-
-// ---- date helpers ----
-function todayStr(){
-  return new Date().toISOString().slice(0,10);
-}
-function addMonths(dateStr, n){
-  const d = new Date(dateStr + 'T00:00:00');
-  d.setMonth(d.getMonth() + n);
-  return d.toISOString().slice(0,10);
+  // Legend
+  var legend=document.createElement('div');
+  legend.style.cssText='display:flex;gap:16px;padding:6px 12px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);';
+  legend.innerHTML='<span style="color:#5fb88a;">— Ordre</span><span style="color:#e8a33d;">╌ Tilbud</span><span>Klik på blok = rediger job</span>';
+  wrapper.appendChild(legend);
+  wrap.appendChild(wrapper);
 }
 
-// ---- filter bar setup ----
-function initFilterDates(){
-  const t = todayStr();
-  document.getElementById('filterStart').value = t;
-  document.getElementById('filterEnd').value   = addMonths(t, 1);
-}
 
-document.getElementById('filterStart').addEventListener('change', ()=> renderJobs());
-document.getElementById('filterEnd').addEventListener('change',   ()=> renderJobs());
-document.getElementById('filterResetBtn').addEventListener('click', ()=>{
-  initFilterDates();
-  renderJobs();
+// ── Gantt toggle ──────────────────────────────────────────
+document.getElementById('ganttToggleBtn').addEventListener('click', function(){
+  var wrap = document.getElementById('jobsGanttWrap');
+  var btn  = document.getElementById('ganttToggleBtn');
+  if(wrap.style.display === 'none'){
+    wrap.style.display = 'block';
+    btn.textContent = '📅 Skjul tidslinje';
+    btn.style.color = 'var(--amber)';
+    try{ renderJobsGantt(); }catch(e){ console.error('renderJobsGantt:',e); }
+  } else {
+    wrap.style.display = 'none';
+    btn.textContent = '📅 Vis tidslinje';
+    btn.style.color = '';
+  }
 });
 
-// ---- avail tab: set today as default start ----
-document.getElementById('availStart').value = todayStr();
+// Re-render gantt when filters change (if visible)
+function maybeRerenderGantt(){
+  var wrap = document.getElementById('jobsGanttWrap');
+  if(wrap && wrap.style.display !== 'none'){
+    try{ renderJobsGantt(); }catch(e){ console.error(e); }
+  }
+}
 
-// ---- init ----
+
 (async function init(){
   initFilterDates();
-  await loadEquipment();
-  await loadJobs();
+  document.getElementById('availStart').value=todayStr();
+  try{
+    await Promise.all([loadCategories(),loadObVogne(),loadObBookinger(),loadPackages(),loadEquipment()]);
+  }catch(e){ console.warn('Init load fejl:',e); }
+  try{ await loadJobs(); }catch(e){ console.error('loadJobs fejlede:',e); }
   renderJobs();
-
-  // opdater automatisk hvert 15. sekund, så man ser kollegers nye bookinger
-  setInterval(async ()=>{
-    if(overlay.classList.contains('open')) return; // forstyr ikke mens nogen redigerer
-    await loadJobs();
+  setInterval(async function(){
+    if(overlay.classList.contains('open')) return;
+    await Promise.all([loadJobs(),loadObBookinger()]);
     renderJobs();
+    var obTab=document.getElementById('tab-obvogne');
+    if(obTab&&obTab.style.display!=='none') renderObVogne();
   }, 15000);
 })();
+
+
 </script>
 </body>
 </html>
