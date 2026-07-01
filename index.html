@@ -166,9 +166,7 @@
   ::-webkit-scrollbar-track{ background:transparent; }
   ::-webkit-scrollbar-thumb{ background:#33363f; border-radius:10px; }
 
-  @media (max-width:640px){
-    .row2, .row3{ grid-template-columns:1fr; }
-  }
+  
 
   /* pakker */
   .pkg-card{ border:1px solid var(--border); border-radius:9px; overflow:hidden; margin-bottom:8px; }
@@ -199,102 +197,7 @@
   /* ═══════════════════════════════════════
      MOBIL LAYOUT (max 640px)
      ═══════════════════════════════════════ */
-  @media (max-width: 640px){
-    #qrScanOverlay{ left:8px; right:8px; width:auto; top:8px; }
-    #overlay .modal{ margin-left:0 !important; }
-
-
-    /* App padding */
-    .app{ padding:10px 10px 60px; }
-
-    /* Header */
-    header.top{ flex-wrap:wrap; gap:10px; padding:10px 0 12px; }
-    header.top .btn{ padding:10px 14px; font-size:13px; }
-
-    /* Nav tabs - horizontal scroll */
-    nav.tabs{ overflow-x:auto; -webkit-overflow-scrolling:touch; flex-wrap:nowrap; gap:0; padding-bottom:2px; }
-    nav.tabs::-webkit-scrollbar{ height:0; }
-    nav.tabs button{ font-size:12px; padding:10px 2px; margin-right:14px; white-space:nowrap; flex-shrink:0; }
-
-    /* Filter bar - stack vertically */
-    #tab-jobs > div:first-child{ flex-direction:column; align-items:stretch !important; }
-    #tab-jobs > div:first-child input[type="date"],
-    #tab-jobs > div:first-child input[type="text"],
-    #tab-jobs > div:first-child button{ width:100%; }
-    #tab-jobs > div:first-child .field{ width:100%; }
-
-    /* Job cards */
-    .job-head{ flex-wrap:wrap; gap:8px; padding:12px; }
-    .job-title{ font-size:14px; }
-    .job-meta{ font-size:11px; }
-    .job-count, .job-conflict-badge{ font-size:10px; }
-    .job-body{ padding:10px 12px; }
-    .job-actions{ flex-wrap:wrap; gap:6px; }
-    .job-actions .btn{ flex:1; min-width:calc(50% - 6px); text-align:center; padding:10px 8px; font-size:12px; }
-
-    /* Modals - full screen on mobile */
-    .overlay{ padding:0; align-items:flex-end; }
-    .modal{
-      border-radius:16px 16px 0 0;
-      max-height:92vh;
-      overflow-y:auto;
-      padding:18px 14px;
-      margin-bottom:0;
-      width:100%;
-      max-width:100%;
-    }
-
-    /* Grid fields - single column */
-    .row2, .row3{ grid-template-columns:1fr !important; gap:10px; }
-
-    /* Equip picker - taller */
-    .equip-list{ max-height:200px; }
-
-    /* Chips - wrap nicely */
-    .selected-strip{ gap:5px; }
-    .chip{ font-size:11px; padding:4px 8px; }
-
-    /* Lager rows - stack actions */
-    .equip-item{ flex-wrap:wrap; gap:6px; padding:8px 4px; }
-    .equip-item .name{ font-size:13px; flex:1; min-width:60%; }
-    .equip-item .stock{ font-size:11px; }
-    .equip-item > div[style*="margin-left:auto"]{ margin-left:0 !important; width:100%; display:flex; flex-wrap:wrap; gap:5px; }
-    .equip-item > div[style*="margin-left:auto"] select,
-    .equip-item > div[style*="margin-left:auto"] button{ flex:1; min-width:calc(50% - 5px); font-size:11px; padding:7px 4px; }
-
-    /* Package cards */
-    .pkg-head{ padding:10px 10px; gap:8px; }
-    .pkg-body{ padding:8px 10px; }
-    .pkg-item-row{ flex-wrap:wrap; gap:5px; }
-    .pkg-item-row select{ width:100%; }
-
-    /* OB Vogne */
-    .ob-head{ flex-wrap:wrap; gap:8px; padding:12px; }
-    .ob-badge{ width:34px; height:34px; font-size:12px; }
-    .ob-section{ padding:10px 12px; }
-    .ob-booking-row{ flex-wrap:wrap; gap:6px; }
-    .ob-booking-row > div:last-child{ width:100%; display:flex; flex-wrap:wrap; gap:5px; }
-    .ob-booking-row > div:last-child button{ flex:1; font-size:11px; padding:8px 4px; }
-
-    /* Stats summary - 2 columns */
-    #statsSummary{ grid-template-columns:1fr 1fr !important; }
-
-    /* Bulk bar */
-    #bulkBar{ flex-direction:column; align-items:stretch; }
-    #bulkBar select, #bulkBar button{ width:100%; padding:10px; font-size:13px; }
-
-    /* Equip detail modal */
-    #equipOverlay .modal > div:first-of-type{ flex-direction:column !important; }
-    #equipImgPreview, #equipImgPlaceholder{ width:100% !important; height:160px !important; flex:none !important; }
-
-    /* Category manager */
-    .cat-row{ flex-wrap:wrap; gap:5px; }
-    .cat-row button{ flex:1; }
-
-    /* Bigger touch targets for all buttons */
-    .btn{ min-height:40px; }
-    .btn.small{ min-height:36px; padding:8px 10px; font-size:12px; }
-  }
+  
 
 
 /* ═══════════════════════════════════════════════════════════
@@ -561,26 +464,53 @@
 #mobileQrUnknown.open { display: block; }
 
 @media (max-width: 767px) {
+  /* ── Hide desktop, show mobile shell ── */
   .app { display: none !important; }
   #mobileApp { display: flex !important; }
-  /* Desktop overlays must appear above mobile app shell */
-  .overlay { z-index: 1500 !important; }
-  .overlay .modal {
-    max-width: 100% !important;
-    width: 100% !important;
-    border-radius: 20px 20px 0 0 !important;
-    margin: 0 !important;
-    max-height: 90vh !important;
-    overflow-y: auto !important;
-  }
+
+  /* ── Desktop overlays appear above mobile shell ── */
   .overlay {
-    align-items: flex-end !important;
+    z-index: 1500 !important;
     padding: 0 !important;
+    align-items: flex-end !important;
   }
-  #mobileQrView, .m-modal-overlay { z-index: 1600 !important; }
-  #qrScanOverlay { z-index: 1600 !important; }
+  .overlay .modal {
+    border-radius: 20px 20px 0 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    max-height: 88vh !important;
+    overflow-y: auto !important;
+    padding: 20px 16px 40px !important;
+  }
+  .row2, .row3 { grid-template-columns: 1fr !important; }
+
+  /* ── QR overlays above everything ── */
+  #mobileQrView { z-index: 1700 !important; }
+  #qrScanOverlay { z-index: 1700 !important; }
+  .m-modal-overlay { z-index: 1600 !important; }
+
+  /* ── Mobile job modal sheet ── */
+  #mJobOverlay { z-index: 1600 !important; }
 }
 
+
+  .view-toggle {
+    display: flex; align-items: center;
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 3px; gap: 2px;
+  }
+  .view-toggle button {
+    background: none; border: none; cursor: pointer;
+    padding: 5px 10px; border-radius: 16px;
+    font-size: 16px; line-height: 1;
+    transition: background .15s, box-shadow .15s;
+    color: var(--muted);
+  }
+  .view-toggle button.active {
+    background: var(--green);
+    box-shadow: 0 0 8px rgba(95,184,138,.4);
+    color: #fff;
+  }
 </style>
 </head>
 <body>
@@ -593,7 +523,10 @@
         <div class="sub">OB PULJE &middot; DELT LAGER</div>
       </div>
     </div>
-    <button class="btn" id="newJobBtn">+ Nyt job</button>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <div class="view-toggle" id="viewToggleDesktop"><button id="btnMobileViewD" onclick="switchToMobile()" title="Mobil">📱</button><button id="btnDesktopViewD" onclick="switchToDesktop()" title="PC">🖥</button></div>
+      <button class="btn" id="newJobBtn">+ Nyt job</button>
+    </div>
   </header>
 
   <nav class="tabs">
@@ -891,6 +824,7 @@
       <div class="dot"></div>
       <h1>UDSTYR BOOKING</h1>
     </div>
+<div class="view-toggle" id="viewToggle"><button id="btnMobileView" onclick="switchToMobile()" title="Mobil">📱</button><button id="btnDesktopView" onclick="switchToDesktop()" title="PC">🖥</button></div>
     <button class="btn small" id="mobileNewJobBtn" style="padding:8px 14px;">+ Job</button>
   </div>
 
@@ -962,6 +896,18 @@
   <div id="mobileQrCamera" style="width:100%;flex:1;"></div>
   <div id="mobileQrBar">
     <div id="mobileQrTitle">Scan QR / Stregkode</div>
+    <div id="mobileQrDates" style="display:none; margin-bottom:10px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">Fra dato</div>
+          <input type="date" id="mQrStart" style="width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:10px 8px;border-radius:9px;font-size:14px;">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">Til dato</div>
+          <input type="date" id="mQrEnd" style="width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:10px 8px;border-radius:9px;font-size:14px;">
+        </div>
+      </div>
+    </div>
     <div id="mobileQrStatus"></div>
     <div id="mobileQrManual">
       <input type="text" id="mobileQrInput" placeholder="Eller skriv kode manuelt..." autocomplete="off">
@@ -2857,6 +2803,7 @@ document.querySelectorAll('#mobileNav button').forEach(function(btn){
 
 function renderMobileTab(){
   var q = (document.getElementById('mobileSearch').value||'').trim().toLowerCase();
+  document.getElementById('mobileSearchBar').style.display = (mCurrentTab==='avail') ? 'none' : 'flex';
   if(mCurrentTab==='jobs')  renderMobileJobs(q);
   if(mCurrentTab==='ob')    renderMobileOb(q);
   if(mCurrentTab==='avail') renderMobileAvail(q);
@@ -2970,40 +2917,111 @@ function renderMobileOb(q){
 // ── Avail tab ──────────────────────────────────────────────
 function renderMobileAvail(q){
   var cont = document.getElementById('mobileContent');
-  cont.innerHTML = '<div style="text-align:center;padding:30px 0 10px;">'
-    +'<button class="btn" onclick="openMobileQr(\'avail\')" style="padding:16px 32px;font-size:16px;width:100%;margin-bottom:16px;">📷 Scan for at tjekke</button>'
-    +'</div>';
+  var today = todayStr();
+  cont.innerHTML = '';
+  var dateBar = document.createElement('div');
+  dateBar.style.cssText = 'background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;';
+  dateBar.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">'
+    +'<div><div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Fra</div>'
+    +'<input type="date" id="mAvailStart" value="'+today+'" style="width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:11px 10px;border-radius:9px;font-size:15px;"></div>'
+    +'<div><div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Til</div>'
+    +'<input type="date" id="mAvailEnd" value="'+addMonths(today,1)+'" style="width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:11px 10px;border-radius:9px;font-size:15px;"></div>'
+    +'</div>'
+    +'<div style="margin:10px 0 10px;">'
+    +'<div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Søg udstyr / OB vogn</div>'
+    +'<input type="text" id="mAvailSearch" placeholder="Skriv navn..." style="width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:12px 14px;border-radius:10px;font-size:15px;box-sizing:border-box;" autocomplete="off">'
+    +'</div>'
+    +'<button class="btn" onclick="openMobileQr(\'avail\')" style="width:100%;padding:14px;font-size:15px;">📷 Scan QR for at tjekke</button>';
+  dateBar.querySelectorAll('input[type=date]').forEach(function(inp){
+    inp.addEventListener('change', function(){
+      var q2 = document.getElementById('mobileSearch').value.trim();
+      if(q2) mRunAvail(q2, cont);
+    });
+  });
+  cont.appendChild(dateBar);
+  // Wire search field (now inside dateBar)
+  var mAvailSel = document.getElementById('mAvailSearch');
+  if(mAvailSel){
+    mAvailSel.addEventListener('input', function(){ mRunAvail(this.value.trim(), cont); });
+    if(q) mAvailSel.value = q;
+  }
+  var ra = document.createElement('div'); ra.id='mAvailResult'; cont.appendChild(ra);
   if(q) mRunAvail(q, cont);
 }
 
 function mRunAvail(q, cont){
   if(!cont) cont = document.getElementById('mobileContent');
+  var ra = document.getElementById('mAvailResult');
+  if(!ra){ ra = document.createElement('div'); ra.id='mAvailResult'; cont.appendChild(ra); }
+  q = (q||'').trim();
+  if(!q){ ra.innerHTML=''; return; }
   var ql = q.toLowerCase();
-  var eq = EQUIPMENT.find(function(e){return e.name.toLowerCase()===ql;})||EQUIPMENT.find(function(e){return e.name.toLowerCase().includes(ql);});
-  var pkg = PACKAGES.find(function(p){return p.name.toLowerCase()===ql;})||PACKAGES.find(function(p){return p.name.toLowerCase().includes(ql);});
-  var vogn = OB_VOGNE.find(function(v){return v.name.toLowerCase()===ql;})||OB_VOGNE.find(function(v){return v.name.toLowerCase().includes(ql);});
-  var res = '<div class="m-avail-result">';
-  if(!eq&&!pkg&&!vogn){ res+='<div class="m-avail-name">Intet matcher "'+escapeHtml(q)+'"</div></div>'; }
-  else {
-    if(vogn){
-      var c=obBookingConflict(vogn.id,todayStr(),addMonths(todayStr(),3),null);
-      res+='<div class="m-avail-name">🚐 '+escapeHtml(vogn.name)+'</div>'
-        +'<div class="m-avail-status" style="color:'+(c?'var(--red)':'var(--green)')+';">'+(c?'Booket':'Ledig')+'</div>'
-        +(c?'<div class="m-avail-detail">'+escapeHtml(c.name)+': '+fmtDate(c.start_date)+' → '+fmtDate(c.end_date)+'</div>':'');
+
+  var s = (document.getElementById('mAvailStart')||{}).value || todayStr();
+  var e = (document.getElementById('mAvailEnd')||{}).value   || addMonths(todayStr(),1);
+
+  var hits = [];
+
+  // Search OB Vogne
+  OB_VOGNE.forEach(function(v){
+    if(!v.name.toLowerCase().includes(ql)) return;
+    var booked = obBookingConflict(v.id, s, e, null);
+    hits.push({icon:'🚐', name:v.name, cat:v.name,
+      ok:!booked, label: booked?('❌ Booket: '+v.name):('✅ Ledig'),
+      detail: booked ? escapeHtml(booked.name)+' '+fmtDate(booked.start_date)+'→'+fmtDate(booked.end_date) : ''});
+  });
+
+  // Search Packages
+  PACKAGES.forEach(function(p){
+    if(!p.name.toLowerCase().includes(ql) && !p.category.toLowerCase().includes(ql)) return;
+    var obOk = true; var obDetail = '';
+    if(p.ob_vogn_id){
+      var obc=obBookingConflict(p.ob_vogn_id,s,e,null);
+      if(obc){obOk=false;var ov=obVognById(p.ob_vogn_id);obDetail='OB booket 🚐'+(ov?' '+ov.name:'');}
     }
-    if(eq){
-      var bq=bookedQty(eq.name,todayStr(),addMonths(todayStr(),3),null);
-      var free=eq.qty-bq.sum;
-      res+='<div class="m-avail-name">'+escapeHtml(eq.name)+'</div>'
-        +'<div class="m-avail-status" style="color:'+(free>0?'var(--green)':'var(--red)')+';">'+free+' / '+eq.qty+' ledige</div>'
-        +(bq.users.length?'<div class="m-avail-detail">Booket af: '+escapeHtml(bq.users.join(', '))+'</div>':'');
+    hits.push({icon:'📦', name:p.name, cat:p.category,
+      ok:obOk, label:obOk?'✅ Ledig':('❌ '+obDetail), detail:''});
+  });
+
+  // Search Equipment
+  EQUIPMENT.forEach(function(eq){
+    if(!eq.name.toLowerCase().includes(ql) && !eq.category.toLowerCase().includes(ql)) return;
+    var bq = bookedQty(eq.name, s, e, null);
+    var free = eq.qty - bq.sum;
+    var obDetail = '';
+    if(eq.ob_vogn_id){
+      var obc=obBookingConflict(eq.ob_vogn_id,s,e,null);
+      if(obc){var ov=obVognById(eq.ob_vogn_id);obDetail=' · OB: 🚐'+(ov?' '+ov.name:'');}
     }
+    var ok = free > 0 && !obDetail;
+    hits.push({icon:'🔧', name:eq.name, cat:eq.category,
+      ok:ok,
+      label: ok ? ('✅ '+free+' / '+eq.qty+' ledige') : ('❌ '+free+' / '+eq.qty+' ledige'),
+      detail: (bq.users.length?'Booket af: '+escapeHtml(bq.users.join(', ')):'')+(obDetail?escapeHtml(obDetail):'')});
+  });
+
+  if(!hits.length){
+    ra.innerHTML='<div style="padding:16px 0;color:var(--muted);font-size:14px;">Intet matcher "'+escapeHtml(q)+'"</div>';
+    return;
   }
-  res+='</div>';
-  var existing = cont.querySelector('.m-avail-result');
-  if(existing) existing.outerHTML = res;
-  else cont.innerHTML += res;
+
+  var periodLine = '<div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px;">'+fmtDate(s)+' → '+fmtDate(e)+'</div>';
+
+  ra.innerHTML = hits.map(function(h){
+    return '<div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;">'
+      + periodLine
+      + '<div style="display:flex;align-items:center;gap:10px;">'
+      + '<span style="font-size:22px;flex-shrink:0;">'+h.icon+'</span>'
+      + '<div style="flex:1;min-width:0;">'
+      + '<div style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escapeHtml(h.name)+'</div>'
+      + '<div style="font-size:11px;color:var(--muted);">'+escapeHtml(h.cat)+'</div>'
+      + '</div></div>'
+      + '<div style="font-size:20px;font-weight:800;margin:8px 0;color:'+(h.ok?'var(--green)':'var(--red)')+';">'+h.label+'</div>'
+      + (h.detail?'<div style="font-size:12px;color:var(--muted);">'+h.detail+'</div>':'')
+      + '</div>';
+  }).join('');
 }
+
 
 // ── Lager tab ──────────────────────────────────────────────
 function renderMobileLager(q){
@@ -3073,58 +3091,113 @@ function updateMJobStatusStyle(){
 ['mJobStatusTilbud','mJobStatusOrdre'].forEach(function(id){document.getElementById(id).addEventListener('change',function(){updateMJobStatusStyle();});});
 
 function renderMEquipList(filter){
-  var f = filter.trim().toLowerCase();
+  var f = (filter||'').trim().toLowerCase();
   var cont = document.getElementById('mEquipList');
-  var items = [
-    ...PACKAGES.map(function(p){return {type:'pkg',obj:p,category:p.category,name:p.name};}),
-    ...EQUIPMENT.filter(function(e){return !e.package_id;}).map(function(e){return {type:'equip',obj:e,category:e.category,name:e.name};})
-  ].sort(function(a,b){var c=a.category.localeCompare(b.category,'da');return c!==0?c:a.name.localeCompare(b.name,'da');})
-  .filter(function(it){return !f||it.name.toLowerCase().includes(f)||it.category.toLowerCase().includes(f);});
+  cont.innerHTML = '';
 
-  cont.innerHTML='';
-  var lastCat=null;
+  var items = [
+    ...PACKAGES.map(function(p){ return {type:'pkg', obj:p, category:p.category, name:p.name}; }),
+    ...EQUIPMENT.filter(function(e){ return !e.package_id; }).map(function(e){ return {type:'equip', obj:e, category:e.category, name:e.name}; })
+  ].sort(function(a,b){
+    var c = a.category.localeCompare(b.category,'da');
+    return c !== 0 ? c : a.name.localeCompare(b.name,'da');
+  }).filter(function(it){
+    return !f || it.name.toLowerCase().includes(f) || it.category.toLowerCase().includes(f);
+  });
+
+  if(!items.length){
+    cont.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);">Ingen match</div>';
+    return;
+  }
+
+  var lastCat = null;
   items.forEach(function(item){
-    if(item.category!==lastCat){
-      var ch=document.createElement('div');ch.style.cssText='font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;padding:10px 0 4px;';
-      ch.textContent=item.category;cont.appendChild(ch);lastCat=item.category;
+    // Category header
+    if(item.category !== lastCat){
+      var ch = document.createElement('div');
+      ch.style.cssText = 'padding:12px 0 4px;font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);margin-bottom:4px;';
+      ch.textContent = item.category;
+      cont.appendChild(ch);
+      lastCat = item.category;
     }
-    var key=item.type==='pkg'?'PKG:'+item.obj.id:item.obj.name;
-    var checked=mSelectedItems.hasOwnProperty(key);
-    var row=document.createElement('div');row.className='m-equip-item';
-    var cb=document.createElement('input');cb.type='checkbox';cb.className='m-equip-cb';cb.checked=checked;
-    (function(k){cb.addEventListener('change',function(){
-      if(cb.checked)mSelectedItems[k]=1;else delete mSelectedItems[k];
-      renderMSelectedEquip();
-    });})(key);
-    var nd=document.createElement('div');nd.className='m-equip-info';
-    nd.innerHTML='<div class="m-equip-name">'+(item.type==='pkg'?'📦 ':'')+escapeHtml(item.name)+'</div>'
-      +'<div class="m-equip-cat">'+escapeHtml(item.category)+'</div>';
-    row.appendChild(cb);row.appendChild(nd);
-    if(checked){
-      var qw=document.createElement('div');qw.className='m-equip-qty-wrap';
-      var ql=document.createElement('span');ql.style.cssText='font-size:11px;color:var(--muted);';ql.textContent='×';
-      var qi=document.createElement('input');qi.type='number';qi.className='m-equip-qty-input';qi.min='1';qi.value=mSelectedItems[key];
-      (function(k){qi.addEventListener('change',function(){mSelectedItems[k]=parseInt(qi.value)||1;renderMSelectedEquip();});})(key);
-      qw.appendChild(ql);qw.appendChild(qi);row.appendChild(qw);
-    }
+
+    var key = item.type === 'pkg' ? 'PKG:' + item.obj.id : item.obj.name;
+    var checked = mSelectedItems.hasOwnProperty(key);
+
+    // Row: checkbox | name+cat | qty
+    var row = document.createElement('label');
+    row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid #1e2128;cursor:pointer;-webkit-tap-highlight-color:transparent;';
+
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = checked;
+    cb.style.cssText = 'width:20px;height:20px;flex-shrink:0;accent-color:var(--amber);cursor:pointer;';
+    (function(k, r){
+      cb.addEventListener('change', function(e){
+        e.stopPropagation();
+        if(cb.checked) mSelectedItems[k] = 1; else delete mSelectedItems[k];
+        renderMSelectedEquip();
+        // Re-render just this row's qty
+        var qi = r.querySelector('.m-qty');
+        if(cb.checked && !qi){
+          var inp = makeQtyInput(k);
+          r.appendChild(inp);
+        } else if(!cb.checked && qi){
+          r.removeChild(qi);
+        }
+      });
+    })(key, row);
+
+    var nameWrap = document.createElement('div');
+    nameWrap.style.cssText = 'flex:1;min-width:0;overflow:hidden;';
+    var nameEl = document.createElement('div');
+    nameEl.style.cssText = 'font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    nameEl.textContent = (item.type==='pkg' ? '📦 ' : '') + item.name;
+    var catEl = document.createElement('div');
+    catEl.style.cssText = 'font-size:11px;color:var(--muted);margin-top:2px;';
+    catEl.textContent = item.type==='pkg'
+      ? (EQUIPMENT.filter(function(e){return e.package_id===item.obj.id;}).length) + ' stk.'
+      : 'af ' + item.obj.qty;
+    nameWrap.appendChild(nameEl);
+    nameWrap.appendChild(catEl);
+
+    row.appendChild(cb);
+    row.appendChild(nameWrap);
+    if(checked) row.appendChild(makeQtyInput(key));
+
     cont.appendChild(row);
   });
 }
 
-function renderMSelectedEquip(){
-  var strip=document.getElementById('mSelectedEquip');
-  var names=Object.keys(mSelectedItems);
-  if(!names.length){strip.innerHTML='';return;}
-  strip.innerHTML='';
-  names.forEach(function(n){
-    var label=n.startsWith('PKG:')?(PACKAGES.find(function(p){return p.id===n.slice(4);})||{name:'pakke'}).name+' (pakke)':n;
-    var chip=document.createElement('div');chip.className='chip';chip.style.cssText='background:var(--amber-dim);color:var(--amber);border-radius:20px;padding:5px 10px;font-size:12px;font-family:var(--mono);display:flex;align-items:center;gap:6px;';
-    chip.textContent=label+' ×'+mSelectedItems[n]+' ';
-    var btn=document.createElement('button');btn.style.cssText='background:none;border:none;color:var(--amber);cursor:pointer;font-size:14px;padding:0;';btn.textContent='×';
-    (function(k){btn.onclick=function(){delete mSelectedItems[k];renderMSelectedEquip();renderMEquipList(document.getElementById('mEquipSearch').value||'');};})(n);
-    chip.appendChild(btn);strip.appendChild(chip);
-  });
+function makeQtyInput(key){
+  var wrap = document.createElement('div');
+  wrap.className = 'm-qty';
+  wrap.style.cssText = 'display:flex;align-items:center;gap:4px;flex-shrink:0;';
+  wrap.addEventListener('click', function(e){e.stopPropagation();e.preventDefault();});
+  var minBtn = document.createElement('button');
+  minBtn.type = 'button';
+  minBtn.style.cssText = 'width:28px;height:28px;border-radius:50%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+  minBtn.textContent = '−';
+  var inp = document.createElement('input');
+  inp.type = 'number';
+  inp.value = mSelectedItems[key] || 1;
+  inp.min = '1';
+  inp.style.cssText = 'width:36px;text-align:center;background:var(--panel-2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px;font-size:14px;';
+  var plusBtn = document.createElement('button');
+  plusBtn.type = 'button';
+  plusBtn.style.cssText = minBtn.style.cssText;
+  plusBtn.textContent = '+';
+  (function(k){
+    inp.addEventListener('change', function(){mSelectedItems[k]=parseInt(inp.value)||1;renderMSelectedEquip();});
+    minBtn.addEventListener('click', function(e){e.preventDefault();var v=Math.max(1,(parseInt(inp.value)||1)-1);inp.value=v;mSelectedItems[k]=v;renderMSelectedEquip();});
+    plusBtn.addEventListener('click', function(e){e.preventDefault();var v=(parseInt(inp.value)||1)+1;inp.value=v;mSelectedItems[k]=v;renderMSelectedEquip();});
+  })(key);
+  wrap.appendChild(minBtn);
+  wrap.appendChild(inp);
+  wrap.appendChild(plusBtn);
+  return wrap;
 }
+
 
 document.getElementById('mEquipSearch').addEventListener('input',function(e){renderMEquipList(e.target.value);});
 
@@ -3166,6 +3239,21 @@ function openMobileQr(mode){
   document.getElementById('mobileQrInput').value='';
   document.getElementById('mobileQrStatus').textContent='';
   document.getElementById('mobileQrTitle').textContent = mode==='avail'?'Scan for at tjekke ledighed':'Scan for at tilføje til job';
+  // Show date fields only in avail mode
+  var datesDiv = document.getElementById('mobileQrDates');
+  if(datesDiv){
+    datesDiv.style.display = mode==='avail' ? 'block' : 'none';
+    if(mode==='avail'){
+      var today = todayStr();
+      // Use existing avail dates if set, else default to today + 1 month
+      var startEl = document.getElementById('mAvailStart');
+      var endEl   = document.getElementById('mAvailEnd');
+      document.getElementById('mQrStart').value = startEl ? startEl.value : today;
+      document.getElementById('mQrEnd').value   = endEl   ? endEl.value   : addMonths(today, 1);
+      if(!document.getElementById('mQrStart').value) document.getElementById('mQrStart').value = today;
+      if(!document.getElementById('mQrEnd').value)   document.getElementById('mQrEnd').value   = addMonths(today, 1);
+    }
+  }
   startMobileQrCamera();
   setTimeout(function(){document.getElementById('mobileQrInput').focus();},300);
 }
@@ -3284,6 +3372,43 @@ function initMobile(){
 }
 
 
+// ── View switcher ─────────────────────────────────────────
+function updateToggleState(view){
+  ['btnMobileView','btnMobileViewD'].forEach(function(id){
+    var b=document.getElementById(id); if(b) b.classList.toggle('active', view==='mobile');
+  });
+  ['btnDesktopView','btnDesktopViewD'].forEach(function(id){
+    var b=document.getElementById(id); if(b) b.classList.toggle('active', view==='desktop');
+  });
+}
+function switchToMobile(){
+  document.getElementById('mobileApp').style.display='flex';
+  document.querySelector('.app').style.display='none';
+  localStorage.setItem('preferView','mobile');
+  updateToggleState('mobile');
+  renderMobileTab();
+}
+function switchToDesktop(){
+  document.getElementById('mobileApp').style.display='none';
+  document.querySelector('.app').style.display='block';
+  localStorage.setItem('preferView','desktop');
+  updateToggleState('desktop');
+}
+function applyViewPreference(){
+  var pref = localStorage.getItem('preferView');
+  var mobile = isMobile();
+  if(pref==='desktop'){
+    document.getElementById('mobileApp').style.display='none';
+    document.querySelector('.app').style.display='block';
+    updateToggleState('desktop');
+  } else {
+    document.getElementById('mobileApp').style.display='flex';
+    document.querySelector('.app').style.display='none';
+    updateToggleState('mobile');
+  }
+}
+
+
 (async function init(){
   initFilterDates();
   document.getElementById('availStart').value=todayStr();
@@ -3293,6 +3418,7 @@ function initMobile(){
   try{ await loadJobs(); }catch(e){ console.error('loadJobs fejlede:',e); }
   renderJobs();
   initMobile();
+  applyViewPreference();
   setInterval(async function(){
     if(overlay.classList.contains('open')) return;
     await Promise.all([loadJobs(),loadObBookinger()]);
