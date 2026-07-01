@@ -1178,6 +1178,7 @@ function openNew(){
   overlay.classList.add('open');
 }
 function openEdit(id){
+  try{
   const j=jobs.find(function(x){return x.id===id;}); if(!j) return;
   editingJobId=id; selectedItems={};
   (j.items||[]).forEach(function(it){
@@ -1194,6 +1195,7 @@ function openEdit(id){
   document.getElementById('equipSearch').value='';
   renderEquipList(''); renderSelectedStrip(); renderConflicts();
   overlay.classList.add('open');
+  }catch(e){console.error('openEdit fejl:',e);alert('Fejl i openEdit: '+e.message);}
 }
 function openCopy(id){
   const j=jobs.find(function(x){return x.id===id;}); if(!j) return;
@@ -2816,58 +2818,91 @@ function renderMobileTab(){
 document.getElementById('mobileSearch').addEventListener('input', function(){ renderMobileTab(); });
 
 // ── Jobs tab ───────────────────────────────────────────────
+function mkBtn(txt, cls, fn){
+  var b = document.createElement('button');
+  b.className = 'btn small '+(cls||'secondary');
+  b.textContent = txt;
+  b.style.padding = '12px 8px';
+  b.addEventListener('click', function(e){ e.stopPropagation(); fn(); });
+  return b;
+}
+
 function renderMobileJobs(q){
   var cont = document.getElementById('mobileContent');
   var today = todayStr();
   var visible = jobs.filter(function(j){
-    if(q) return (j.name||'').toLowerCase().includes(q)||(j.who||'').toLowerCase().includes(q);
-    // Default: upcoming + recent (30 days back, 60 forward)
-    if(!j.start) return true;
-    var past = new Date(); past.setDate(past.getDate()-30);
-    var future = new Date(); future.setDate(future.getDate()+60);
-    return new Date(j.end+'T00:00:00') >= past && new Date(j.start+'T00:00:00') <= future;
+    if(q) return (j.name||'').toLowerCase().includes(q)||(j.who||'').toLowerCase().includes(q)||(j.notes||'').toLowerCase().includes(q);
+    var past=new Date(); past.setDate(past.getDate()-30);
+    var future=new Date(); future.setDate(future.getDate()+60);
+    return new Date((j.end||j.start)+'T00:00:00')>=past && new Date((j.start||j.end)+'T00:00:00')<=future;
   }).sort(function(a,b){ return (b.start||'').localeCompare(a.start||''); });
 
-  if(!visible.length){ cont.innerHTML='<div style="text-align:center;padding:50px 20px;color:var(--muted);">📋<br>Ingen jobs</div>'; return; }
+  if(!visible.length){
+    cont.innerHTML='<div style="text-align:center;padding:50px 20px;color:var(--muted);">📋<br>'+(q?'Ingen match':'Ingen jobs i perioden')+'</div>';
+    return;
+  }
 
   cont.innerHTML = '';
   visible.forEach(function(j){
     var isTilbud = j.status==='tilbud';
     var isActive = j.start<=today && j.end>=today;
-    var card = document.createElement('div'); card.className='m-job-card';
-    if(isTilbud) card.style.borderLeft='3px solid var(--amber)';
+    var card = document.createElement('div');
+    card.className = 'm-job-card';
     if(isActive) card.style.borderLeft='3px solid #5fb88a';
+    else if(isTilbud) card.style.borderLeft='3px solid var(--amber)';
 
-    var head = document.createElement('div'); head.className='m-job-head';
+    var head = document.createElement('div');
+    head.className = 'm-job-head';
+    var badge = '';
+    if(isTilbud) badge = '<span style="background:#5c4521;color:var(--amber);font-size:9px;padding:1px 5px;border-radius:4px;font-family:var(--mono);font-weight:700;margin-right:5px;">TILBUD</span>';
     head.innerHTML = '<div style="flex:1;">'
-      +'<div class="m-job-title">'+(isTilbud?'<span style="background:#5c4521;color:var(--amber);font-size:9px;padding:1px 5px;border-radius:4px;font-family:var(--mono);font-weight:700;margin-right:5px;">TILBUD</span>':'')+escapeHtml(j.name||'')+'</div>'
+      +'<div class="m-job-title">'+badge+escapeHtml(j.name||'')+'</div>'
       +'<div class="m-job-meta">'+(j.who?escapeHtml(j.who)+' · ':'')+fmtDate(j.start)+' → '+fmtDate(j.end)+'</div>'
-      +'</div>'
-      +'<span style="font-size:11px;color:var(--muted);font-family:var(--mono);">'+(j.items||[]).length+' stk.</span>';
-    head.addEventListener('click', function(){ var b=card.querySelector('.m-job-body'); b.classList.toggle('open'); });
+      +'</div><span style="font-size:11px;color:var(--muted);font-family:var(--mono);">'+(j.items||[]).length+' stk.</span>';
+
+    var body = document.createElement('div');
+    body.className = 'm-job-body';
+    head.addEventListener('click', function(){ body.classList.toggle('open'); });
+
+    var itemsHtml = (j.items||[]).map(function(it){
+      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;">'
+        +'<span>'+(it.isPkg?'📦 ':'')+escapeHtml(it.name)+'</span>'
+        +'<span style="color:var(--amber);font-family:var(--mono);font-weight:700;">x'+it.qty+'</span></div>';
+    }).join('') || '<div style="color:var(--muted);font-size:13px;padding:6px 0;">Intet udstyr</div>';
+    body.innerHTML = itemsHtml;
+
+    var acts = document.createElement('div');
+    acts.className = 'm-job-actions';
+    acts.style.marginTop = '12px';
+
+    (function(jid, jobj){
+      acts.appendChild(mkBtn('Rediger', 'secondary', function(){ openEdit(jid); }));
+      acts.appendChild(mkBtn('Kopier', 'secondary', function(){ openCopy(jid); }));
+      if(isTilbud) acts.appendChild(mkBtn('Ordre', '', function(){ mConvertOrdre(jid); }));
+      acts.appendChild(mkBtn('Pakkeliste', 'secondary', function(){ printPackList(jid); }));
+      acts.appendChild(mkBtn('Slet', 'danger', function(){ mDeleteJob(jid); }));
+    })(j.id, j);
+
+    body.appendChild(acts);
     card.appendChild(head);
-
-    var body = document.createElement('div'); body.className='m-job-body';
-    var items = (j.items||[]).map(function(it){ return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;"><span>'+escapeHtml(it.name)+'</span><span style="color:var(--amber);font-family:var(--mono);">×'+it.qty+'</span></div>'; }).join('')||'<div style="color:var(--muted);font-size:13px;">Intet udstyr</div>';
-    body.innerHTML = items
-      +'<div class="m-job-actions" style="margin-top:12px;">'
-      +'<button class="btn small secondary" style="padding:12px;">Rediger</button>'
-      +'<button class="btn small secondary" style="padding:12px;">Kopiér</button>'
-      +(isTilbud?'<button class="btn small" style="padding:12px;background:var(--green);color:#0a1f14;">→ Ordre</button>':'')
-      +'<button class="btn small" style="padding:12px;">📄 Pakkeliste</button>'
-      +'</div>';
-
-    body.querySelectorAll('button')[0].addEventListener('click', function(){ openMJobModal(j.id); });
-    body.querySelectorAll('button')[1].addEventListener('click', function(){ openMJobModal(null, j); });
-    if(isTilbud) body.querySelectorAll('button')[2].addEventListener('click', async function(){
-      if(!confirm('Konverter til ordre?')) return;
-      await supa.from('jobs').update({status:'ordre'}).eq('id',j.id);
-      await loadJobs(); renderMobileJobs(document.getElementById('mobileSearch').value||'');
-    });
-    body.querySelectorAll('button')[isTilbud?3:2].addEventListener('click', function(){ printPackList(j.id); });
     card.appendChild(body);
     cont.appendChild(card);
   });
+}
+
+function mToggleJob(el){ el.nextElementSibling.classList.toggle("open"); }
+async function mConvertOrdre(id){
+  if(!confirm('Konverter til ordre?')) return;
+  await supa.from('jobs').update({status:'ordre'}).eq('id',id);
+  await loadJobs();
+  renderMobileJobs(document.getElementById('mobileSearch').value||'');
+}
+async function mDeleteJob(id){
+  var j=jobs.find(function(x){return x.id===id;});
+  if(!j||!confirm('Slet "'+j.name+'"?')) return;
+  await supa.from('jobs').delete().eq('id',id);
+  await loadJobs();
+  renderMobileJobs(document.getElementById('mobileSearch').value||'');
 }
 
 // ── OB Vogne tab ───────────────────────────────────────────
@@ -3226,7 +3261,7 @@ document.getElementById('mSaveJobBtn').addEventListener('click', async function(
   finally{btn.disabled=false;btn.textContent='Gem job';}
 });
 
-document.getElementById('mobileNewJobBtn').addEventListener('click',function(){openMJobModal(null);});
+document.getElementById('mobileNewJobBtn').addEventListener('click',function(){ openNew(); });
 
 // Close modal on overlay click
 document.getElementById('mJobOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('mJobOverlay'))closeMJobModal();});
@@ -3352,7 +3387,7 @@ function mQrCreateNew(){
 }
 
 function mScanEquip(){
-  openMobileQr('job');
+  scanToAddToJob();
 }
 
 // FAB scan button — context-aware
@@ -3384,27 +3419,24 @@ function updateToggleState(view){
 function switchToMobile(){
   document.getElementById('mobileApp').style.display='flex';
   document.querySelector('.app').style.display='none';
-  localStorage.setItem('preferView','mobile');
   updateToggleState('mobile');
   renderMobileTab();
 }
 function switchToDesktop(){
   document.getElementById('mobileApp').style.display='none';
   document.querySelector('.app').style.display='block';
-  localStorage.setItem('preferView','desktop');
   updateToggleState('desktop');
 }
 function applyViewPreference(){
-  var pref = localStorage.getItem('preferView');
-  var mobile = isMobile();
-  if(pref==='desktop'){
-    document.getElementById('mobileApp').style.display='none';
-    document.querySelector('.app').style.display='block';
-    updateToggleState('desktop');
-  } else {
+  // Always start in the right view for the device — no saved preference
+  if(isMobile()){
     document.getElementById('mobileApp').style.display='flex';
     document.querySelector('.app').style.display='none';
     updateToggleState('mobile');
+  } else {
+    document.getElementById('mobileApp').style.display='none';
+    document.querySelector('.app').style.display='block';
+    updateToggleState('desktop');
   }
 }
 
