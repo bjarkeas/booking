@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Udstyr Booking — OB Pulje</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
   :root{
     --bg:#14161b;
@@ -194,6 +195,104 @@
   .ob-section:last-child{ border-bottom:none; }
   .ob-section-title{ font-size:10.5px; color:var(--muted); font-family:var(--mono); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px; }
   .ob-tag{ font-family:var(--mono); font-size:10px; padding:2px 7px; border-radius:10px; font-weight:700; }
+
+  /* ═══════════════════════════════════════
+     MOBIL LAYOUT (max 640px)
+     ═══════════════════════════════════════ */
+  @media (max-width: 640px){
+
+    /* App padding */
+    .app{ padding:10px 10px 60px; }
+
+    /* Header */
+    header.top{ flex-wrap:wrap; gap:10px; padding:10px 0 12px; }
+    header.top .btn{ padding:10px 14px; font-size:13px; }
+
+    /* Nav tabs - horizontal scroll */
+    nav.tabs{ overflow-x:auto; -webkit-overflow-scrolling:touch; flex-wrap:nowrap; gap:0; padding-bottom:2px; }
+    nav.tabs::-webkit-scrollbar{ height:0; }
+    nav.tabs button{ font-size:12px; padding:10px 2px; margin-right:14px; white-space:nowrap; flex-shrink:0; }
+
+    /* Filter bar - stack vertically */
+    #tab-jobs > div:first-child{ flex-direction:column; align-items:stretch !important; }
+    #tab-jobs > div:first-child input[type="date"],
+    #tab-jobs > div:first-child input[type="text"],
+    #tab-jobs > div:first-child button{ width:100%; }
+    #tab-jobs > div:first-child .field{ width:100%; }
+
+    /* Job cards */
+    .job-head{ flex-wrap:wrap; gap:8px; padding:12px; }
+    .job-title{ font-size:14px; }
+    .job-meta{ font-size:11px; }
+    .job-count, .job-conflict-badge{ font-size:10px; }
+    .job-body{ padding:10px 12px; }
+    .job-actions{ flex-wrap:wrap; gap:6px; }
+    .job-actions .btn{ flex:1; min-width:calc(50% - 6px); text-align:center; padding:10px 8px; font-size:12px; }
+
+    /* Modals - full screen on mobile */
+    .overlay{ padding:0; align-items:flex-end; }
+    .modal{
+      border-radius:16px 16px 0 0;
+      max-height:92vh;
+      overflow-y:auto;
+      padding:18px 14px;
+      margin-bottom:0;
+      width:100%;
+      max-width:100%;
+    }
+
+    /* Grid fields - single column */
+    .row2, .row3{ grid-template-columns:1fr !important; gap:10px; }
+
+    /* Equip picker - taller */
+    .equip-list{ max-height:200px; }
+
+    /* Chips - wrap nicely */
+    .selected-strip{ gap:5px; }
+    .chip{ font-size:11px; padding:4px 8px; }
+
+    /* Lager rows - stack actions */
+    .equip-item{ flex-wrap:wrap; gap:6px; padding:8px 4px; }
+    .equip-item .name{ font-size:13px; flex:1; min-width:60%; }
+    .equip-item .stock{ font-size:11px; }
+    .equip-item > div[style*="margin-left:auto"]{ margin-left:0 !important; width:100%; display:flex; flex-wrap:wrap; gap:5px; }
+    .equip-item > div[style*="margin-left:auto"] select,
+    .equip-item > div[style*="margin-left:auto"] button{ flex:1; min-width:calc(50% - 5px); font-size:11px; padding:7px 4px; }
+
+    /* Package cards */
+    .pkg-head{ padding:10px 10px; gap:8px; }
+    .pkg-body{ padding:8px 10px; }
+    .pkg-item-row{ flex-wrap:wrap; gap:5px; }
+    .pkg-item-row select{ width:100%; }
+
+    /* OB Vogne */
+    .ob-head{ flex-wrap:wrap; gap:8px; padding:12px; }
+    .ob-badge{ width:34px; height:34px; font-size:12px; }
+    .ob-section{ padding:10px 12px; }
+    .ob-booking-row{ flex-wrap:wrap; gap:6px; }
+    .ob-booking-row > div:last-child{ width:100%; display:flex; flex-wrap:wrap; gap:5px; }
+    .ob-booking-row > div:last-child button{ flex:1; font-size:11px; padding:8px 4px; }
+
+    /* Stats summary - 2 columns */
+    #statsSummary{ grid-template-columns:1fr 1fr !important; }
+
+    /* Bulk bar */
+    #bulkBar{ flex-direction:column; align-items:stretch; }
+    #bulkBar select, #bulkBar button{ width:100%; padding:10px; font-size:13px; }
+
+    /* Equip detail modal */
+    #equipOverlay .modal > div:first-of-type{ flex-direction:column !important; }
+    #equipImgPreview, #equipImgPlaceholder{ width:100% !important; height:160px !important; flex:none !important; }
+
+    /* Category manager */
+    .cat-row{ flex-wrap:wrap; gap:5px; }
+    .cat-row button{ flex:1; }
+
+    /* Bigger touch targets for all buttons */
+    .btn{ min-height:40px; }
+    .btn.small{ min-height:36px; padding:8px 10px; font-size:12px; }
+  }
+
 </style>
 </head>
 <body>
@@ -222,6 +321,7 @@
       <div class="field" style="margin:0;"><label>til</label><input type="date" id="filterEnd" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;"></div>
       <button class="btn small secondary" id="filterResetBtn" style="margin-bottom:1px;">Nulstil</button>
       <button class="btn small secondary" id="ganttToggleBtn" style="margin-bottom:1px;">📅 Vis tidslinje</button>
+      <input type="text" id="jobSearch" placeholder="Søg job navn, initialer..." style="min-width:220px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;">
       <div id="filterCount" style="font-size:11px; color:var(--muted); font-family:var(--mono); align-self:center;"></div>
     </div>
     <div id="jobsGanttWrap" style="display:none; margin-bottom:14px;"></div>
@@ -234,7 +334,10 @@
       <div class="row3">
         <div class="field">
           <label>Udstyr</label>
-          <input type="text" id="availSearch" placeholder="Søg udstyr...">
+          <div style="display:flex;gap:8px;">
+          <input type="text" id="availSearch" placeholder="Søg udstyr..." style="flex:1;">
+          <button class="btn small secondary" type="button" onclick="scanForAvailability()" style="white-space:nowrap;">📷 Scan</button>
+        </div>
         </div>
         <div class="field">
           <label>Start dato</label>
@@ -260,10 +363,25 @@
           <button class="btn small secondary" id="addPkgBtn">+ Ny pakke</button>
           <button class="btn small" id="addEquipBtn">+ Tilføj udstyr</button>
           <button class="btn small secondary" onclick="openCatManager()">Kategorier</button>
+          <button class="btn small secondary" id="multiModeBtn" onclick="toggleMultiMode()">☑ Vælg flere</button>
           <button class="btn small secondary" id="showStatsBtn">Statistik</button>
         </div>
       </div>
       <div id="lagerNewRow" style="display:none; margin-bottom:14px;"></div>
+      <div id="bulkBar" style="display:none; background:var(--panel-2); border:1px solid var(--amber); border-radius:8px; padding:10px 14px; margin-bottom:12px; gap:10px; align-items:center; flex-wrap:wrap;">
+        <span id="bulkCount" style="font-size:12px; font-weight:700; color:var(--amber); font-family:var(--mono);"></span>
+        <select id="bulkPkgSel" onchange="bulkMoveToPackage(this.value); this.value='';" style="background:var(--panel); border:1px solid var(--border); color:var(--text); padding:6px 8px; border-radius:6px; font-size:12px;">
+          <option value="">Flyt til pakke...</option>
+        </select>
+        <select id="bulkObSel" onchange="bulkMoveToOb(this.value); this.value='';" style="background:var(--panel); border:1px solid var(--border); color:var(--text); padding:6px 8px; border-radius:6px; font-size:12px;">
+          <option value="">OB Vogn...</option>
+          <option value="__remove__">— Fjern fra OB vogn</option>
+        </select>
+        <select id="bulkCatSel" onchange="bulkChangeCategory(this.value); this.value='';" style="background:var(--panel); border:1px solid var(--border); color:var(--text); padding:6px 8px; border-radius:6px; font-size:12px;">
+          <option value="">Skift kategori...</option>
+        </select>
+        <button class="btn small danger" onclick="bulkDelete()">Slet valgte</button>
+      </div>
       <div id="lagerList"></div>
     </div>
   </div>
@@ -284,9 +402,49 @@
   </div>
 
   <div id="tab-obvogne" style="display:none;">
+    <div style="margin-bottom:14px;">
+      <input type="text" id="obSearch" placeholder="Søg OB vogn navn eller booking..." style="width:100%; max-width:400px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 12px; border-radius:8px; font-size:13px;">
+    </div>
     <div id="obvogneContent"></div>
   </div>
 </div>
+
+<div class="overlay" id="qrScanOverlay">
+  <div class="modal" style="max-width:420px;">
+    <h2>Scan QR / Stregkode</h2>
+    <div id="qrCameraView" style="width:100%;border-radius:8px;overflow:hidden;background:#000;min-height:200px;margin-bottom:12px;"></div>
+    <div id="qrScanStatus" style="font-size:11.5px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;min-height:18px;"></div>
+    <div class="field">
+      <label>Manuel input / USB scanner</label>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="qrManualInput" placeholder="Scan eller skriv serienummer / QR-kode..." style="flex:1;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:7px;font-size:13px;">
+        <button class="btn small" id="qrManualConfirmBtn">OK</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="qrCloseScanBtn">Luk</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="qrUnknownOverlay">
+  <div class="modal" style="max-width:440px;">
+    <h2>Ukendt QR-kode</h2>
+    <div style="background:var(--panel-2);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-family:var(--mono);font-size:12px;color:var(--amber);">
+      Scannet kode: <span id="qrUnknownCode"></span>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Denne QR-kode er ikke tilknyttet noget udstyr endnu. Hvad vil du gøre?</p>
+    <div class="field">
+      <label>Tilknyt til eksisterende udstyr/pakke</label>
+      <select id="qrLinkSelect" style="width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:7px;font-size:13px;"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="qrCreateBtn">+ Opret nyt udstyr</button>
+      <button class="btn" id="qrLinkBtn">Tilknyt</button>
+    </div>
+  </div>
+</div>
+
 
 <div class="overlay" id="catOverlay">
   <div class="modal" style="max-width:480px;">
@@ -315,9 +473,13 @@
     <div class="field"><label>Noter</label><textarea id="obNotes" style="min-height:50px;"></textarea></div>
     <div class="field">
       <label>Status</label>
-      <div style="display:flex; gap:8px; margin-top:2px;">
-        <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="obStatus" id="obStatusTilbud" value="tilbud" style="accent-color:var(--amber);"> Tilbud</label>
-        <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="obStatus" id="obStatusOrdre" value="ordre" checked style="accent-color:var(--green);"> Ordre</label>
+      <div style="display:flex;gap:0;margin-top:6px;border:1px solid var(--border);border-radius:8px;overflow:hidden;width:fit-content;">
+        <label id="obLabelTilbud" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 18px;font-size:13px;font-weight:600;transition:background .15s;" onclick="document.getElementById('obStatusTilbud').checked=true;updateObStatusStyle();">
+          <input type="radio" name="obStatus" id="obStatusTilbud" value="tilbud" style="display:none;"> Tilbud
+        </label>
+        <label id="obLabelOrdre" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 18px;font-size:13px;font-weight:600;border-left:1px solid var(--border);transition:background .15s;" onclick="document.getElementById('obStatusOrdre').checked=true;updateObStatusStyle();">
+          <input type="radio" name="obStatus" id="obStatusOrdre" value="ordre" checked style="display:none;"> Ordre
+        </label>
       </div>
     </div>
     <div id="obConflictBox"></div>
@@ -357,12 +519,26 @@
       <label>Noter</label>
       <textarea id="jobNotes" placeholder="Valgfrit..."></textarea>
     </div>
+    <div class="field">
+      <label>Status</label>
+      <div style="display:flex; gap:0; margin-top:6px; border:1px solid var(--border); border-radius:8px; overflow:hidden; width:fit-content;">
+        <label id="labelTilbud" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 18px;font-size:13px;font-weight:600;transition:background .15s;" onclick="document.getElementById('jobStatusTilbud').checked=true;updateStatusStyle();">
+          <input type="radio" name="jobStatus" id="jobStatusTilbud" value="tilbud" style="display:none;"> Tilbud
+        </label>
+        <label id="labelOrdre" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 18px;font-size:13px;font-weight:600;border-left:1px solid var(--border);transition:background .15s;" onclick="document.getElementById('jobStatusOrdre').checked=true;updateStatusStyle();">
+          <input type="radio" name="jobStatus" id="jobStatusOrdre" value="ordre" checked style="display:none;"> Ordre
+        </label>
+      </div>
+    </div>
 
     <div class="field">
       <label>Udstyr til jobbet</label>
       <div class="equip-picker">
         <div class="equip-search">
-          <input type="text" id="equipSearch" placeholder="Søg i udstyrsliste (256 stk.)...">
+          <div style="display:flex;gap:8px;margin-bottom:6px;">
+          <button class="btn small secondary" type="button" onclick="scanToAddToJob()" style="white-space:nowrap;">📷 Scan udstyr</button>
+        </div>
+        <input type="text" id="equipSearch" placeholder="Søg i udstyrsliste (256 stk.)...">
         </div>
         <div class="equip-list" id="equipList"></div>
       </div>
@@ -405,6 +581,9 @@
         </div>
         <div class="row2">
           <div class="field"><label>Serienummer</label><input type="text" id="dSerial" placeholder="f.eks. SN-9988231"></div>
+          <div class="field"><label>QR-kode (hvis forskellig fra serienummer)</label><input type="text" id="dQrCode" placeholder="Scan eller skriv QR-kode..."></div>
+        </div>
+        <div class="row2">
           <div class="field"><label>Strøm tilslutning</label><input type="text" id="dPower" placeholder="f.eks. 230V Schuko"></div>
         </div>
       </div>
@@ -586,7 +765,11 @@ function renderJobs(){
 
   const fStart=document.getElementById('filterStart'); const fEnd=document.getElementById('filterEnd');
   const fs=fStart?fStart.value:''; const fe=fEnd?fEnd.value:'';
+  const jobSearchEl=document.getElementById('jobSearch'); const jobQ=(jobSearchEl?jobSearchEl.value:'').trim().toLowerCase();
   const visible=jobs.filter(function(j){
+    if(jobQ){
+      return (j.name||'').toLowerCase().includes(jobQ) || (j.who||'').toLowerCase().includes(jobQ) || (j.notes||'').toLowerCase().includes(jobQ);
+    }
     if(!j.start||!j.end) return true;
     if(fs && j.end<fs) return false;
     if(fe && j.start>fe) return false;
@@ -647,6 +830,7 @@ function toggleJob(id){
 }
 
 // ── Filter bar ─────────────────────────────────────────────
+document.getElementById('jobSearch').addEventListener('input', function(){ renderJobs(); maybeRerenderGantt(); });
 document.getElementById('filterStart').addEventListener('change', function(){ renderJobs(); maybeRerenderGantt(); });
 document.getElementById('filterEnd').addEventListener('change', function(){ renderJobs(); maybeRerenderGantt(); });
 document.getElementById('filterResetBtn').addEventListener('click', function(){ initFilterDates(); renderJobs(); maybeRerenderGantt(); });
@@ -681,7 +865,7 @@ function openEdit(id){
   document.getElementById('jobStart').value=j.start||'';
   document.getElementById('jobEnd').value=j.end||'';
   document.getElementById('jobNotes').value=j.notes||'';
-  var jst=j.status||'ordre'; document.getElementById('jobStatusOrdre').checked=jst==='ordre'; document.getElementById('jobStatusTilbud').checked=jst==='tilbud';
+  var jst=j.status||'ordre'; document.getElementById('jobStatusOrdre').checked=jst==='ordre'; document.getElementById('jobStatusTilbud').checked=jst==='tilbud'; updateStatusStyle();
   document.getElementById('equipSearch').value='';
   renderEquipList(''); renderSelectedStrip(); renderConflicts();
   overlay.classList.add('open');
@@ -701,7 +885,7 @@ function openCopy(id){
   document.getElementById('jobNotes').value=j.notes||'';
   document.getElementById('equipSearch').value='';
   renderEquipList(''); renderSelectedStrip(); renderConflicts();
-  overlay.classList.add('open');
+  overlay.classList.add('open'); updateStatusStyle();
 }
 function closeModal(){ overlay.classList.remove('open'); }
 document.getElementById('newJobBtn').addEventListener('click', openNew);
@@ -857,8 +1041,11 @@ function renderAvailMatches(filter){
   const box=document.getElementById('availMatches');
   const f=filter.trim().toLowerCase();
   if(!f){ box.style.display='none'; box.innerHTML=''; return; }
-  const matches=[...PACKAGES.filter(function(p){return p.name.toLowerCase().includes(f);}),
-                 ...EQUIPMENT.filter(function(e){return e.name.toLowerCase().includes(f);})].slice(0,10);
+  const matches=[
+    ...OB_VOGNE.filter(function(v){return v.name.toLowerCase().includes(f);}).map(function(v){return {name:'🚐 '+v.name, _name:v.name};}),
+    ...PACKAGES.filter(function(p){return p.name.toLowerCase().includes(f);}).map(function(p){return {name:'📦 '+p.name, _name:p.name};}),
+    ...EQUIPMENT.filter(function(e){return e.name.toLowerCase().includes(f);}).map(function(e){return {name:e.name, _name:e.name};})
+  ].slice(0,12);
   if(!matches.length){ box.style.display='none'; return; }
   box.style.display='block';
   box.innerHTML='<div class="panel" style="margin-top:8px;padding:8px;">'
@@ -866,6 +1053,8 @@ function renderAvailMatches(filter){
       +'<div class="name">'+escapeHtml(m.name)+'</div></div>'; }).join('')+'</div>';
 }
 function selectAvailItem(name){
+  // strip emoji prefix
+  name = name.replace(/^[🚐📦] /, '');
   document.getElementById('availSearch').value=name;
   document.getElementById('availMatches').style.display='none';
   runAvailCheck();
@@ -876,14 +1065,78 @@ function runAvailCheck(){
   const end=document.getElementById('availEnd').value;
   const q=document.getElementById('availSearch').value.trim();
   if(!q){ result.innerHTML=''; return; }
-  const eq=EQUIPMENT.find(function(i){return i.name.toLowerCase()===q.toLowerCase();})||EQUIPMENT.find(function(i){return i.name.toLowerCase().includes(q.toLowerCase());});
-  if(!eq){ result.innerHTML='<div class="empty">Intet matcher "'+escapeHtml(q)+'"</div>'; return; }
-  if(!start||!end){ result.innerHTML='<div class="avail-row"><div>'+escapeHtml(eq.name)+'</div><div class="avail-free">'+eq.qty+' stk. — vælg datoer</div></div>'; return; }
-  const bq=bookedQty(eq.name,start,end,null);
-  const free=eq.qty-bq.sum;
-  result.innerHTML='<div class="avail-row"><div><div>'+escapeHtml(eq.name)+'</div>'
-    +(bq.users.length?'<div class="avail-used-by">Booket: '+escapeHtml(bq.users.join(', '))+'</div>':'')
-    +'</div><div class="avail-free '+(free>0?'ok':'bad')+'">'+free+' / '+eq.qty+' ledige</div></div>';
+
+  const ql = q.toLowerCase();
+
+  // Check packages too
+  const pkg = PACKAGES.find(function(p){ return p.name.toLowerCase()===ql; })
+           || PACKAGES.find(function(p){ return p.name.toLowerCase().includes(ql); });
+  const eq  = EQUIPMENT.find(function(i){ return i.name.toLowerCase()===ql; })
+           || EQUIPMENT.find(function(i){ return i.name.toLowerCase().includes(ql); });
+  // Also match OB Vogn by name
+  const vogn = OB_VOGNE.find(function(v){ return v.name.toLowerCase()===ql; })
+            || OB_VOGNE.find(function(v){ return v.name.toLowerCase().includes(ql); });
+
+  if(!eq && !pkg && !vogn){ result.innerHTML='<div class="empty">Intet matcher "'+escapeHtml(q)+'"</div>'; return; }
+
+  var html = '';
+
+  // ── OB Vogn match ──
+  if(vogn){
+    if(!start||!end){
+      html += '<div class="avail-row"><div><div style="font-weight:700;">🚐 '+escapeHtml(vogn.name)+'</div></div><div class="avail-free">Vælg datoer</div></div>';
+    } else {
+      const obB = obBookingConflict(vogn.id, start, end, null);
+      html += '<div class="avail-row"><div>'
+        +'<div style="font-weight:700;">🚐 '+escapeHtml(vogn.name)+'</div>'
+        +(obB?'<div class="avail-used-by">Booket: '+escapeHtml(obB.name)+(obB.who?' ('+escapeHtml(obB.who)+')':'')+' '+fmtDate(obB.start_date)+' → '+fmtDate(obB.end_date)+'</div>':'')
+        +'</div><div class="avail-free '+(obB?'bad':'ok')+'">'+(obB?'Booket':'Ledig')+'</div></div>';
+    }
+  }
+
+  // ── Equipment match ──
+  if(eq){
+    if(!start||!end){
+      html += '<div class="avail-row"><div>'+escapeHtml(eq.name)+'</div><div class="avail-free">'+eq.qty+' stk. — vælg datoer</div></div>';
+    } else {
+      const bq = bookedQty(eq.name, start, end, null);
+      const free = eq.qty - bq.sum;
+      // Also check if in an OB vogn that is booked
+      var obWarn = '';
+      if(eq.ob_vogn_id){
+        const obB = obBookingConflict(eq.ob_vogn_id, start, end, null);
+        if(obB){
+          const v = obVognById(eq.ob_vogn_id);
+          obWarn = '<div class="avail-used-by" style="color:var(--amber);">OB booket via 🚐 '+(v?escapeHtml(v.name):'?')+': '+escapeHtml(obB.name)+' '+fmtDate(obB.start_date)+' → '+fmtDate(obB.end_date)+'</div>';
+        }
+      }
+      html += '<div class="avail-row"><div><div>'+escapeHtml(eq.name)+'</div>'
+        +(bq.users.length?'<div class="avail-used-by">Pulje booket: '+escapeHtml(bq.users.join(', '))+'</div>':'')
+        +obWarn
+        +'</div><div class="avail-free '+(free>0&&!obWarn?'ok':'bad')+'">'+free+' / '+eq.qty+' ledige</div></div>';
+    }
+  }
+
+  // ── Package match ──
+  if(pkg && pkg !== eq){
+    if(!start||!end){
+      html += '<div class="avail-row"><div>📦 '+escapeHtml(pkg.name)+'</div><div class="avail-free">Vælg datoer</div></div>';
+    } else {
+      var obWarnP = '';
+      if(pkg.ob_vogn_id){
+        const obB = obBookingConflict(pkg.ob_vogn_id, start, end, null);
+        if(obB){
+          const v = obVognById(pkg.ob_vogn_id);
+          obWarnP = '<div class="avail-used-by" style="color:var(--amber);">OB booket via 🚐 '+(v?escapeHtml(v.name):'?')+': '+escapeHtml(obB.name)+'</div>';
+        }
+      }
+      html += '<div class="avail-row"><div><div>📦 '+escapeHtml(pkg.name)+'</div>'
+        +obWarnP
+        +'</div><div class="avail-free '+(obWarnP?'bad':'ok')+'">'+(obWarnP?'Booket':'Ledig')+'</div></div>';
+    }
+  }
+
+  result.innerHTML = html || '<div class="empty">Ingen resultater</div>';
 }
 document.getElementById('availSearch').addEventListener('input', function(e){ renderAvailMatches(e.target.value); runAvailCheck(); });
 document.getElementById('availStart').addEventListener('change', runAvailCheck);
@@ -910,9 +1163,28 @@ function renderLager(filter){
   const filtered=items.filter(function(it){return !f||it.name.toLowerCase().includes(f)||it.category.toLowerCase().includes(f);});
 
   const total=PACKAGES.length+EQUIPMENT.filter(function(e){return !e.package_id;}).length;
+  if(multiMode && EQUIPMENT.filter(function(e){return !e.package_id;}).length>0){
+    const saRow=document.createElement('div'); saRow.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12px;color:var(--muted);';
+    const saCb=document.createElement('input'); saCb.type='checkbox'; saCb.style.cssText='accent-color:var(--amber);width:15px;height:15px;';
+    const loose=EQUIPMENT.filter(function(e){return !e.package_id;});
+    saCb.checked=loose.every(function(e){return multiSelected.has(e.id);});
+    saCb.addEventListener('change',function(){selectAll(saCb.checked);});
+    const saLbl=document.createElement('span'); saLbl.textContent='Vælg alle løse udstyr';
+    saRow.appendChild(saCb); saRow.appendChild(saLbl);
+    list.appendChild(saRow);
+  }
   if(countEl) countEl.textContent=filtered.length+' af '+total+' ('+PACKAGES.length+' pakker, '+EQUIPMENT.filter(function(e){return !e.package_id;}).length+' udstyr)';
 
   list.innerHTML=''; let lastCat=null;
+
+  // Update bulk selects
+  const bps=document.getElementById('bulkPkgSel');
+  if(bps){ bps.innerHTML='<option value="">Flyt til pakke...</option>'+PACKAGES.map(function(p){return '<option value="'+p.id+'">'+escapeHtml(p.name)+'</option>';}).join(''); }
+  const bos=document.getElementById('bulkObSel');
+  if(bos){ bos.innerHTML='<option value="">OB Vogn...</option><option value="__remove__">— Fjern fra OB vogn</option>'+OB_VOGNE.map(function(v){return '<option value="'+v.id+'">🚐 '+escapeHtml(v.name)+'</option>';}).join(''); }
+  const bcs=document.getElementById('bulkCatSel');
+  if(bcs){ bcs.innerHTML='<option value="">Skift kategori...</option>'+CATEGORIES.map(function(c){return '<option value="'+escapeHtml(c.name)+'">'+escapeHtml(c.name)+'</option>';}).join(''); }
+  updateBulkBar();
 
   filtered.forEach(function(item){
     if(item.category!==lastCat){
@@ -932,6 +1204,8 @@ function renderLager(filter){
 
       const bEdit=document.createElement('button'); bEdit.className='btn small secondary'; bEdit.textContent='Rediger'; bEdit.style.fontSize='11px';
       bEdit.addEventListener('click', function(e){ e.stopPropagation(); openPkgDetail(pkg.id); }); head.appendChild(bEdit);
+      const bCopyPkg=document.createElement('button'); bCopyPkg.className='btn small secondary'; bCopyPkg.textContent='Kopier'; bCopyPkg.style.fontSize='11px';
+      (function(pid){ bCopyPkg.addEventListener('click', function(e){ e.stopPropagation(); copyPkg(pid); }); })(pkg.id); head.appendChild(bCopyPkg);
 
       const bDel=document.createElement('button'); bDel.className='btn small danger'; bDel.textContent='Slet'; bDel.style.fontSize='11px';
       bDel.addEventListener('click', function(e){ e.stopPropagation();
@@ -1009,8 +1283,16 @@ function renderLager(filter){
         ov.addEventListener('change', async function(){ if(!ov.value) return; ov.disabled=true; await supa.from('equipment').update({ob_vogn_id:ov.value==='__remove__'?null:ov.value}).eq('id',equip.id); await loadEquipment(); renderLager(document.getElementById('lagerSearch').value||''); });
         actions.appendChild(ov);
       }
+      // Multi-select checkbox
+      if(multiMode){
+        const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=multiSelected.has(equip.id);
+        cb.style.cssText='accent-color:var(--amber);width:16px;height:16px;flex-shrink:0;cursor:pointer;';
+        (function(eid){ cb.addEventListener('change',function(){ toggleMultiSelect(eid); }); })(equip.id);
+        row.insertBefore(cb, row.firstChild);
+      }
       const bd=document.createElement('button'); bd.className='btn small secondary'; bd.textContent='Detaljer'; bd.addEventListener('click', function(){ openEquipDetail(realIdx); }); actions.appendChild(bd);
-      const br=document.createElement('button'); br.className='btn small secondary'; br.textContent='Rediger'; br.addEventListener('click', function(){ editingEquipName=equip.name; renderLager(document.getElementById('lagerSearch').value||''); }); actions.appendChild(br);
+      const br=document.createElement('button'); br.className='btn small secondary'; br.textContent='Rediger'; br.addEventListener('click', function(){ openEquipDetail(realIdx); }); actions.appendChild(br);
+      const bcp=document.createElement('button'); bcp.className='btn small secondary'; bcp.textContent='Kopier'; (function(ri){ bcp.addEventListener('click', function(){ copyEquip(ri); }); })(realIdx); actions.appendChild(bcp);
       const bx=document.createElement('button'); bx.className='btn small danger'; bx.textContent='Slet'; bx.addEventListener('click', function(){ deleteEquip(realIdx); }); actions.appendChild(bx);
       row.appendChild(actions); list.appendChild(row);
     }
@@ -1072,6 +1354,7 @@ function openEquipDetail(idx){
   document.getElementById('dQty').value=it.qty||0;
   document.getElementById('dTv2').value=it.tv2_number||'';
   document.getElementById('dSerial').value=it.serial_number||'';
+  var qrEl=document.getElementById('dQrCode'); if(qrEl) qrEl.value=it.qr_code||'';
   document.getElementById('dPower').value=it.power_connection||'';
   document.getElementById('equipImgFile').value='';
   document.getElementById('equipImgStatus').textContent='';
@@ -1127,7 +1410,7 @@ document.getElementById('equipDetailSaveBtn').addEventListener('click', async fu
     const category=document.getElementById('dCategory').value||'Diverse';
     let qty=parseInt(document.getElementById('dQty').value); if(isNaN(qty)||qty<0) qty=0;
     const custom_fields=detailCustomFields.filter(function(f){return f.label.trim()||f.value.trim();});
-    const {error}=await supa.from('equipment').update({name,category,qty,tv2_number:document.getElementById('dTv2').value.trim(),serial_number:document.getElementById('dSerial').value.trim(),power_connection:document.getElementById('dPower').value.trim(),image_url,custom_fields}).eq('id',it.id);
+    const {error}=await supa.from('equipment').update({name,category,qty,tv2_number:document.getElementById('dTv2').value.trim(),serial_number:document.getElementById('dSerial').value.trim(),qr_code:(document.getElementById('dQrCode').value.trim()||null),power_connection:document.getElementById('dPower').value.trim(),image_url,custom_fields}).eq('id',it.id);
     if(error) throw error;
     await loadEquipment(); equipOverlay.classList.remove('open'); renderLager(document.getElementById('lagerSearch').value||''); renderJobs();
   }catch(e){ console.error(e); alert('Fejl: '+(e.message||JSON.stringify(e))); }
@@ -1143,6 +1426,7 @@ function openPkgDetail(id){
   document.getElementById('dQty').value=pkg?pkg.qty:1;
   document.getElementById('dTv2').value=pkg?(pkg.tv2_number||''):'';
   document.getElementById('dSerial').value=pkg?(pkg.serial_number||''):'';
+  var qrEl2=document.getElementById('dQrCode'); if(qrEl2) qrEl2.value=pkg?(pkg.qr_code||''):'';
   document.getElementById('dPower').value=pkg?(pkg.power_connection||''):'';
   document.getElementById('equipImgFile').value='';
   document.getElementById('equipImgStatus').textContent='';
@@ -1170,7 +1454,7 @@ async function savePkgFromOverlay(){
       const {error:ue}=await supa.storage.from('udstyr-billeder').upload(path,detailPendingFile,{upsert:true});
       if(!ue){ const {data:pub}=supa.storage.from('udstyr-billeder').getPublicUrl(path); image_url=pub.publicUrl; }
     }
-    const row={name,category,qty,tv2_number:document.getElementById('dTv2').value.trim(),serial_number:document.getElementById('dSerial').value.trim(),power_connection:document.getElementById('dPower').value.trim(),image_url,custom_fields:detailCustomFields.filter(function(f){return f.label.trim()||f.value.trim();})};
+    const row={name,category,qty,tv2_number:document.getElementById('dTv2').value.trim(),serial_number:document.getElementById('dSerial').value.trim(),qr_code:(document.getElementById('dQrCode').value.trim()||null),power_connection:document.getElementById('dPower').value.trim(),image_url,custom_fields:detailCustomFields.filter(function(f){return f.label.trim()||f.value.trim();})};
     if(editingPkgId){ const {error}=await supa.from('packages').update(row).eq('id',editingPkgId); if(error) throw error; }
     else { const {error}=await supa.from('packages').insert(row); if(error) throw error; }
     await loadPackages(); equipOverlay.classList.remove('open'); renderLager(document.getElementById('lagerSearch').value||'');
@@ -1401,10 +1685,12 @@ function renderObVogne(){
   sh.textContent='Vogne & Bookinger'; container.appendChild(sh);
 
   var today=todayStr();
+  var obQ=(document.getElementById('obSearch')?document.getElementById('obSearch').value.trim().toLowerCase():'');
   OB_VOGNE.forEach(function(vogn){
     var equip=EQUIPMENT.filter(function(e){return e.ob_vogn_id===vogn.id;});
     var pkgs=PACKAGES.filter(function(p){return p.ob_vogn_id===vogn.id;});
-    var upcoming=OB_BOOKINGER.filter(function(b){return b.ob_vogn_id===vogn.id&&b.end_date>=today;}).sort(function(a,b){return a.start_date.localeCompare(b.start_date);});
+    if(obQ && !vogn.name.toLowerCase().includes(obQ) && !upcoming.length && !equip.some(function(e){return e.name.toLowerCase().includes(obQ);}) && !pkgs.some(function(p){return p.name.toLowerCase().includes(obQ);})) return;
+    var upcoming=OB_BOOKINGER.filter(function(b){ if(b.ob_vogn_id!==vogn.id||b.end_date<today) return false; if(obQ && !(b.name||'').toLowerCase().includes(obQ) && !(b.who||'').toLowerCase().includes(obQ) && !vogn.name.toLowerCase().includes(obQ)) return false; return true; }).sort(function(a,b){return a.start_date.localeCompare(b.start_date);});
     var active=upcoming.filter(function(b){return b.start_date<=today;});
 
     var card=document.createElement('div'); card.className='ob-card';
@@ -1416,10 +1702,22 @@ function renderObVogne(){
       +(active.length?'<span style="color:var(--red);margin-left:8px;">● BOOKET: '+escapeHtml(active[0].name)+'</span>':'')+'</div>';
     head.appendChild(tw);
     var bb=document.createElement('button'); bb.className='btn small'; bb.textContent='+ Book '+vogn.name;
-    (function(v){ bb.addEventListener('click',function(){openObModal(v.id,null);}); })(vogn);
-    head.appendChild(bb); card.appendChild(head);
+    (function(v){ bb.addEventListener('click',function(e){e.stopPropagation();openObModal(v.id,null);}); })(vogn);
+    head.appendChild(bb);
+
+    var obChev=document.createElement('span');
+    obChev.id='ob-chev-'+vogn.id;
+    obChev.className='pkg-chevron';
+    obChev.innerHTML='&#9654;';
+    head.appendChild(obChev);
+
+    head.style.cursor='pointer';
+    (function(v){ head.addEventListener('click',function(e){ if(e.target.closest('button')) return; toggleObCard(v.id); }); })(vogn);
+    card.appendChild(head);
 
     var body=document.createElement('div'); body.style.cssText='border-top:1px solid var(--border);';
+    body.id='ob-body-'+vogn.id;
+    body.style.display='none';
 
     // Bookings section
     var bs=document.createElement('div'); bs.className='ob-section';
@@ -1477,6 +1775,7 @@ function openObModal(vognId,ob){
   var st=ob?(ob.status||'ordre'):'ordre';
   document.getElementById('obStatusOrdre').checked=st==='ordre';
   document.getElementById('obStatusTilbud').checked=st==='tilbud';
+  updateObStatusStyle();
   renderObConflicts();
   document.getElementById('obOverlay').classList.add('open');
 }
@@ -1720,6 +2019,8 @@ function renderJobsGantt(){
 }
 
 
+document.getElementById('obSearch').addEventListener('input', function(){ try{ renderObVogne(); }catch(e){} });
+
 // ── Gantt toggle ──────────────────────────────────────────
 document.getElementById('ganttToggleBtn').addEventListener('click', function(){
   var wrap = document.getElementById('jobsGanttWrap');
@@ -1742,6 +2043,382 @@ function maybeRerenderGantt(){
   if(wrap && wrap.style.display !== 'none'){
     try{ renderJobsGantt(); }catch(e){ console.error(e); }
   }
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// LAGER: KOPIER + MULTI-SELECT
+// ═══════════════════════════════════════════════════════════
+
+// ── Kopier udstyr ──────────────────────────────────────────
+async function copyEquip(idx){
+  const it = EQUIPMENT[idx];
+  if(!it) return;
+  const newName = it.name + ' (kopi)';
+  if(EQUIPMENT.some(function(e){ return e.name.toLowerCase()===newName.toLowerCase(); })){
+    alert('"'+newName+'" findes allerede — omdøb den eksisterende kopi først.'); return;
+  }
+  const row = {
+    name: newName, category: it.category, qty: it.qty,
+    tv2_number: it.tv2_number||null, serial_number: it.serial_number||null,
+    power_connection: it.power_connection||null, image_url: null, custom_fields: it.custom_fields||[],
+    package_id: it.package_id||null, ob_vogn_id: it.ob_vogn_id||null
+  };
+  const {error} = await supa.from('equipment').insert(row);
+  if(error){ alert('Fejl: '+error.message); return; }
+  await loadEquipment();
+  renderLager(document.getElementById('lagerSearch').value||'');
+}
+
+// ── Kopier pakke ───────────────────────────────────────────
+async function copyPkg(pkgId){
+  const pkg = PACKAGES.find(function(p){ return p.id===pkgId; });
+  if(!pkg) return;
+  const newName = pkg.name + ' (kopi)';
+  if(PACKAGES.some(function(p){ return p.name.toLowerCase()===newName.toLowerCase(); })){
+    alert('"'+newName+'" findes allerede.'); return;
+  }
+  const row = {
+    name: newName, category: pkg.category, qty: pkg.qty,
+    tv2_number: pkg.tv2_number||null, serial_number: pkg.serial_number||null,
+    power_connection: pkg.power_connection||null, image_url: null,
+    custom_fields: pkg.custom_fields||[], ob_vogn_id: pkg.ob_vogn_id||null
+  };
+  const {error} = await supa.from('packages').insert(row);
+  if(error){ alert('Fejl: '+error.message); return; }
+  await loadPackages();
+  renderLager(document.getElementById('lagerSearch').value||'');
+}
+
+// ── Multi-select state ─────────────────────────────────────
+let multiSelected = new Set(); // Set of equipment IDs
+let multiMode = false;
+
+function toggleMultiMode(){
+  multiMode = !multiMode;
+  multiSelected.clear();
+  const btn = document.getElementById('multiModeBtn');
+  if(btn){
+    btn.textContent = multiMode ? '✕ Annuller valg' : '☑ Vælg flere';
+    btn.style.color = multiMode ? 'var(--red)' : '';
+    btn.style.borderColor = multiMode ? 'var(--red)' : '';
+  }
+  renderLager(document.getElementById('lagerSearch').value||'');
+}
+
+function toggleMultiSelect(equipId){
+  if(multiSelected.has(equipId)) multiSelected.delete(equipId);
+  else multiSelected.add(equipId);
+  updateBulkBar();
+}
+
+function selectAll(checked){
+  if(checked){
+    EQUIPMENT.filter(function(e){ return !e.package_id; }).forEach(function(e){ multiSelected.add(e.id); });
+  } else {
+    multiSelected.clear();
+  }
+  updateBulkBar();
+  renderLager(document.getElementById('lagerSearch').value||'');
+}
+
+function updateBulkBar(){
+  const bar = document.getElementById('bulkBar');
+  if(!bar) return;
+  const n = multiSelected.size;
+  if(!multiMode || n===0){
+    bar.style.display='none'; return;
+  }
+  bar.style.display='flex';
+  document.getElementById('bulkCount').textContent = n + ' stykker valgt';
+}
+
+async function bulkMoveToPackage(pkgId){
+  if(!pkgId || !multiSelected.size) return;
+  const ids = [...multiSelected];
+  for(const id of ids){
+    await supa.from('equipment').update({package_id:pkgId}).eq('id',id);
+  }
+  await loadEquipment();
+  multiSelected.clear(); updateBulkBar();
+  renderLager(document.getElementById('lagerSearch').value||'');
+}
+
+async function bulkMoveToOb(obId){
+  if(!multiSelected.size) return;
+  const val = obId === '__remove__' ? null : obId;
+  const ids = [...multiSelected];
+  for(const id of ids){
+    await supa.from('equipment').update({ob_vogn_id:val}).eq('id',id);
+  }
+  await loadEquipment();
+  multiSelected.clear(); updateBulkBar();
+  renderLager(document.getElementById('lagerSearch').value||'');
+}
+
+async function bulkChangeCategory(cat){
+  if(!cat || !multiSelected.size) return;
+  const ids = [...multiSelected];
+  for(const id of ids){
+    await supa.from('equipment').update({category:cat}).eq('id',id);
+  }
+  await loadEquipment();
+  multiSelected.clear(); updateBulkBar();
+  renderLager(document.getElementById('lagerSearch').value||'');
+}
+
+async function bulkDelete(){
+  if(!multiSelected.size) return;
+  if(!confirm('Slet '+multiSelected.size+' stykker udstyr? Det kan ikke fortrydes.')) return;
+  const ids = [...multiSelected];
+  for(const id of ids){
+    await supa.from('equipment').delete().eq('id',id);
+  }
+  await loadEquipment();
+  multiSelected.clear(); updateBulkBar();
+  renderLager(document.getElementById('lagerSearch').value||'');
+}
+
+
+function updateObStatusStyle(){
+  var isTilbud = document.getElementById('obStatusTilbud').checked;
+  var lT = document.getElementById('obLabelTilbud');
+  var lO = document.getElementById('obLabelOrdre');
+  if(!lT || !lO) return;
+  if(isTilbud){
+    lT.style.background='var(--amber-dim)'; lT.style.color='var(--amber)';
+    lO.style.background=''; lO.style.color='var(--muted)';
+  } else {
+    lO.style.background='rgba(95,184,138,.15)'; lO.style.color='#5fb88a';
+    lT.style.background=''; lT.style.color='var(--muted)';
+  }
+}
+
+
+function updateStatusStyle(){
+  var isTilbud = document.getElementById('jobStatusTilbud').checked;
+  var lT = document.getElementById('labelTilbud');
+  var lO = document.getElementById('labelOrdre');
+  if(!lT || !lO) return;
+  if(isTilbud){
+    lT.style.background = 'var(--amber-dim)'; lT.style.color = 'var(--amber)';
+    lO.style.background = ''; lO.style.color = 'var(--muted)';
+  } else {
+    lO.style.background = 'rgba(95,184,138,.15)'; lO.style.color = '#5fb88a';
+    lT.style.background = ''; lT.style.color = 'var(--muted)';
+  }
+}
+
+
+function toggleObCard(vognId){
+  var body  = document.getElementById('ob-body-'+vognId);
+  var chev  = document.getElementById('ob-chev-'+vognId);
+  if(!body) return;
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if(chev) chev.classList.toggle('open', !open);
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// QR SCANNER SYSTEM
+// ═══════════════════════════════════════════════════════════
+
+// ── Lookup by QR/serial ───────────────────────────────────
+function findByQr(code){
+  const c = code.trim();
+  if(!c) return null;
+  // Search equipment: qr_code field first, then serial_number
+  const eq = EQUIPMENT.find(function(e){
+    return (e.qr_code && e.qr_code.trim().toLowerCase() === c.toLowerCase())
+        || (e.serial_number && e.serial_number.trim().toLowerCase() === c.toLowerCase());
+  });
+  if(eq) return {type:'equip', item:eq};
+  // Search packages
+  const pkg = PACKAGES.find(function(p){
+    return (p.qr_code && p.qr_code.trim().toLowerCase() === c.toLowerCase())
+        || (p.serial_number && p.serial_number.trim().toLowerCase() === c.toLowerCase());
+  });
+  if(pkg) return {type:'pkg', item:pkg};
+  return null;
+}
+
+// ── QR not found: offer to link or create ─────────────────
+function handleUnknownQr(code, onLinked){
+  const items = [
+    ...PACKAGES.map(function(p){ return {label:'📦 '+p.name, id:p.id, type:'pkg'}; }),
+    ...EQUIPMENT.filter(function(e){ return !e.package_id; }).map(function(e){ return {label:e.name, id:e.id, type:'equip'}; })
+  ];
+
+  const overlay = document.getElementById('qrUnknownOverlay');
+  document.getElementById('qrUnknownCode').textContent = code;
+  const sel = document.getElementById('qrLinkSelect');
+  sel.innerHTML = '<option value="">— Vælg eksisterende udstyr/pakke —</option>'
+    + items.map(function(i){ return '<option value="'+i.type+':'+i.id+'">'+escapeHtml(i.label)+'</option>'; }).join('');
+
+  document.getElementById('qrLinkBtn').onclick = async function(){
+    const val = sel.value;
+    if(!val){ alert('Vælg et stykke udstyr.'); return; }
+    const [type, id] = val.split(':');
+    const field = { qr_code: code };
+    const tbl = type==='pkg' ? 'packages' : 'equipment';
+    const { error } = await supa.from(tbl).update(field).eq('id', id);
+    if(error){ alert('Fejl: '+error.message); return; }
+    await (type==='pkg' ? loadPackages() : loadEquipment());
+    overlay.classList.remove('open');
+    const found = findByQr(code);
+    if(found && onLinked) onLinked(found);
+  };
+
+  document.getElementById('qrCreateBtn').onclick = function(){
+    overlay.classList.remove('open');
+    // Pre-fill the new equipment form and set qr_code
+    document.getElementById('lagerNewRow').style.display = 'block';
+    document.getElementById('lagerNewRow').innerHTML =
+      '<div class="panel" style="padding:12px;background:var(--panel-2);border:1px solid var(--amber);">'
+      +'<div style="font-size:11px;color:var(--amber);font-family:var(--mono);margin-bottom:8px;">Opretter nyt udstyr med QR: '+escapeHtml(code)+'</div>'
+      +'<div class="row3">'
+      +'<div class="field"><label>Navn</label><input type="text" id="newEquipName" placeholder="f.eks. Wisycom MCH55"></div>'
+      +'<div class="field"><label>Kategori</label><select id="newEquipCat" style="width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:7px;font-size:13px;"></select></div>'
+      +'<div class="field"><label>Antal</label><input type="number" id="newEquipQty" value="1" min="0"></div>'
+      +'</div>'
+      +'<div class="modal-actions">'
+      +'<button class="btn small secondary" onclick="document.getElementById(\'lagerNewRow\').style.display=\'none\';">Annuller</button>'
+      +'<button class="btn small" onclick="confirmAddEquipWithQr(\''+code.replace(/'/g,"\\'")+'\')" >Tilføj</button>'
+      +'</div></div>';
+    populateCategoryDropdowns();
+    // Switch to lager tab
+    document.querySelectorAll('nav.tabs button').forEach(function(b){ b.classList.toggle('active', b.dataset.tab==='lager'); });
+    ['jobs','avail','obvogne','stats'].forEach(function(t){ var el=document.getElementById('tab-'+t); if(el) el.style.display='none'; });
+    document.getElementById('tab-lager').style.display='block';
+    Promise.all([loadPackages(),loadEquipment()]).then(function(){ renderLager(''); });
+  };
+
+  overlay.classList.add('open');
+}
+
+async function confirmAddEquipWithQr(qrCode){
+  const name = document.getElementById('newEquipName').value.trim();
+  const category = document.getElementById('newEquipCat').value || 'Diverse';
+  let qty = parseInt(document.getElementById('newEquipQty').value); if(isNaN(qty)||qty<0) qty=0;
+  if(!name){ alert('Skriv et navn.'); return; }
+  const { error } = await supa.from('equipment').insert({name,category,qty,qr_code:qrCode,serial_number:qrCode});
+  if(error){ alert('Fejl: '+error.message); return; }
+  await loadEquipment();
+  document.getElementById('lagerNewRow').style.display='none';
+  renderLager('');
+}
+
+// ── Scanner overlay (camera + USB) ─────────────────────────
+let qrScanCallback = null; // function(found) called on successful scan
+let html5QrScanner = null;
+let usbScanBuffer = '';
+let usbScanTimer = null;
+
+function openQrScanner(callback){
+  qrScanCallback = callback;
+  document.getElementById('qrScanOverlay').classList.add('open');
+  document.getElementById('qrManualInput').value='';
+  document.getElementById('qrScanStatus').textContent='';
+  startCameraScanner();
+  // USB scanner listener
+  document.getElementById('qrManualInput').focus();
+}
+
+function closeQrScanner(){
+  stopCameraScanner();
+  document.getElementById('qrScanOverlay').classList.remove('open');
+  qrScanCallback = null;
+}
+
+function startCameraScanner(){
+  if(typeof Html5Qrcode === 'undefined') return;
+  try{
+    html5QrScanner = new Html5Qrcode('qrCameraView');
+    html5QrScanner.start(
+      { facingMode: 'environment' },
+      { fps:10, qrbox:{width:250,height:250} },
+      function(code){
+        stopCameraScanner();
+        handleScannedCode(code);
+      },
+      function(){}
+    ).catch(function(e){
+      document.getElementById('qrScanStatus').textContent = 'Kamera ikke tilgængeligt — brug manuel input nedenfor.';
+    });
+  }catch(e){
+    document.getElementById('qrScanStatus').textContent = 'Kamera ikke tilgængeligt.';
+  }
+}
+
+function stopCameraScanner(){
+  if(html5QrScanner){
+    html5QrScanner.stop().catch(function(){});
+    html5QrScanner.clear();
+    html5QrScanner = null;
+  }
+}
+
+function handleScannedCode(code){
+  code = code.trim();
+  if(!code) return;
+  document.getElementById('qrScanStatus').innerHTML = '<span style="color:var(--muted);">Scannet: '+escapeHtml(code)+'</span>';
+  const found = findByQr(code);
+  if(found){
+    closeQrScanner();
+    if(qrScanCallback) qrScanCallback(found);
+  } else {
+    closeQrScanner();
+    handleUnknownQr(code, qrScanCallback);
+  }
+}
+
+// Manual input (also catches USB scanner which types fast then presses Enter)
+document.getElementById('qrManualInput').addEventListener('keydown', function(e){
+  if(e.key === 'Enter'){
+    const val = document.getElementById('qrManualInput').value.trim();
+    if(val) handleScannedCode(val);
+  }
+});
+document.getElementById('qrManualConfirmBtn').addEventListener('click', function(){
+  const val = document.getElementById('qrManualInput').value.trim();
+  if(val) handleScannedCode(val);
+});
+
+document.getElementById('qrScanOverlay').addEventListener('click', function(e){
+  if(e.target===document.getElementById('qrScanOverlay')) closeQrScanner();
+});
+document.getElementById('qrCloseScanBtn').addEventListener('click', closeQrScanner);
+
+// ── Scan to add to job ────────────────────────────────────
+function scanToAddToJob(){
+  openQrScanner(function(found){
+    const key = found.type==='pkg' ? 'PKG:'+found.item.id : found.item.name;
+    const label = found.type==='pkg' ? found.item.name+' (pakke)' : found.item.name;
+    if(selectedItems[key]){
+      selectedItems[key]++;
+    } else {
+      selectedItems[key] = 1;
+    }
+    renderEquipList(document.getElementById('equipSearch').value||'');
+    renderSelectedStrip();
+    renderConflicts();
+    // Show feedback and offer to scan more
+    setTimeout(function(){
+      if(confirm('Tilføjet: '+label+'\n\nScan næste stykke udstyr?')){
+        scanToAddToJob();
+      }
+    }, 100);
+  });
+}
+
+// ── Scan for availability check ───────────────────────────
+function scanForAvailability(){
+  openQrScanner(function(found){
+    const name = found.item.name;
+    document.getElementById('availSearch').value = name;
+    runAvailCheck();
+  });
 }
 
 
