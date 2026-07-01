@@ -190,6 +190,18 @@
   </nav>
 
   <div id="tab-jobs">
+    <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:14px; background:var(--panel); border:1px solid var(--border); border-radius:9px; padding:12px 14px;">
+      <div class="field" style="margin:0;">
+        <label>Vis jobs fra</label>
+        <input type="date" id="filterStart" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;">
+      </div>
+      <div class="field" style="margin:0;">
+        <label>til</label>
+        <input type="date" id="filterEnd" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;">
+      </div>
+      <button class="btn small secondary" id="filterResetBtn" style="margin-bottom:1px;">Nulstil</button>
+      <div id="filterCount" style="font-size:11px; color:var(--muted); font-family:var(--mono); align-self:center; margin-left:4px;"></div>
+    </div>
     <div id="jobsLoading" class="loading">Henter bookinger...</div>
     <div id="jobsList"></div>
   </div>
@@ -220,11 +232,48 @@
       <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
         <input type="text" id="lagerSearch" placeholder="Søg i lager..." style="flex:1; min-width:200px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 10px; border-radius:7px; font-size:13.5px;">
         <button class="btn small" id="addEquipBtn">+ Tilføj udstyr</button>
+        <button class="btn small secondary" id="showStatsBtn">📊 Statistik</button>
       </div>
       <div id="lagerNewRow" style="display:none; margin-bottom:14px;"></div>
       <div id="lagerCount" style="font-size:11px; color:var(--muted); font-family:var(--mono); margin-bottom:8px;"></div>
       <div id="lagerList"></div>
     </div>
+  </div>
+
+  <div id="tab-stats" style="display:none;">
+    <div class="panel" style="margin-bottom:14px;">
+      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+        <div class="field" style="margin:0; min-width:120px;">
+          <label>År</label>
+          <select id="statsYear" style="width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 10px; border-radius:7px; font-size:13px;"></select>
+        </div>
+        <div class="field" style="margin:0; min-width:180px;">
+          <label>Kategori</label>
+          <select id="statsCat" style="width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 10px; border-radius:7px; font-size:13px;">
+            <option value="">Alle kategorier</option>
+          </select>
+        </div>
+        <div class="field" style="margin:0; min-width:160px;">
+          <label>Sorter efter</label>
+          <select id="statsSort" style="width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 10px; border-radius:7px; font-size:13px;">
+            <option value="total">Mest brugt i alt</option>
+            <option value="name">Navn (A-Z)</option>
+            <option value="peak">Højeste enkelt måned</option>
+          </select>
+        </div>
+        <div class="field" style="margin:0; min-width:160px;">
+          <label>Vis</label>
+          <select id="statsMetric" style="width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 10px; border-radius:7px; font-size:13px;">
+            <option value="days">Dage booket</option>
+            <option value="jobs">Antal jobs</option>
+          </select>
+        </div>
+        <button class="btn small secondary" id="statsExportBtn">⬇ Eksportér CSV</button>
+        <button class="btn small secondary" id="statsCloseBtn">✕ Luk statistik</button>
+      </div>
+    </div>
+    <div id="statsSummary" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px;"></div>
+    <div id="statsContent" class="loading">Beregner statistik...</div>
   </div>
 </div>
 
@@ -411,12 +460,31 @@ function renderJobs(){
   const list = document.getElementById('jobsList');
   document.getElementById('jobsLoading').style.display = 'none';
 
+  const filterStart = document.getElementById('filterStart').value;
+  const filterEnd   = document.getElementById('filterEnd').value;
+
+  // filter: show jobs that overlap with the selected period
+  const visible = jobs.filter(j => {
+    if(!j.start || !j.end) return true;
+    if(filterStart && j.end   < filterStart) return false;
+    if(filterEnd   && j.start > filterEnd)   return false;
+    return true;
+  });
+
+  const countEl = document.getElementById('filterCount');
+  if(countEl) countEl.textContent = visible.length + ' af ' + jobs.length + ' jobs';
+
   if(jobs.length === 0){
     list.innerHTML = '<div class="empty"><div class="big">📋</div>Ingen bookinger endnu.<br>Klik "+ Nyt job" for at oprette den første.</div>';
     return;
   }
 
-  const sorted = [...jobs].sort((a,b)=> (a.start||'').localeCompare(b.start||''));
+  if(visible.length === 0){
+    list.innerHTML = '<div class="empty"><div class="big">🔍</div>Ingen jobs i den valgte periode.</div>';
+    return;
+  }
+
+  const sorted = [...visible].sort((a,b)=> (b.start||'').localeCompare(a.start||''));
 
   list.innerHTML = sorted.map(j=>{
     const itemCount = (j.items||[]).length;
@@ -479,7 +547,7 @@ function openNew(){
   document.getElementById('modalTitle').textContent = 'Nyt job';
   document.getElementById('jobName').value = '';
   document.getElementById('jobWho').value = '';
-  document.getElementById('jobStart').value = '';
+  document.getElementById('jobStart').value = todayStr();
   document.getElementById('jobEnd').value = '';
   document.getElementById('jobNotes').value = '';
   document.getElementById('equipSearch').value = '';
@@ -517,7 +585,7 @@ function openCopy(id){
   document.getElementById('modalTitle').textContent = 'Kopiér job: ' + (j.name||'');
   document.getElementById('jobName').value = (j.name ? j.name + ' (kopi)' : '');
   document.getElementById('jobWho').value = j.who || '';
-  document.getElementById('jobStart').value = ''; // nye datoer skal udfyldes
+  document.getElementById('jobStart').value = todayStr(); // nye datoer skal udfyldes
   document.getElementById('jobEnd').value = '';
   document.getElementById('jobNotes').value = j.notes || '';
   document.getElementById('equipSearch').value = '';
@@ -1170,8 +1238,253 @@ function printPackList(id){
   win.document.close();
 }
 
+// ---- statistik ----
+const MONTHS_DA = ['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
+
+function bookedDaysInMonth(job, year, month){
+  // returns overlap days between job period and the given month
+  if(!job.start || !job.end) return 0;
+  const mStart = new Date(year, month, 1);
+  const mEnd   = new Date(year, month+1, 0); // last day of month
+  const jStart = new Date(job.start+'T00:00:00');
+  const jEnd   = new Date(job.end+'T00:00:00');
+  const overlapStart = jStart > mStart ? jStart : mStart;
+  const overlapEnd   = jEnd   < mEnd   ? jEnd   : mEnd;
+  if(overlapEnd < overlapStart) return 0;
+  return Math.round((overlapEnd - overlapStart)/(1000*60*60*24)) + 1;
+}
+
+function initStatsControls(){
+  // populate year selector
+  const years = new Set();
+  const thisYear = new Date().getFullYear();
+  years.add(thisYear); years.add(thisYear-1);
+  jobs.forEach(j=>{ if(j.start) years.add(parseInt(j.start.slice(0,4))); });
+  const yearSel = document.getElementById('statsYear');
+  yearSel.innerHTML = [...years].sort((a,b)=>b-a).map(y=>`<option value="${y}">${y}</option>`).join('');
+
+  // populate category selector
+  const cats = new Set(EQUIPMENT.map(e=>e.category));
+  const catSel = document.getElementById('statsCat');
+  catSel.innerHTML = '<option value="">Alle kategorier</option>' +
+    [...cats].sort().map(c=>`<option value="${c}">${escapeHtml(c)}</option>`).join('');
+}
+
+function renderStats(){
+  initStatsControls();
+  computeAndRenderStats();
+}
+
+function computeAndRenderStats(){
+  const year   = parseInt(document.getElementById('statsYear').value);
+  const catFilter = document.getElementById('statsCat').value;
+  const sort   = document.getElementById('statsSort').value;
+  const metric = document.getElementById('statsMetric').value; // 'days' or 'jobs'
+
+  // build per-item monthly data
+  const itemMap = {}; // name -> {cat, monthly:[12 numbers], total}
+
+  let equipment = EQUIPMENT;
+  if(catFilter) equipment = equipment.filter(e=>e.category===catFilter);
+
+  equipment.forEach(eq=>{
+    itemMap[eq.name] = {name:eq.name, cat:eq.category, monthly:Array(12).fill(0), total:0, peak:0};
+  });
+
+  jobs.forEach(job=>{
+    if(!job.start) return;
+    const jYear = parseInt(job.start.slice(0,4));
+    const jEndYear = job.end ? parseInt(job.end.slice(0,4)) : jYear;
+    if(jYear > year || jEndYear < year) return; // job not in this year at all
+
+    (job.items||[]).forEach(it=>{
+      if(!itemMap[it.name]) return; // filtered out
+      for(let m=0; m<12; m++){
+        let val = 0;
+        if(metric === 'days'){
+          val = bookedDaysInMonth(job, year, m) * it.qty;
+        } else {
+          // count job once per month it overlaps
+          const mStart = new Date(year, m, 1);
+          const mEnd   = new Date(year, m+1, 0);
+          const jS = new Date(job.start+'T00:00:00');
+          const jE = job.end ? new Date(job.end+'T00:00:00') : jS;
+          if(jS <= mEnd && jE >= mStart) val = 1;
+        }
+        itemMap[it.name].monthly[m] += val;
+        itemMap[it.name].total += val;
+      }
+    });
+  });
+
+  // compute peak
+  Object.values(itemMap).forEach(it=>{
+    it.peak = Math.max(...it.monthly);
+  });
+
+  let items = Object.values(itemMap).filter(it=>it.total>0);
+
+  if(sort==='total') items.sort((a,b)=>b.total-a.total);
+  else if(sort==='name') items.sort((a,b)=>a.name.localeCompare(b.name));
+  else if(sort==='peak') items.sort((a,b)=>b.peak-a.peak);
+
+  // summary cards
+  const totalDays = items.reduce((s,i)=>s+i.total,0);
+  const topItem = items[0];
+  const activeCount = items.length;
+  const peakMonth = (() => {
+    const byMonth = Array(12).fill(0);
+    items.forEach(it=>it.monthly.forEach((v,m)=>byMonth[m]+=v));
+    const max = Math.max(...byMonth);
+    return {month: MONTHS_DA[byMonth.indexOf(max)], val: max};
+  })();
+
+  document.getElementById('statsSummary').innerHTML = [
+    {label: metric==='days'?'Totale lejedage':'Totale job-bookinger', val: totalDays.toLocaleString('da-DK')},
+    {label: 'Aktive stykker udstyr', val: activeCount},
+    {label: 'Mest brugte udstyr', val: topItem ? topItem.name.slice(0,28)+(topItem.name.length>28?'…':'') : '—'},
+    {label: 'Travleste måned', val: peakMonth.val > 0 ? `${peakMonth.month} (${peakMonth.val})` : '—'},
+  ].map(s=>`<div class="panel" style="padding:12px 14px;">
+    <div style="font-size:10px; color:var(--muted); font-family:var(--mono); text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px;">${s.label}</div>
+    <div style="font-size:16px; font-weight:800; color:var(--amber);">${escapeHtml(String(s.val))}</div>
+  </div>`).join('');
+
+  if(items.length===0){
+    document.getElementById('statsContent').innerHTML =
+      '<div class="empty"><div class="big">📊</div>Ingen bookinger fundet for '+year+(catFilter?' i kategorien '+escapeHtml(catFilter):'')+'</div>';
+    return;
+  }
+
+  // find global max for bar scaling
+  const globalMax = Math.max(...items.flatMap(i=>i.monthly), 1);
+  const metricLabel = metric==='days' ? 'dage' : 'jobs';
+
+  const rows = items.map(it=>{
+    const bars = it.monthly.map((v,m)=>{
+      const pct = Math.round((v/globalMax)*100);
+      const title = `${MONTHS_DA[m]}: ${v} ${metricLabel}`;
+      return `<div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;">
+        <div style="font-size:8px; color:${v>0?'var(--amber)':'var(--muted)'}; font-family:var(--mono); font-weight:${v>0?700:400};">${v>0?v:''}</div>
+        <div title="${title}" style="width:100%; background:var(--border); border-radius:2px; height:28px; display:flex; align-items:flex-end;">
+          <div style="width:100%; height:${pct}%; background:${pct>66?'var(--amber)':pct>33?'#b07d2a':'#5c4521'}; border-radius:2px; min-height:${v>0?2:0}px; transition:height .2s;"></div>
+        </div>
+        <div style="font-size:7.5px; color:var(--muted); font-family:var(--mono);">${MONTHS_DA[m]}</div>
+      </div>`;
+    }).join('');
+
+    return `<div style="background:var(--panel); border:1px solid var(--border); border-radius:9px; padding:12px 14px; margin-bottom:8px;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; gap:10px;">
+        <div>
+          <div style="font-size:13px; font-weight:700;">${escapeHtml(it.name)}</div>
+          <div style="font-size:10px; color:var(--muted); font-family:var(--mono); margin-top:1px;">${escapeHtml(it.cat)}</div>
+        </div>
+        <div style="text-align:right; flex-shrink:0;">
+          <div style="font-size:16px; font-weight:800; color:var(--amber); font-family:var(--mono);">${it.total}</div>
+          <div style="font-size:9px; color:var(--muted);">${metricLabel} i ${year}</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:3px; align-items:flex-end; height:58px;">${bars}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('statsContent').innerHTML = `
+    <div style="font-size:11px; color:var(--muted); font-family:var(--mono); margin-bottom:10px;">
+      Viser ${items.length} stykker udstyr med bookinger i ${year} · ${metric==='days'?'Målt i dage':'Målt i antal jobs'}
+    </div>
+    ${rows}`;
+}
+
+// export CSV
+document.getElementById('statsExportBtn').addEventListener('click', ()=>{
+  const year = parseInt(document.getElementById('statsYear').value);
+  const catFilter = document.getElementById('statsCat').value;
+  const metric = document.getElementById('statsMetric').value;
+
+  const itemMap = {};
+  let equipment = EQUIPMENT;
+  if(catFilter) equipment = equipment.filter(e=>e.category===catFilter);
+  equipment.forEach(eq=>{ itemMap[eq.name]={name:eq.name, cat:eq.category, monthly:Array(12).fill(0)}; });
+
+  jobs.forEach(job=>{
+    if(!job.start) return;
+    const jYear = parseInt(job.start.slice(0,4));
+    const jEndYear = job.end ? parseInt(job.end.slice(0,4)) : jYear;
+    if(jYear > year || jEndYear < year) return;
+    (job.items||[]).forEach(it=>{
+      if(!itemMap[it.name]) return;
+      for(let m=0; m<12; m++){
+        if(metric==='days'){
+          itemMap[it.name].monthly[m] += bookedDaysInMonth(job, year, m) * it.qty;
+        } else {
+          const mStart=new Date(year,m,1), mEnd=new Date(year,m+1,0);
+          const jS=new Date(job.start+'T00:00:00'), jE=job.end?new Date(job.end+'T00:00:00'):jS;
+          if(jS<=mEnd && jE>=mStart) itemMap[it.name].monthly[m]+=1;
+        }
+      }
+    });
+  });
+
+  const label = metric==='days'?'Dage booket':'Antal jobs';
+  const header = ['Udstyr','Kategori',...MONTHS_DA.map(m=>m+' '+year),'Total'].join(';');
+  const rows = Object.values(itemMap).filter(i=>i.monthly.some(v=>v>0)).map(i=>{
+    const total = i.monthly.reduce((s,v)=>s+v,0);
+    return ['"'+i.name+'"', '"'+i.cat+'"', ...i.monthly, total].join(';');
+  });
+  const csv = [header,...rows].join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`udstyr-statistik-${year}.csv`; a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('showStatsBtn').addEventListener('click', ()=>{
+  const statsPanel = document.getElementById('tab-stats');
+  const lagerPanel = document.getElementById('tab-lager');
+  statsPanel.style.display = 'block';
+  lagerPanel.style.display = 'none';
+  renderStats();
+});
+
+document.getElementById('statsCloseBtn').addEventListener('click', ()=>{
+  document.getElementById('tab-stats').style.display = 'none';
+  document.getElementById('tab-lager').style.display = 'block';
+});
+
+['statsYear','statsCat','statsSort','statsMetric'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', computeAndRenderStats);
+});
+
+// ---- date helpers ----
+function todayStr(){
+  return new Date().toISOString().slice(0,10);
+}
+function addMonths(dateStr, n){
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setMonth(d.getMonth() + n);
+  return d.toISOString().slice(0,10);
+}
+
+// ---- filter bar setup ----
+function initFilterDates(){
+  const t = todayStr();
+  document.getElementById('filterStart').value = t;
+  document.getElementById('filterEnd').value   = addMonths(t, 1);
+}
+
+document.getElementById('filterStart').addEventListener('change', ()=> renderJobs());
+document.getElementById('filterEnd').addEventListener('change',   ()=> renderJobs());
+document.getElementById('filterResetBtn').addEventListener('click', ()=>{
+  initFilterDates();
+  renderJobs();
+});
+
+// ---- avail tab: set today as default start ----
+document.getElementById('availStart').value = todayStr();
+
 // ---- init ----
 (async function init(){
+  initFilterDates();
   await loadEquipment();
   await loadJobs();
   renderJobs();
