@@ -1210,9 +1210,21 @@ function renderJobs(){
     const totalQtyAll=(j.items||[]).reduce(function(s,i){return s+i.qty;},0);
     let conflictCount=0;
     (j.items||[]).forEach(function(it){
-      if(it.isPkg) return;
-      const bq=bookedQty(it.name,j.start,j.end,j.id);
-      if(bq.sum+it.qty>totalQty(it.name)) conflictCount++;
+      if(it.isPkg){
+        // Package: check pulje bookings + OB vogn
+        const pkg=PACKAGES.find(function(p){return p.name===it.name;});
+        if(pkg){
+          const bq=bookedQty(it.name,j.start,j.end,j.id);
+          if(bq.sum+it.qty>pkg.qty) conflictCount++;
+          if(pkg.ob_vogn_id&&obBookingConflict(pkg.ob_vogn_id,j.start,j.end,null)) conflictCount++;
+        }
+      } else {
+        // Equipment: check pulje bookings + OB vogn
+        const bq=bookedQty(it.name,j.start,j.end,j.id);
+        if(bq.sum+it.qty>totalQty(it.name)) conflictCount++;
+        const eq=EQUIPMENT.find(function(e){return e.name===it.name;});
+        if(eq&&eq.ob_vogn_id&&obBookingConflict(eq.ob_vogn_id,j.start,j.end,null)) conflictCount++;
+      }
     });
 
     const itemsHtml=(j.items||[]).map(function(it){
@@ -1411,11 +1423,28 @@ function renderConflicts(){
   if(start>end){ box.innerHTML='<div class="conflict-box">Slut dato skal være efter start dato.</div>'; return; }
   const conflicts=[];
   Object.keys(selectedItems).forEach(function(n){
-    if(n.startsWith('PKG:')) return;
     const qty=selectedItems[n];
-    const bq=bookedQty(n,start,end,editingJobId);
-    const free=totalQty(n)-bq.sum;
-    if(qty>free) conflicts.push('⚠ '+n+': ønsker '+qty+', kun '+Math.max(free,0)+' ledige'+(bq.users.length?' ('+bq.users.join(', ')+')':''));
+    if(n.startsWith('PKG:')){
+      // Package conflict check
+      const pkg=PACKAGES.find(function(p){return p.id===n.slice(4);});
+      if(!pkg) return;
+      const bq=bookedQty(pkg.name,start,end,editingJobId);
+      const free=pkg.qty-bq.sum;
+      const obC=pkg.ob_vogn_id?obBookingConflict(pkg.ob_vogn_id,start,end,null):null;
+      const ov=obC?obVognById(pkg.ob_vogn_id):null;
+      if(qty>free) conflicts.push('⚠ 📦 '+pkg.name+': kun '+Math.max(free,0)+' ledig'+(bq.users.length?' ('+bq.users.join(', ')+')':''));
+      if(obC) conflicts.push('⚠ 📦 '+pkg.name+': OB vogn 🚐 '+(ov?ov.name:'?')+' er booket i perioden ('+obC.name+')');
+    } else {
+      // Equipment conflict check
+      const bq=bookedQty(n,start,end,editingJobId);
+      const free=totalQty(n)-bq.sum;
+      if(qty>free) conflicts.push('⚠ '+n+': ønsker '+qty+', kun '+Math.max(free,0)+' ledige'+(bq.users.length?' ('+bq.users.join(', ')+')':''));
+      const eq=EQUIPMENT.find(function(e){return e.name===n;});
+      if(eq&&eq.ob_vogn_id){
+        const obC=obBookingConflict(eq.ob_vogn_id,start,end,null);
+        if(obC){const ov=obVognById(eq.ob_vogn_id);conflicts.push('⚠ '+n+': OB vogn 🚐 '+(ov?ov.name:'?')+' er booket ('+obC.name+')');}
+      }
+    }
   });
   if(conflicts.length===0) box.innerHTML='<div class="conflict-box"><span class="ok">✓ Ingen konflikter.</span></div>';
   else box.innerHTML='<div class="conflict-box">'+conflicts.map(function(c){return escapeHtml(c);}).join('<br>')+'</div>';
