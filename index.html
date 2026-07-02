@@ -485,9 +485,7 @@ body.mobile-view-active .m-modal-overlay { z-index: 1600 !important; }
 body.mobile-view-active #mJobOverlay { z-index: 1600 !important; }
 
 @media (max-width: 767px) {
-  /* ── Hide desktop, show mobile shell ── */
-  .app { display: none !important; }
-  #mobileApp { display: flex !important; }
+  /* Display controlled by JS via body classes below */
 
   /* ── Desktop overlays appear above mobile shell ── */
   .overlay {
@@ -532,6 +530,14 @@ body.mobile-view-active #mJobOverlay { z-index: 1600 !important; }
     box-shadow: 0 0 8px rgba(95,184,138,.4);
     color: #fff;
   }
+
+/* ── View control via body class (JS-controlled, works on all screen sizes) ── */
+#mobileApp { display: none; }
+body.show-mobile #mobileApp { display: flex !important; }
+body.show-mobile .app { display: none !important; }
+body.show-desktop #mobileApp { display: none !important; }
+body.show-desktop .app { display: block !important; }
+
 </style>
 </head>
 <body>
@@ -3441,32 +3447,27 @@ function updateToggleState(view){
 }
 function switchToMobile(){
   localStorage.setItem('viewPref','mobile');
-  document.getElementById('mobileApp').style.display='flex';
-  document.querySelector('.app').style.display='none';
-  document.body.classList.add('mobile-view-active');
+  document.body.classList.remove('show-desktop');
+  document.body.classList.add('show-mobile','mobile-view-active');
   updateToggleState('mobile');
   renderMobileTab();
 }
 function switchToDesktop(){
   localStorage.setItem('viewPref','desktop');
-  document.getElementById('mobileApp').style.display='none';
-  document.querySelector('.app').style.display='block';
-  document.body.classList.remove('mobile-view-active');
+  document.body.classList.remove('show-mobile','mobile-view-active');
+  document.body.classList.add('show-desktop');
   updateToggleState('desktop');
 }
 function applyViewPreference(){
-  // User's explicit choice wins — otherwise device decides
   var saved = localStorage.getItem('viewPref');
-  var useMobile = saved ? (saved === 'mobile') : isMobile();
+  var useMobile = saved ? (saved==='mobile') : isMobile();
   if(useMobile){
-    document.getElementById('mobileApp').style.display='flex';
-    document.querySelector('.app').style.display='none';
-    document.body.classList.add('mobile-view-active');
+    document.body.classList.add('show-mobile','mobile-view-active');
+    document.body.classList.remove('show-desktop');
     updateToggleState('mobile');
   } else {
-    document.getElementById('mobileApp').style.display='none';
-    document.querySelector('.app').style.display='block';
-    document.body.classList.remove('mobile-view-active');
+    document.body.classList.add('show-desktop');
+    document.body.classList.remove('show-mobile','mobile-view-active');
     updateToggleState('desktop');
   }
 }
