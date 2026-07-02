@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Udstyr Booking — OB Pulje</title>
+<title>East Production — OB Pulje</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
@@ -538,6 +538,13 @@ body.show-mobile .app { display: none !important; }
 body.show-desktop #mobileApp { display: none !important; }
 body.show-desktop .app { display: block !important; }
 
+
+  .repair-badge{ background:#3a1a18; color:var(--red); font-size:9px; font-family:var(--mono); font-weight:700; padding:2px 7px; border-radius:10px; border:1px solid var(--red); }
+  .repair-card{ background:var(--panel); border:1px solid var(--border); border-radius:10px; margin-bottom:10px; overflow:hidden; }
+  .repair-card.active{ border-left:3px solid var(--red); }
+  .repair-head{ padding:12px 16px; display:flex; align-items:center; gap:10px; }
+  .repair-history-row{ padding:12px 16px; border-top:1px solid var(--border); }
+  .repair-status-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -546,7 +553,7 @@ body.show-desktop .app { display: block !important; }
     <div class="brand">
       <div class="dot"></div>
       <div>
-        <h1>Udstyr Booking</h1>
+        <h1>East Production</h1>
         <div class="sub">OB PULJE &middot; DELT LAGER</div>
       </div>
     </div>
@@ -605,12 +612,20 @@ body.show-desktop .app { display: block !important; }
   <div id="tab-lager" style="display:none;">
     <div class="panel">
       <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
-        <div style="font-size:13px; font-weight:700;">Lager <span id="lagerCount" style="font-size:10px; color:var(--muted); font-family:var(--mono); font-weight:400;"></span></div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div style="font-size:13px; font-weight:700;">Lager <span id="lagerCount" style="font-size:10px; color:var(--muted); font-family:var(--mono); font-weight:400;"></span></div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <input type="text" id="lagerSearch" placeholder="Søg..." style="min-width:180px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;">
+          </div>
+          <select id="lagerSort" style="background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:7px;font-size:13px;">
+            <option value="category">Kategori</option>
+            <option value="name">Navn (A-Z)</option>
+            <option value="type">Type (pakker først)</option>
+          </select>
           <button class="btn small secondary" id="addPkgBtn">+ Ny pakke</button>
           <button class="btn small" id="addEquipBtn">+ Tilføj udstyr</button>
           <button class="btn small secondary" onclick="openCatManager()">Kategorier</button>
+          <button class="btn small secondary" id="showVaerkstedBtn">🔧 Værksted</button>
           <button class="btn small secondary" id="multiModeBtn" onclick="toggleMultiMode()">☑ Vælg flere</button>
           <button class="btn small secondary" id="showStatsBtn">Statistik</button>
         </div>
@@ -649,6 +664,14 @@ body.show-desktop .app { display: block !important; }
     <div id="statsContent" class="loading">Beregner statistik...</div>
   </div>
 
+  <div id="tab-vaerksted" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:700;">🔧 Værksted <span id="vaerkstedCount" style="font-size:10px;color:var(--muted);font-family:var(--mono);font-weight:400;"></span></div>
+      <button class="btn small secondary" id="vaerkstedCloseBtn">← Tilbage til Lager</button>
+    </div>
+    <div id="vaerkstedList"></div>
+  </div>
+
   <div id="tab-obvogne" style="display:none;">
     <div style="margin-bottom:14px;">
       <input type="text" id="obSearch" placeholder="Søg OB vogn navn eller booking..." style="width:100%; max-width:400px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 12px; border-radius:8px; font-size:13px;">
@@ -680,6 +703,52 @@ body.show-desktop .app { display: block !important; }
     <div style="display:flex; gap:6px;">
       <button class="btn small secondary" id="qrCreateBtn" style="flex:1;">+ Opret nyt</button>
       <button class="btn small" id="qrLinkBtn" style="flex:1;">Tilknyt</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="overlay" id="repairOverlay">
+  <div class="modal" style="max-width:500px;">
+    <h2 id="repairModalTitle">Fejlmeld udstyr</h2>
+    <input type="hidden" id="repairEquipId">
+    <div class="field"><label>Udstyr</label><div id="repairEquipName" style="padding:10px;background:var(--panel-2);border-radius:7px;font-size:13px;color:var(--muted);"></div></div>
+    <div class="row2">
+      <div class="field"><label>Dato</label><input type="date" id="repairDate"></div>
+      <div class="field"><label>Indmeldt af</label><input type="text" id="repairBy" placeholder="Initialer"></div>
+    </div>
+    <div class="field"><label>Hvad fejler det?</label><textarea id="repairDesc" placeholder="Beskriv fejlen..." style="min-height:80px;"></textarea></div>
+    <div class="field"><label>Hvad skal ske? (valgfrit)</label><textarea id="repairAction" placeholder="f.eks. Sendes til værksted, udskiftes..." style="min-height:60px;"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="repairCancelBtn">Annuller</button>
+      <button class="btn" id="repairSaveBtn" style="background:var(--red);">Fejlmeld</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="historyOverlay">
+  <div class="modal" style="max-width:560px;">
+    <h2 id="historyTitle">Reparationshistorie</h2>
+    <div id="historyList"></div>
+    <div class="modal-actions" style="justify-content:space-between;">
+      <button class="btn small secondary" id="historyPdfBtn">📄 Eksportér PDF</button>
+      <button class="btn secondary" id="historyCancelBtn">Luk</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="resolveOverlay">
+  <div class="modal" style="max-width:440px;">
+    <h2>Marker som repareret</h2>
+    <input type="hidden" id="resolveRepairId">
+    <div class="row2">
+      <div class="field"><label>Repareret dato</label><input type="date" id="resolveDate"></div>
+      <div class="field"><label>Repareret af</label><input type="text" id="resolveBy" placeholder="Initialer"></div>
+    </div>
+    <div class="field"><label>Hvad blev gjort?</label><textarea id="resolveNotes" placeholder="Beskriv reparationen..." style="min-height:70px;"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="resolveCancelBtn">Annuller</button>
+      <button class="btn" id="resolveSaveBtn" style="background:var(--green);color:#0a1f14;">✓ Marker repareret</button>
     </div>
   </div>
 </div>
@@ -849,7 +918,7 @@ body.show-desktop .app { display: block !important; }
   <div id="mobileHeader">
     <div class="brand">
       <div class="dot"></div>
-      <h1>UDSTYR BOOKING</h1>
+      <h1>EAST PRODUCTION</h1>
     </div>
 <div class="view-toggle" id="viewToggle"><button id="btnMobileView" onclick="switchToMobile()" title="Mobil">📱</button><button id="btnDesktopView" onclick="switchToDesktop()" title="PC">🖥</button></div>
     <button class="btn small" id="mobileNewJobBtn" style="padding:8px 14px;">+ Job</button>
@@ -1646,8 +1715,22 @@ function renderLager(filter){
         row.insertBefore(cb, row.firstChild);
       }
       const bd=document.createElement('button'); bd.className='btn small secondary'; bd.textContent='Detaljer'; bd.addEventListener('click', function(){ openEquipDetail(realIdx); }); actions.appendChild(bd);
-      const br=document.createElement('button'); br.className='btn small secondary'; br.textContent='Rediger'; br.addEventListener('click', function(){ openEquipDetail(realIdx); }); actions.appendChild(br);
       const bcp=document.createElement('button'); bcp.className='btn small secondary'; bcp.textContent='Kopier'; (function(ri){ bcp.addEventListener('click', function(){ copyEquip(ri); }); })(realIdx); actions.appendChild(bcp);
+      // Repair status badge
+      var activeRep = activeRepair(equip.id);
+      if(activeRep){
+        var repBadge=document.createElement('span'); repBadge.className='repair-badge'; repBadge.textContent='⚠ Fejlmeldt';
+        actions.insertBefore(repBadge, actions.firstChild);
+      }
+      var bfejl=document.createElement('button');
+      bfejl.className='btn small '+(activeRep?'secondary':'secondary');
+      bfejl.textContent=activeRep?'⚠ Fejlmeldt':'Fejlmeld';
+      bfejl.style.cssText=activeRep?'font-size:11px;color:var(--red);border-color:var(--red);':'font-size:11px;';
+      (function(eid){ bfejl.addEventListener('click', function(){ openRepairModal(eid); }); })(equip.id);
+      actions.appendChild(bfejl);
+      var bhist=document.createElement('button'); bhist.className='btn small secondary'; bhist.textContent='Historik'; bhist.style.fontSize='11px';
+      (function(eid){ bhist.addEventListener('click', function(){ openHistoryModal(eid); }); })(equip.id);
+      actions.appendChild(bhist);
       const bx=document.createElement('button'); bx.className='btn small danger'; bx.textContent='Slet'; bx.addEventListener('click', function(){ deleteEquip(realIdx); }); actions.appendChild(bx);
       row.appendChild(actions); list.appendChild(row);
     }
@@ -1655,6 +1738,7 @@ function renderLager(filter){
 }
 
 document.getElementById('lagerSearch').addEventListener('input', function(e){ renderLager(e.target.value); });
+document.getElementById('lagerSort').addEventListener('change', function(){ renderLager(document.getElementById('lagerSearch').value||''); });
 document.getElementById('addEquipBtn').addEventListener('click', function(){
   const row=document.getElementById('lagerNewRow'); row.style.display='block';
   row.innerHTML='<div class="panel" style="padding:12px;background:var(--panel-2);">'
@@ -3090,11 +3174,34 @@ function mRunAvail(q, cont){
 // ── Lager tab ──────────────────────────────────────────────
 function renderMobileLager(q){
   var cont = document.getElementById('mobileContent');
-  cont.innerHTML = '';
+
+  // Sort bar (rendered once at top)
+  if(!document.getElementById('mobileLagerSort')){
+    var sb = document.createElement('div');
+    sb.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:12px;';
+    sb.innerHTML='<span style="font-size:11px;color:var(--muted);">Sorter:</span>'
+      +'<select id="mobileLagerSort" style="flex:1;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:9px;font-size:14px;">'
+      +'<option value="category">Kategori</option>'
+      +'<option value="name">Navn (A-Z)</option>'
+      +'<option value="type">Type (pakker først)</option>'
+      +'</select>';
+    sb.querySelector('select').addEventListener('change', function(){ renderMobileLager(document.getElementById('mobileSearch').value||''); });
+    cont.appendChild(sb);
+  } else {
+    cont.innerHTML='';
+  }
+
+  var mSortEl = document.getElementById('mobileLagerSort');
+  var mSort = mSortEl ? mSortEl.value : 'category';
+
   var items = [
     ...PACKAGES.map(function(p){return {type:'pkg',obj:p,name:p.name,category:p.category};}),
     ...EQUIPMENT.filter(function(e){return !e.package_id;}).map(function(e){return {type:'equip',obj:e,name:e.name,category:e.category};})
-  ].sort(function(a,b){return a.name.localeCompare(b.name,'da');})
+  ].sort(function(a,b){
+    if(mSort==='name') return a.name.localeCompare(b.name,'da');
+    if(mSort==='type'){ if(a.type!==b.type) return a.type==='pkg'?-1:1; return a.name.localeCompare(b.name,'da'); }
+    var c=a.category.localeCompare(b.category,'da'); return c!==0?c:a.name.localeCompare(b.name,'da');
+  })
   .filter(function(it){return !q||it.name.toLowerCase().includes(q)||it.category.toLowerCase().includes(q);});
 
   if(!items.length){ cont.innerHTML='<div style="text-align:center;padding:50px 20px;color:var(--muted);">📦<br>Intet match</div>'; return; }
@@ -3473,11 +3580,293 @@ function applyViewPreference(){
 }
 
 
+// ═══════════════════════════════════════════════════════════
+// VÆRKSTED / REPARATIONER
+// ═══════════════════════════════════════════════════════════
+let REPAIRS = [];
+
+async function loadRepairs(){
+  try{
+    const {data,error} = await supa.from('repairs').select('*').order('created_at', {ascending:false});
+    if(error){ console.warn('loadRepairs:', error.message); REPAIRS=[]; return; }
+    REPAIRS = data || [];
+  }catch(e){ console.warn(e); REPAIRS=[]; }
+}
+
+function activeRepair(equipId){
+  return REPAIRS.find(function(r){ return r.equipment_id===equipId && r.status==='fejlmeldt'; });
+}
+
+// ── Fejlmeld modal ─────────────────────────────────────────
+function openRepairModal(equipId){
+  const eq = EQUIPMENT.find(function(e){ return e.id===equipId; });
+  if(!eq) return;
+  document.getElementById('repairEquipId').value = equipId;
+  document.getElementById('repairEquipName').textContent = eq.name;
+  document.getElementById('repairModalTitle').textContent = 'Fejlmeld: ' + eq.name;
+  document.getElementById('repairDate').value = todayStr();
+  document.getElementById('repairBy').value = '';
+  document.getElementById('repairDesc').value = '';
+  document.getElementById('repairAction').value = '';
+  document.getElementById('repairOverlay').classList.add('open');
+}
+
+document.getElementById('repairCancelBtn').addEventListener('click', function(){
+  document.getElementById('repairOverlay').classList.remove('open');
+});
+document.getElementById('repairOverlay').addEventListener('click', function(e){
+  if(e.target===document.getElementById('repairOverlay')) document.getElementById('repairOverlay').classList.remove('open');
+});
+
+document.getElementById('repairSaveBtn').addEventListener('click', async function(){
+  const equipId = document.getElementById('repairEquipId').value;
+  const desc    = document.getElementById('repairDesc').value.trim();
+  const by      = document.getElementById('repairBy').value.trim();
+  const date    = document.getElementById('repairDate').value;
+  const action  = document.getElementById('repairAction').value.trim();
+  if(!desc){ alert('Beskriv fejlen.'); return; }
+  const btn = document.getElementById('repairSaveBtn');
+  btn.disabled=true; btn.textContent='Gemmer...';
+  try{
+    const {error} = await supa.from('repairs').insert({
+      equipment_id: equipId, reported_date: date, reported_by: by,
+      description: desc, action: action, status: 'fejlmeldt'
+    });
+    if(error) throw error;
+    await loadRepairs();
+    document.getElementById('repairOverlay').classList.remove('open');
+    renderLager(document.getElementById('lagerSearch').value||'');
+  }catch(e){ alert('Fejl: '+e.message); }
+  finally{ btn.disabled=false; btn.textContent='Fejlmeld'; }
+});
+
+// ── Reparationshistorie modal ──────────────────────────────
+function openHistoryModal(equipId){
+  const eq = EQUIPMENT.find(function(e){ return e.id===equipId; });
+  if(!eq) return;
+  const repairs = REPAIRS.filter(function(r){ return r.equipment_id===equipId; }).sort(function(a,b){ return b.created_at.localeCompare(a.created_at); });
+  const jobHistory = jobs.filter(function(j){
+    return (j.items||[]).some(function(it){ return it.name===eq.name; });
+  }).sort(function(a,b){ return (b.start||'').localeCompare(a.start||''); });
+
+  document.getElementById('historyTitle').textContent = eq.name;
+  document.getElementById('historyPdfBtn').onclick = function(){ printRepairHistory(eq, repairs); };
+
+  window._histState = { equipId:equipId, jobsExp:false, repExp:false };
+
+  function renderAll(){
+    var s = window._histState;
+    var shownJobs = s.jobsExp ? jobHistory : jobHistory.slice(0,3);
+    var shownRep  = s.repExp  ? repairs    : repairs.slice(0,3);
+
+    var html = '';
+
+    // Jobs section
+    html += '<div style="margin-bottom:20px;">'
+      +'<div style="font-size:11px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:6px;">Brugt i jobs ('+jobHistory.length+')</div>';
+    if(!jobHistory.length){
+      html += '<div style="font-size:13px;color:var(--muted);padding:8px 0;">Ikke brugt i nogen jobs endnu.</div>';
+    } else {
+      shownJobs.forEach(function(j){
+        var it=(j.items||[]).find(function(i){return i.name===eq.name;});
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--panel-2);border-radius:8px;margin-bottom:5px;font-size:12.5px;">'
+          +'<div><div style="font-weight:600;">'+escapeHtml(j.name||'')+'</div>'
+          +'<div style="font-size:11px;color:var(--muted);">'+fmtDate(j.start)+' → '+fmtDate(j.end)+(j.who?' · '+escapeHtml(j.who):'')+'</div></div>'
+          +'<div style="font-family:var(--mono);font-size:11px;color:var(--amber);font-weight:700;">×'+(it?it.qty:1)+'</div>'
+          +'</div>';
+      });
+      if(jobHistory.length > 3){
+        html += '<button id="_histJobsToggle" style="background:none;border:none;color:var(--amber);font-size:12px;cursor:pointer;padding:4px 0;">'+(s.jobsExp?'▲ Vis færre':'▼ Vis alle '+jobHistory.length+' jobs')+'</button>';
+      }
+    }
+    html += '</div>';
+
+    // Repairs section
+    html += '<div>'
+      +'<div style="font-size:11px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:6px;">Reparationshistorie ('+repairs.length+')</div>';
+    if(!repairs.length){
+      html += '<div style="font-size:13px;color:var(--muted);padding:8px 0;">Ingen reparationshistorie.</div>';
+    } else {
+      shownRep.forEach(function(r){
+        var isFejl = r.status==='fejlmeldt';
+        html += '<div class="repair-card '+(isFejl?'active':'')+'" data-rid="'+r.id+'" style="margin-bottom:8px;cursor:pointer;">'
+          +'<div class="repair-head">'
+          +'<div class="repair-status-dot" style="background:'+(isFejl?'var(--red)':'var(--green)')+';box-shadow:0 0 5px '+(isFejl?'var(--red)':'var(--green)')+';"></div>'
+          +'<div style="flex:1;">'
+          +'<div style="font-weight:700;font-size:13px;">'+(isFejl?'⚠ Fejlmeldt':'✅ Repareret')+'</div>'
+          +'<div style="font-size:11px;color:var(--muted);">'+fmtDate(r.reported_date)+(r.reported_by?' · '+escapeHtml(r.reported_by):'')+'</div>'
+          +'</div>'
+          +'<span style="font-size:11px;color:var(--muted);">› Tryk for detaljer</span>'
+          +'</div>'
+          +'<div style="padding:0 16px 10px;font-size:12.5px;color:var(--muted);">'+escapeHtml(r.description.slice(0,80))+(r.description.length>80?'…':'')+'</div>'
+          +'</div>';
+      });
+      if(repairs.length > 3){
+        html += '<button id="_histRepToggle" style="background:none;border:none;color:var(--amber);font-size:12px;cursor:pointer;padding:4px 0;">'+(s.repExp?'▲ Vis færre':'▼ Vis alle '+repairs.length+' reparationer')+'</button>';
+      }
+    }
+    html += '</div>';
+
+    var list = document.getElementById('historyList');
+    list.innerHTML = html;
+
+    // Wire buttons
+    var jt = document.getElementById('_histJobsToggle');
+    if(jt) jt.addEventListener('click', function(){ window._histState.jobsExp=!window._histState.jobsExp; renderAll(); });
+    var rt = document.getElementById('_histRepToggle');
+    if(rt) rt.addEventListener('click', function(){ window._histState.repExp=!window._histState.repExp; renderAll(); });
+
+    // Wire repair card clicks
+    list.querySelectorAll('[data-rid]').forEach(function(el){
+      el.addEventListener('click', function(){ openRepairDetail(el.dataset.rid, equipId); });
+    });
+  }
+
+  renderAll();
+  document.getElementById('historyOverlay').classList.add('open');
+}
+
+function openRepairDetail(repairId, returnEquipId){
+  const r = REPAIRS.find(function(x){ return x.id===repairId; });
+  if(!r) return;
+  document.getElementById('historyOverlay').classList.remove('open');
+  if(r.status==='fejlmeldt'){
+    openResolveModal(repairId);
+  } else {
+    // Show detail then reopen history
+    alert('Repareret: '+fmtDate(r.resolved_date||'')+'\n'+(r.resolved_by?'Af: '+r.resolved_by+'\n':'')+'Note: '+r.resolution_notes);
+    if(returnEquipId) openHistoryModal(returnEquipId);
+  }
+}
+
+
+document.getElementById('historyCancelBtn').addEventListener('click', function(){
+  document.getElementById('historyOverlay').classList.remove('open');
+});
+document.getElementById('historyOverlay').addEventListener('click', function(e){
+  if(e.target===document.getElementById('historyOverlay')) document.getElementById('historyOverlay').classList.remove('open');
+});
+
+// ── Marker repareret modal ─────────────────────────────────
+function openResolveModal(repairId){
+  document.getElementById('historyOverlay').classList.remove('open');
+  document.getElementById('resolveRepairId').value = repairId;
+  document.getElementById('resolveDate').value = todayStr();
+  document.getElementById('resolveBy').value = '';
+  document.getElementById('resolveNotes').value = '';
+  document.getElementById('resolveOverlay').classList.add('open');
+}
+
+document.getElementById('resolveCancelBtn').addEventListener('click', function(){
+  document.getElementById('resolveOverlay').classList.remove('open');
+});
+document.getElementById('resolveOverlay').addEventListener('click', function(e){
+  if(e.target===document.getElementById('resolveOverlay')) document.getElementById('resolveOverlay').classList.remove('open');
+});
+
+document.getElementById('resolveSaveBtn').addEventListener('click', async function(){
+  const id    = document.getElementById('resolveRepairId').value;
+  const date  = document.getElementById('resolveDate').value;
+  const by    = document.getElementById('resolveBy').value.trim();
+  const notes = document.getElementById('resolveNotes').value.trim();
+  if(!notes){ alert('Beskriv hvad der blev gjort.'); return; }
+  const btn = document.getElementById('resolveSaveBtn');
+  btn.disabled=true; btn.textContent='Gemmer...';
+  try{
+    const {error} = await supa.from('repairs').update({
+      status:'repareret', resolved_date:date, resolved_by:by, resolution_notes:notes
+    }).eq('id',id);
+    if(error) throw error;
+    await loadRepairs();
+    document.getElementById('resolveOverlay').classList.remove('open');
+    renderLager(document.getElementById('lagerSearch').value||'');
+    renderVaerksted();
+  }catch(e){ alert('Fejl: '+e.message); }
+  finally{ btn.disabled=false; btn.textContent='✓ Marker repareret'; }
+});
+
+// ── Værksted tab render ────────────────────────────────────
+function renderVaerksted(){
+  const cont  = document.getElementById('vaerkstedList');
+  const count = document.getElementById('vaerkstedCount');
+  const active = REPAIRS.filter(function(r){ return r.status==='fejlmeldt'; });
+  if(count) count.textContent = active.length + ' fejlmeldinger';
+
+  if(!active.length){
+    cont.innerHTML='<div class="empty"><div class="big">✅</div>Ingen aktive fejlmeldinger.</div>';
+    return;
+  }
+
+  cont.innerHTML='';
+  active.forEach(function(r){
+    const eq = EQUIPMENT.find(function(e){ return e.id===r.equipment_id; });
+    if(!eq) return;
+    const card = document.createElement('div');
+    card.className = 'repair-card active';
+    card.innerHTML = '<div class="repair-head">'
+      +'<div class="repair-status-dot" style="background:var(--red);box-shadow:0 0 6px var(--red);"></div>'
+      +'<div style="flex:1;">'
+      +'<div style="font-weight:700;font-size:13.5px;">'+escapeHtml(eq.name)+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);">'+escapeHtml(eq.category)+' · Fejlmeldt '+fmtDate(r.reported_date)+(r.reported_by?' af '+escapeHtml(r.reported_by):'')+'</div>'
+      +'</div>'
+      +'<div style="display:flex;gap:6px;">'
+      +'<button class="btn small secondary" style="font-size:11px;" onclick="openHistoryModal(\''+eq.id+'\')">Historik</button>'
+      +'<button class="btn small" style="font-size:11px;background:var(--green);color:#0a1f14;" onclick="openResolveModal(\''+r.id+'\')">✓ Repareret</button>'
+      +'</div></div>'
+      +'<div style="padding:0 16px 12px;font-size:13px;"><strong>Fejl:</strong> '+escapeHtml(r.description)+'</div>'
+      +(r.action?'<div style="padding:0 16px 12px;font-size:12px;color:var(--muted);"><strong>Handling:</strong> '+escapeHtml(r.action)+'</div>':'');
+    cont.appendChild(card);
+  });
+}
+
+// ── PDF export ─────────────────────────────────────────────
+function printRepairHistory(eq, repairs){
+  var rows = repairs.map(function(r){
+    var isFejl = r.status==='fejlmeldt';
+    return '<tr style="border-bottom:1px solid #eee;">'
+      +'<td style="padding:8px;white-space:nowrap;">'+fmtDate(r.reported_date)+'</td>'
+      +'<td style="padding:8px;"><span style="background:'+(isFejl?'#fde8e8':'#e8f5e9')+';color:'+(isFejl?'#c0392b':'#27ae60')+';padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;">'+(isFejl?'Fejlmeldt':'Repareret')+'</span></td>'
+      +'<td style="padding:8px;">'+escapeHtml(r.reported_by||'—')+'</td>'
+      +'<td style="padding:8px;">'+escapeHtml(r.description)+'</td>'
+      +'<td style="padding:8px;">'+escapeHtml(r.action||'—')+'</td>'
+      +'<td style="padding:8px;">'+(r.resolved_date?fmtDate(r.resolved_date):'—')+'</td>'
+      +'<td style="padding:8px;">'+escapeHtml(r.resolution_notes||'—')+'</td>'
+      +'</tr>';
+  }).join('');
+
+  var html='<!DOCTYPE html><html lang="da"><head><meta charset="UTF-8"><title>Reparationshistorie — '+escapeHtml(eq.name)+'</title>'
+    +'<style>body{font-family:Helvetica,sans-serif;font-size:10pt;color:#1a1a1a;padding:20mm;}h1{font-size:16pt;margin-bottom:4px;}table{width:100%;border-collapse:collapse;margin-top:16px;}th{background:#1a1a1a;color:#fff;padding:8px;text-align:left;font-size:9pt;}@media print{.no-print{display:none;}}</style>'
+    +'</head><body>'
+    +'<h1>Reparationshistorie</h1>'
+    +'<div style="font-size:11pt;color:#555;margin-bottom:4px;">'+escapeHtml(eq.name)+' · '+escapeHtml(eq.category)+'</div>'
+    +(eq.serial_number?'<div style="font-size:10pt;color:#777;">SN: '+escapeHtml(eq.serial_number)+(eq.tv2_number?' · TV2: '+escapeHtml(eq.tv2_number):'')+'</div>':'')
+    +'<div style="font-size:9pt;color:#999;margin-top:4px;">Udskrevet: '+new Date().toLocaleDateString('da-DK')+'</div>'
+    +'<table><thead><tr><th>Dato</th><th>Status</th><th>Af</th><th>Fejlbeskrivelse</th><th>Handling</th><th>Repareret</th><th>Reparationsnote</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<div class="no-print" style="margin-top:20px;text-align:center;"><button onclick="window.print()" style="background:#1a1a1a;color:#fff;border:none;padding:12px 28px;font-size:13px;border-radius:7px;cursor:pointer;">Udskriv / Gem som PDF</button></div>'
+    +'</body></html>';
+  var win=window.open('','_blank');
+  win.document.write(html); win.document.close();
+}
+
+// ── Værksted tab switch ────────────────────────────────────
+document.getElementById('showVaerkstedBtn').addEventListener('click', function(){
+  ['jobs','avail','lager','obvogne','stats'].forEach(function(t){ var el=document.getElementById('tab-'+t); if(el) el.style.display='none'; });
+  document.getElementById('tab-vaerksted').style.display='block';
+  document.querySelectorAll('nav.tabs button').forEach(function(b){ b.classList.remove('active'); });
+  loadRepairs().then(function(){ renderVaerksted(); });
+});
+document.getElementById('vaerkstedCloseBtn').addEventListener('click', function(){
+  document.getElementById('tab-vaerksted').style.display='none';
+  document.getElementById('tab-lager').style.display='block';
+  document.querySelectorAll('nav.tabs button').forEach(function(b){ b.classList.toggle('active', b.dataset.tab==='lager'); });
+});
+
+
 (async function init(){
   initFilterDates();
   document.getElementById('availStart').value=todayStr();
   try{
-    await Promise.all([loadCategories(),loadObVogne(),loadObBookinger(),loadPackages(),loadEquipment()]);
+    await Promise.all([loadCategories(),loadObVogne(),loadObBookinger(),loadPackages(),loadEquipment(),loadRepairs()]);
   }catch(e){ console.warn('Init load fejl:',e); }
   try{ await loadJobs(); }catch(e){ console.error('loadJobs fejlede:',e); }
   renderJobs();
