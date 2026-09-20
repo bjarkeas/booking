@@ -545,9 +545,186 @@ body.show-desktop .app { display: block !important; }
   .repair-head{ padding:12px 16px; display:flex; align-items:center; gap:10px; }
   .repair-history-row{ padding:12px 16px; border-top:1px solid var(--border); }
   .repair-status-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+
+
+.pak-spor{font:10px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#3fd99c;margin-top:3px}
+.pak-spor.tilfoejet{color:var(--amber,#e0a33e)}
+.item-row.er-pakket>div>div:first-child{color:var(--muted);text-decoration:line-through}
+.pak-maerke{font:10px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--amber,#e0a33e);
+ background:var(--panel-2);border:1px solid var(--border);border-radius:6px;padding:4px 7px;margin-left:auto}
+.pak-maerke.faerdig{color:#3fd99c;border-color:#2c5f4a}
+
+/* ── Pakkeliste ─────────────────────────────────────────────── */
+#pakSide{display:none}
+#pakNavnOverlay{display:none}
+body.pak-visning .app{display:none}
+body.pak-visning #gate{display:none!important}
+body.pak-visning #pakSide{display:block;max-width:640px;margin:0 auto;padding:14px 12px 90px}
+body.pak-visning #pakNavnOverlay.open{display:flex;position:fixed;inset:0;z-index:9500;
+ align-items:center;justify-content:center;background:rgba(6,10,14,.82);padding:18px}
+.pak-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
+.pak-h1{font-size:20px;font-weight:700;color:var(--text)}
+.pak-dato{font:11px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);margin-top:3px}
+.pak-hoejre{margin-left:auto;text-align:right;display:flex;flex-direction:column;gap:4px}
+.pak-hvem{font-size:11px;color:var(--text);background:var(--panel-2);border:1px solid var(--border);
+ border-radius:6px;padding:4px 8px}
+.pak-status{font:10px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted)}
+.pak-status.fejl{color:#ff7b7b}
+.pak-tael-linje{font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);
+ padding:8px 2px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.pak-linje{display:flex;align-items:flex-start;gap:11px;padding:13px 6px;
+ border-bottom:1px solid var(--border);cursor:pointer}
+.pak-linje input{width:24px;height:24px;flex:none;margin-top:1px;accent-color:#3fd99c}
+.pak-antal{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);
+ min-width:30px;flex:none}
+.pak-navn{font-size:16px;line-height:1.35;color:var(--text)}
+.pak-linje.er-pakket .pak-navn{color:var(--muted);text-decoration:line-through}
+.pak-af,.pak-ekstra{display:block;font:10.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+ font-style:normal;color:var(--muted);text-decoration:none;margin-top:2px}
+.pak-ekstra{color:var(--amber,#e0a33e)}
+.pak-tom{color:var(--muted);font-size:13px;padding:24px 4px;text-align:center;line-height:1.6}
+.pak-tilfoej{width:100%;margin-top:14px;background:var(--panel-2);border:1px dashed var(--border);
+ color:var(--text);border-radius:10px;padding:14px;font-size:15px;cursor:pointer}
+.pak-fod{margin-top:14px;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.6}
+#pakTilfoejBoks{display:none}
+#pakTilfoejBoks.open{display:flex;position:fixed;inset:0;z-index:9400;align-items:flex-end;
+ justify-content:center;background:rgba(6,10,14,.7)}
+.pak-boks{width:100%;max-width:420px;background:var(--panel);border:1px solid var(--border);
+ border-radius:14px;padding:18px}
+#pakTilfoejBoks .pak-boks{border-radius:14px 14px 0 0;max-width:640px}
+.pak-boks-h{font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px}
+.pak-boks-sub{font-size:12px;color:var(--muted);margin-bottom:12px}
+.pak-boks label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;
+ color:var(--muted);margin:10px 0 5px}
+.pak-boks input{width:100%;box-sizing:border-box;background:var(--panel-2);border:1px solid var(--border);
+ color:var(--text);border-radius:9px;padding:12px;font-size:16px}
+.pak-boks-knapper{display:flex;gap:8px;margin-top:16px}
+.pak-ok{flex:1;background:#153a2c;border:1px solid #3fd99c;color:#3fd99c;border-radius:9px;
+ padding:13px;font-size:15px;font-weight:600;cursor:pointer}
+.pak-annuller{flex:1;background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+ border-radius:9px;padding:13px;font-size:15px;cursor:pointer}
+.pak-fejl{min-height:16px;font-size:12px;color:#ff7b7b;margin-top:8px}
+
+/* importvinduet */
+.imp-hjaelp{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px}
+#impTekst{width:100%;box-sizing:border-box;background:var(--panel-2);border:1px solid var(--border);
+ color:var(--text);border-radius:8px;padding:10px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;resize:vertical}
+.imp-knapper{display:flex;gap:8px;margin:10px 0 4px;align-items:center}
+.imp-status{font-size:12px;color:var(--muted);margin:12px 0 8px}
+.imp-ok{color:#3fd99c}
+.imp-mangler{color:var(--amber,#e0a33e)}
+.imp-tom{font-size:12.5px;color:var(--muted);padding:14px 2px;line-height:1.6}
+.imp-tabel{width:100%;border-collapse:collapse;font-size:12.5px;max-height:320px;display:block;overflow-y:auto}
+.imp-tabel th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;
+ color:var(--muted);padding:4px 6px;position:sticky;top:0;background:var(--panel)}
+.imp-tabel td{padding:4px 6px;border-top:1px solid var(--border);vertical-align:middle}
+.imp-tabel select{width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+ border-radius:6px;padding:6px 7px;font-size:12px}
+.imp-tabel input[type=number]{width:58px;background:var(--panel-2);border:1px solid var(--border);
+ color:var(--text);border-radius:6px;padding:6px}
+tr.imp-praecis td:first-child{border-left:2px solid #3fd99c;padding-left:8px}
+tr.imp-usikker td:first-child{border-left:2px solid var(--amber,#e0a33e);padding-left:8px}
+tr.imp-ingen td:first-child{border-left:2px solid #7a3b3b;padding-left:8px;color:var(--muted)}
+
+#tipboks{position:fixed;display:none;z-index:10000;pointer-events:none;max-width:290px;
+ background:#0d1219;color:#e9eef5;border:1px solid #223041;border-radius:7px;
+ padding:7px 10px;font:12px/1.45 system-ui,-apple-system,sans-serif;
+ box-shadow:0 8px 22px rgba(0,0,0,.55)}
+@media print{#tipboks{display:none!important}}
+#miguser{font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:#7d95ab;
+ border:1px solid #223041;border-radius:7px;padding:6px 9px;letter-spacing:.06em}
 </style>
 </head>
 <body>
+
+<!-- ── Login ────────────────────────────────────────────────────
+     Programmet var åbent for alle med linket. Nu kræver det login med de
+     SAMME brugere som SignalFlow, da de deler Supabase-projekt. -->
+
+<!-- Pakkeliste: det eneste man ser, når man åbner et pakkeliste-link -->
+<div id="pakSide">
+  <div class="pak-top">
+    <div>
+      <div id="pakJobNavn" class="pak-h1">Pakkeliste</div>
+      <div id="pakJobDato" class="pak-dato"></div>
+    </div>
+    <div class="pak-hoejre">
+      <span id="pakHvem" class="pak-hvem"></span>
+      <span id="pakStatus" class="pak-status"></span>
+    </div>
+  </div>
+  <div class="pak-tael-linje"><span id="pakTael"></span></div>
+  <div id="pakListe"></div>
+  <button class="pak-tilfoej" id="pakTilfoejBtn">+ Tilføj udstyr</button>
+  <div class="pak-fod">Alt du hakker af gemmes med det samme og kan ses i jobbet.</div>
+
+  <div id="pakTilfoejBoks">
+    <div class="pak-boks">
+      <div class="pak-boks-h">Tilføj udstyr</div>
+      <label>Hvad tog du med?</label>
+      <input type="text" id="pakNytNavn" placeholder="fx ekstra XLR 20 m" autocomplete="off">
+      <label>Antal</label>
+      <input type="number" id="pakNytAntal" value="1" min="1">
+      <div class="pak-boks-knapper">
+        <button class="pak-ok" id="pakNytOk">Tilføj</button>
+        <button class="pak-annuller" id="pakNytAnnuller">Annuller</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="pakNavnOverlay">
+  <div class="pak-boks">
+    <div class="pak-boks-h">Hvem er du?</div>
+    <div class="pak-boks-sub">Dit navn vises ud for det du pakker</div>
+    <input type="text" id="pakNavnFelt" placeholder="fx Bjarke" autocomplete="name">
+    <div id="pakNavnFejl" class="pak-fejl"></div>
+    <button class="pak-ok" id="pakNavnOk" style="width:100%">Fortsæt</button>
+  </div>
+</div>
+
+<div id="gate">
+  <div class="gatebox">
+    <div class="gatelogo">East <em>Production</em></div>
+    <div class="gatesub">OB PULJE · DELT LAGER</div>
+    <label>E-mail</label>
+    <input type="email" id="gEmail" autocomplete="username" placeholder="dig@tv2.dk">
+    <label>Adgangskode</label>
+    <input type="password" id="gPw" autocomplete="current-password" placeholder="••••••••">
+    <label>Dine initialer <span class="gvalgfri">vises ved det du retter</span></label>
+    <input type="text" id="gWho" autocomplete="nickname" placeholder="fx BSAN" maxlength="12">
+    <button id="gGo" title="Log ind med dine TV 2-oplysninger">Log ind</button>
+    <div id="gMsg"></div>
+    <div class="gahjaelp">Brugere oprettes af administrator i Supabase.
+      Har du login til SignalFlow, er det det samme her.</div>
+  </div>
+</div>
+
+<style>
+#gate{position:fixed;inset:0;z-index:9000;display:none;align-items:center;justify-content:center;
+ background:#0b0f14;padding:20px}
+#gate.on{display:flex}
+body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
+.gatebox{width:100%;max-width:360px;background:#131a22;border:1px solid #223041;border-radius:14px;
+ padding:26px 24px 22px;box-shadow:0 18px 50px rgba(0,0,0,.5)}
+.gatelogo{font-size:24px;font-weight:800;letter-spacing:.02em;color:#e9eef5;margin-bottom:2px}
+.gatelogo em{font-style:normal;color:#3fd99c}
+.gatesub{font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:#5d7a92;
+ letter-spacing:.14em;margin-bottom:20px}
+#gate label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.07em;
+ color:#7d95ab;margin:12px 0 5px}
+#gate .gvalgfri{text-transform:none;letter-spacing:0;color:#5d7a92;font-size:10.5px}
+#gate input{width:100%;box-sizing:border-box;background:#0b0f14;border:1px solid #223041;
+ color:#e9eef5;border-radius:9px;padding:11px 12px;font-size:16px}
+#gate input:focus{outline:none;border-color:#3fd99c}
+#gGo{width:100%;margin-top:18px;background:#153a2c;border:1px solid #3fd99c;
+ color:#3fd99c;border-radius:9px;padding:12px;font-size:15px;font-weight:600;cursor:pointer}
+#gGo:hover{background:#1b4a38}
+#gMsg{min-height:18px;margin-top:10px;font-size:12.5px;color:#ff7b7b;text-align:center}
+.gahjaelp{margin-top:16px;font-size:11px;line-height:1.6;color:#5d7a92;text-align:center}
+</style>
+
 <div class="app">
   <header class="top">
     <div class="brand">
@@ -559,23 +736,25 @@ body.show-desktop .app { display: block !important; }
     </div>
     <div style="display:flex;gap:10px;align-items:center;">
       <div class="view-toggle" id="viewToggleDesktop"><button id="btnMobileViewD" onclick="switchToMobile()" title="Mobil">📱</button><button id="btnDesktopViewD" onclick="switchToDesktop()" title="PC">🖥</button></div>
-      <button class="btn" id="newJobBtn">+ Nyt job</button>
+      <span id="miguser" title="Du er logget ind"></span>
+      <button class="btn secondary" id="logoutBtn" title="Log ud – programmet låses, og data hentes ikke længere">Log ud</button>
+      <button class="btn" id="newJobBtn" title="Opret et nyt job og vælg udstyr til det">+ Nyt job</button>
     </div>
   </header>
 
   <nav class="tabs">
-    <button class="active" data-tab="jobs">Puljeudstyr</button>
-    <button data-tab="obvogne">OB Vogne</button>
-    <button data-tab="avail">Tjek ledighed</button>
-    <button data-tab="lager">Lager</button>
+    <button class="active" data-tab="jobs" title="Job der trækker på puljeudstyret">Puljeudstyr</button>
+    <button data-tab="obvogne" title="Bookinger af OB-vogne">OB Vogne</button>
+    <button data-tab="avail" title="Se om bestemt udstyr er ledigt i en periode">Tjek ledighed</button>
+    <button data-tab="lager" title="Alt udstyr, pakker og kategorier">Lager</button>
   </nav>
 
   <div id="tab-jobs">
     <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:14px; background:var(--panel); border:1px solid var(--border); border-radius:9px; padding:12px 14px;">
       <div class="field" style="margin:0;"><label>Vis jobs fra</label><input type="date" id="filterStart" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;"></div>
       <div class="field" style="margin:0;"><label>til</label><input type="date" id="filterEnd" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;"></div>
-      <button class="btn small secondary" id="filterResetBtn" style="margin-bottom:1px;">Nulstil</button>
-      <button class="btn small secondary" id="ganttToggleBtn" style="margin-bottom:1px;">📅 Vis tidslinje</button>
+      <button class="btn small secondary" id="filterResetBtn" style="margin-bottom:1px;" title="Nulstil filtrene og vis alle job">Nulstil</button>
+      <button class="btn small secondary" id="ganttToggleBtn" style="margin-bottom:1px;" title="Skift mellem liste og tidslinje">📅 Vis tidslinje</button>
       <input type="text" id="jobSearch" placeholder="Søg job navn, initialer..." style="min-width:220px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;">
       <div id="filterCount" style="font-size:11px; color:var(--muted); font-family:var(--mono); align-self:center;"></div>
     </div>
@@ -622,7 +801,7 @@ body.show-desktop .app { display: block !important; }
             <option value="name">Navn (A-Z)</option>
             <option value="type">Type (pakker først)</option>
           </select>
-          <button class="btn small secondary" id="addPkgBtn">+ Ny pakke</button>
+          <button class="btn small secondary" id="addPkgBtn" title="Opret en pakke, så flere stykker udstyr kan bookes samlet">+ Ny pakke</button>
           <button class="btn small" id="addEquipBtn">+ Tilføj udstyr</button>
           <button class="btn small secondary" onclick="openCatManager()">Kategorier</button>
           <button class="btn small secondary" id="showVaerkstedBtn">🔧 Værksted</button>
@@ -857,11 +1036,33 @@ body.show-desktop .app { display: block !important; }
 
     <div class="modal-actions">
       <button class="btn secondary" id="cancelBtn">Annuller</button>
+      <button class="btn small secondary" id="impAabnBtn" title="Hent en udstyrsliste fra det gamle system – indsæt fra Excel eller vælg en csv-fil">⤒ Importér liste</button>
       <button class="btn" id="saveJobBtn">Gem job</button>
     </div>
   </div>
 </div>
 
+
+<!-- Importér udstyrsliste fra det gamle system -->
+<div class="overlay" id="impOverlay">
+  <div class="modal" style="max-width:760px">
+    <h3 style="margin:0 0 4px">Importér udstyrsliste</h3>
+    <div class="imp-hjaelp">Markér navn og antal i Excel, kopiér, og sæt ind herunder —
+      eller vælg en gemt <b>.csv</b>-fil. Programmet genkender selv kolonnerne.</div>
+    <textarea id="impTekst" rows="6" placeholder="Sæt ind fra Excel her …"></textarea>
+    <div class="imp-knapper">
+      <button class="btn small" id="impLaesBtn" title="Læs det indsatte og find udstyret i lageret">Læs listen</button>
+      <label class="btn small secondary" title="Vælg en csv-fil gemt fra Excel">
+        Vælg fil <input type="file" id="impFil" accept=".csv,.txt,.tsv" hidden>
+      </label>
+    </div>
+    <div id="impResultat"></div>
+    <div class="modal-actions">
+      <button class="btn small secondary" id="impLukBtn">Annuller</button>
+      <button class="btn small" id="impTilfoej" style="display:none" title="Læg de genkendte linjer på jobbet">Læg på jobbet</button>
+    </div>
+  </div>
+</div>
 <div class="overlay" id="equipOverlay">
   <div class="modal">
     <h2 id="equipDetailTitle">Udstyr detaljer</h2>
@@ -1022,6 +1223,533 @@ body.show-desktop .app { display: block !important; }
 </div>
 
 <script>
+
+
+
+
+/* ── Importér udstyrsliste fra det gamle system ────────────────
+   I overgangsperioden ligger listerne i Excel. Man kan enten markere
+   cellerne i Excel og sætte ind (så kommer de som tabulator-adskilt tekst),
+   eller vælge en gemt .csv-fil. Vi prøver at genkende hvert navn i lageret
+   og lader brugeren rette de rækker, der ikke kunne matches. */
+
+let impRaekker = [];          // [{kilde, antal, valg, forslag:[...]}]
+
+function impNormaliser(t){
+  return (t||'').toString().toLowerCase()
+    .replace(/[\u2013\u2014]/g,'-')
+    .replace(/[^a-z0-9æøå]+/g,'')
+    .trim();
+}
+
+/* Del indsat tekst op. Excel giver tabulator; en csv-fil giver semikolon
+   eller komma – vi finder selv ud af hvilken. */
+function impParse(tekst){
+  const linjer = tekst.replace(/\r/g,'').split('\n').filter(function(l){ return l.trim().length; });
+  if(!linjer.length) return [];
+  const tael = function(t,c){ return (t.match(new RegExp('\\'+c,'g'))||[]).length; };
+  const foerste = linjer[0];
+  let sep = '\t';
+  if(tael(foerste,'\t')===0){
+    sep = tael(foerste,';') >= tael(foerste,',') ? ';' : ',';
+  }
+  const rk = linjer.map(function(l){ return l.split(sep).map(function(c){ return c.trim().replace(/^"|"$/g,''); }); });
+
+  /* Find kolonnerne. Er der en overskriftsrække, bruger vi den – ellers
+     antager vi navn i første kolonne og et tal i en af de næste. */
+  let navnKol = 0, antalKol = -1, start = 0;
+  const h = rk[0].map(function(c){ return c.toLowerCase(); });
+  const navnOrd  = ['navn','udstyr','beskrivelse','materiel','item','name','betegnelse','type'];
+  const antalOrd = ['antal','stk','qty','quantity','mængde','count','number'];
+  const harOverskrift = h.some(function(c){
+    return navnOrd.indexOf(c)>=0 || antalOrd.indexOf(c)>=0;
+  });
+  if(harOverskrift){
+    h.forEach(function(c,i){
+      if(navnOrd.indexOf(c)>=0 && navnKol===0) navnKol=i;
+      if(antalOrd.indexOf(c)>=0 && antalKol<0)  antalKol=i;
+    });
+    start = 1;
+  }else{
+    /* intet hoved: find den kolonne der oftest indeholder et lille tal */
+    const kandidat = {};
+    rk.forEach(function(r){
+      r.forEach(function(c,i){
+        if(i===navnKol) return;
+        const n = parseInt(c,10);
+        if(!isNaN(n) && n>0 && n<1000) kandidat[i]=(kandidat[i]||0)+1;
+      });
+    });
+    const bedst = Object.keys(kandidat).sort(function(a,b){ return kandidat[b]-kandidat[a]; })[0];
+    if(bedst!==undefined) antalKol = +bedst;
+  }
+
+  const ud = [];
+  for(let i=start;i<rk.length;i++){
+    const navn = (rk[i][navnKol]||'').trim();
+    if(!navn) continue;
+    if(navnOrd.indexOf(navn.toLowerCase())>=0) continue;     // overskrift midt i arket
+    let antal = 1;
+    if(antalKol>=0){
+      const n = parseInt(rk[i][antalKol],10);
+      if(!isNaN(n) && n>0) antal = n;
+    }
+    ud.push({kilde:navn, antal:antal});
+  }
+  return ud;
+}
+
+/* Find det bedste bud i lageret på et navn fra Excel. */
+function impFindMatch(navn){
+  const n = impNormaliser(navn);
+  if(!n) return {valg:null, forslag:[]};
+  const alle = EQUIPMENT.map(function(e){ return e.name; })
+    .concat(PACKAGES.map(function(p){ return 'PKG:'+p.id; }));
+
+  let praecis = EQUIPMENT.find(function(e){ return impNormaliser(e.name)===n; });
+  if(praecis) return {valg:praecis.name, forslag:[], sikkerhed:'præcis'};
+
+  const pkg = PACKAGES.find(function(p){ return impNormaliser(p.name)===n; });
+  if(pkg) return {valg:'PKG:'+pkg.id, forslag:[], sikkerhed:'præcis'};
+
+  /* delvis: det ene navn indeholder det andet */
+  const delvis = EQUIPMENT.filter(function(e){
+    const en = impNormaliser(e.name);
+    return en.length>2 && (en.indexOf(n)>=0 || n.indexOf(en)>=0);
+  }).map(function(e){ return e.name; });
+
+  /* ord for ord: hvor mange ord er fælles */
+  const ord = navn.toLowerCase().split(/[^a-z0-9æøå]+/).filter(function(o){ return o.length>2; });
+  const scoret = EQUIPMENT.map(function(e){
+    const eo = e.name.toLowerCase().split(/[^a-z0-9æøå]+/);
+    let s=0; ord.forEach(function(o){ if(eo.indexOf(o)>=0) s++; });
+    return {navn:e.name, s:s};
+  }).filter(function(x){ return x.s>0; })
+    .sort(function(a,b){ return b.s-a.s; })
+    .map(function(x){ return x.navn; });
+
+  const forslag = delvis.concat(scoret.filter(function(x){ return delvis.indexOf(x)<0; })).slice(0,5);
+  return {valg: forslag.length===1 ? forslag[0] : null, forslag: forslag,
+          sikkerhed: forslag.length ? 'usikker' : 'ingen'};
+}
+
+function impNavnFor(vaerdi){
+  if(!vaerdi) return '';
+  if(vaerdi.indexOf('PKG:')===0){
+    const p=PACKAGES.find(function(x){ return x.id===vaerdi.slice(4); });
+    return p ? '📦 '+p.name : vaerdi;
+  }
+  return vaerdi;
+}
+
+function openImportModal(){
+  const ov=document.getElementById('impOverlay');
+  document.getElementById('impTekst').value='';
+  document.getElementById('impFil').value='';
+  document.getElementById('impResultat').innerHTML='';
+  document.getElementById('impTilfoej').style.display='none';
+  impRaekker=[];
+  ov.classList.add('open');
+  setTimeout(function(){ document.getElementById('impTekst').focus(); },120);
+}
+
+function impLaes(tekst){
+  const raa = impParse(tekst);
+  if(!raa.length){
+    document.getElementById('impResultat').innerHTML =
+      '<div class="imp-tom">Kunne ikke finde nogen rækker. Markér cellerne i Excel '
+      +'(navn og antal) og sæt ind her – eller vælg en gemt .csv-fil.</div>';
+    document.getElementById('impTilfoej').style.display='none';
+    return;
+  }
+  impRaekker = raa.map(function(r){
+    const m = impFindMatch(r.kilde);
+    return {kilde:r.kilde, antal:r.antal, valg:m.valg, forslag:m.forslag, sikkerhed:m.sikkerhed};
+  });
+  impTegnResultat();
+}
+
+function impTegnResultat(){
+  const fundet = impRaekker.filter(function(r){ return r.valg; }).length;
+  const mangler = impRaekker.length - fundet;
+  let h = '<div class="imp-status">'
+    + '<b>'+impRaekker.length+'</b> linjer læst · '
+    + '<span class="imp-ok">'+fundet+' genkendt</span>'
+    + (mangler ? ' · <span class="imp-mangler">'+mangler+' mangler et match</span>' : '')
+    + '</div><table class="imp-tabel"><thead><tr>'
+    + '<th>Fra Excel</th><th style="width:70px">Antal</th><th>Udstyr i lageret</th></tr></thead><tbody>';
+
+  impRaekker.forEach(function(r,i){
+    const valgmuligheder = [];
+    valgmuligheder.push('<option value="">— spring over —</option>');
+    /* det valgte først, så forslagene, så hele lageret */
+    const setn = {};
+    const tilfoej = function(v){
+      if(!v || setn[v]) return; setn[v]=1;
+      valgmuligheder.push('<option value="'+escapeHtml(v)+'"'+(r.valg===v?' selected':'')+'>'
+        +escapeHtml(impNavnFor(v))+'</option>');
+    };
+    tilfoej(r.valg);
+    r.forslag.forEach(tilfoej);
+    PACKAGES.forEach(function(p){ tilfoej('PKG:'+p.id); });
+    EQUIPMENT.forEach(function(e){ tilfoej(e.name); });
+    valgmuligheder.push('<option value="__nyt__">+ opret som nyt udstyr</option>');
+
+    const mrk = r.valg ? (r.sikkerhed==='præcis' ? 'imp-praecis' : 'imp-usikker') : 'imp-ingen';
+    h += '<tr class="'+mrk+'">'
+      + '<td>'+escapeHtml(r.kilde)+'</td>'
+      + '<td><input type="number" min="1" value="'+r.antal+'" data-impqty="'+i+'"></td>'
+      + '<td><select data-impvalg="'+i+'">'+valgmuligheder.join('')+'</select></td>'
+      + '</tr>';
+  });
+  h += '</tbody></table>';
+  document.getElementById('impResultat').innerHTML = h;
+  document.getElementById('impTilfoej').style.display = '';
+
+  document.querySelectorAll('[data-impvalg]').forEach(function(sel){
+    sel.addEventListener('change', function(){
+      impRaekker[+sel.dataset.impvalg].valg = sel.value;
+      impOpdaterStatus();
+    });
+  });
+  document.querySelectorAll('[data-impqty]').forEach(function(inp){
+    inp.addEventListener('change', function(){
+      impRaekker[+inp.dataset.impqty].antal = Math.max(1, parseInt(inp.value,10)||1);
+    });
+  });
+}
+
+function impOpdaterStatus(){
+  const fundet = impRaekker.filter(function(r){ return r.valg; }).length;
+  const el=document.querySelector('.imp-status');
+  if(el) el.innerHTML = '<b>'+impRaekker.length+'</b> linjer læst · '
+    + '<span class="imp-ok">'+fundet+' klar til jobbet</span>'
+    + ((impRaekker.length-fundet) ? ' · <span class="imp-mangler">'+(impRaekker.length-fundet)+' springes over</span>' : '');
+}
+
+async function impTilfoejTilJob(){
+  const knap=document.getElementById('impTilfoej');
+  knap.disabled=true; knap.textContent='Tilføjer …';
+  let lagt=0, oprettet=0;
+  try{
+    for(const r of impRaekker){
+      if(!r.valg) continue;
+      let noegle = r.valg;
+      if(noegle==='__nyt__'){
+        /* Opret det i lageret, så det kan bookes fremover. */
+        const {error} = await supa.from('equipment')
+          .insert({name:r.kilde, category:'Diverse', qty:r.antal});
+        if(error){ console.warn('Kunne ikke oprette',r.kilde,error); continue; }
+        await loadEquipment();
+        noegle = r.kilde; oprettet++;
+      }
+      selectedItems[noegle] = (selectedItems[noegle]||0) + r.antal;
+      lagt++;
+    }
+    document.getElementById('impOverlay').classList.remove('open');
+    renderEquipList(document.getElementById('equipSearch').value||'');
+    renderSelectedStrip();
+    renderConflicts();
+    if(typeof populateCategoryDropdowns==='function') populateCategoryDropdowns();
+    alert('Lagt '+lagt+' linjer på jobbet'+(oprettet?' – heraf '+oprettet+' oprettet som nyt udstyr':'')+'.');
+  }catch(e){
+    alert('Import fejlede: '+(e.message||e));
+  }finally{
+    knap.disabled=false; knap.textContent='Læg på jobbet';
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   INTERAKTIV PAKKELISTE
+   Samme princip som kanalplanens delelink i SignalFlow: man deler et link,
+   modtageren skriver sit navn, og derefter kan han hakke af og tilføje
+   udstyr direkte på telefonen. Alt hvad han gør, står med hans navn – også
+   inde i jobbet, så du kan se hvem der har pakket hvad.
+   ══════════════════════════════════════════════════════════════ */
+
+let PAK = null;            // {tok, job, items, updated_at} når vi er gæst
+let pakTimer = null;
+let pakGemTimer = null;
+let pakSkriver = {ref:null, ts:0};
+let pakHentetFoerst = false;
+
+function pakNavn(){
+  try{ return localStorage.getItem('east:pakwho') || '' }catch(e){ return '' }
+}
+function pakSaetNavn(n){
+  try{ localStorage.setItem('east:pakwho', n) }catch(e){}
+}
+function pakTid(t){
+  if(!t) return '';
+  const d = new Date(t);
+  if(isNaN(d)) return '';
+  return d.toLocaleString('da-DK',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+
+/* ── Ejerens side: lav og kopiér linket ─────────────────────── */
+async function pakDelLink(jobId){
+  try{
+    const {data, error} = await supa.from('jobs').select('*').eq('id', jobId);
+    if(error) throw error;
+    let tok = data && data[0] && data[0].share_token;
+    if(!tok){
+      tok = (crypto.randomUUID ? crypto.randomUUID()
+             : String(Date.now())+Math.random().toString(16).slice(2));
+      const r = await supa.from('jobs').update({share_token: tok}).eq('id', jobId);
+      if(r.error) throw r.error;
+    }
+    const link = location.origin + location.pathname + '?pak=' + tok;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(link);
+      alert('Linket til pakkelisten er kopieret.\n\nDen der åbner det skal skrive sit navn og kan så hakke af og tilføje udstyr.');
+    }else{
+      prompt('Kopiér linket til pakkelisten:', link);
+    }
+  }catch(e){
+    alert('Kunne ikke lave linket: ' + (e.message||e)
+      + '\n\nHar du kørt SQL\'en, der tilføjer share_token til jobs?');
+  }
+}
+
+/* ── Gæstens side ───────────────────────────────────────────── */
+function pakErGaest(){
+  return new URLSearchParams(location.search).get('pak');
+}
+
+async function pakHent(){
+  const {data, error} = await supa.rpc('ep_pack_get', {tok: PAK.tok});
+  if(error) throw error;
+  const r = Array.isArray(data) ? data[0] : data;
+  if(!r) throw new Error('Linket virker ikke længere.');
+  return r;
+}
+
+async function pakGem(){
+  clearTimeout(pakGemTimer);
+  pakGemTimer = setTimeout(async function(){
+    if(!PAK || !pakHentetFoerst) return;          // skriv aldrig før vi har læst
+    pakStatus('gemmer …');
+    try{
+      const {data, error} = await supa.rpc('ep_pack_set',
+        {tok: PAK.tok, nye: PAK.items, hvem: pakNavn()});
+      if(error) throw error;
+      PAK.updated_at = Array.isArray(data) ? data[0] : data;
+      pakStatus('gemt');
+    }catch(e){
+      pakStatus('kunne ikke gemme', true);
+    }
+  }, 900);
+}
+
+function pakStatus(t, fejl){
+  const el = document.getElementById('pakStatus');
+  if(el){ el.textContent = t; el.className = fejl ? 'pak-status fejl' : 'pak-status'; }
+}
+
+/* Hent kun, når der faktisk er sket noget – ellers bruger vi data uden grund. */
+async function pakPoll(){
+  if(!PAK) return;
+  if(document.getElementById('pakTilfoejBoks').classList.contains('open')) return;
+  try{
+    const r = await pakHent();
+    pakHentetFoerst = true;
+    if(r.updated_at === PAK.updated_at) return;
+    /* Flet: en linje man selv er i gang med, må ikke overskrives. */
+    const mine = {};
+    PAK.items.forEach(function(it){ mine[it.name] = it; });
+    (r.items||[]).forEach(function(nyt){
+      const gl = mine[nyt.name];
+      if(!gl) { PAK.items.push(nyt); return; }
+      const jegSkriver = pakSkriver.ref===nyt.name && (Date.now()-pakSkriver.ts) < 12000;
+      if(jegSkriver) return;
+      gl.qty = nyt.qty; gl.pakket = nyt.pakket;
+      gl.pakketAf = nyt.pakketAf; gl.pakketKl = nyt.pakketKl;
+      gl.tilfoejetAf = nyt.tilfoejetAf;
+    });
+    /* linjer en anden har slettet */
+    const findes = {}; (r.items||[]).forEach(function(i){ findes[i.name]=1; });
+    PAK.items = PAK.items.filter(function(i){ return findes[i.name]; });
+    PAK.updated_at = r.updated_at;
+    pakTegn();
+    pakStatus('opdateret');
+  }catch(e){ pakStatus(e.message||'ingen forbindelse', true); }
+}
+
+function pakTegn(){
+  const liste = document.getElementById('pakListe');
+  const items = PAK.items || [];
+  const pakket = items.filter(function(i){ return i.pakket; }).length;
+
+  document.getElementById('pakJobNavn').textContent = PAK.job.name || 'Pakkeliste';
+  document.getElementById('pakJobDato').textContent =
+    (PAK.job.start_date||'') + (PAK.job.end_date ? ' → ' + PAK.job.end_date : '');
+  document.getElementById('pakTael').textContent = pakket + ' af ' + items.length + ' pakket';
+
+  liste.innerHTML = items.map(function(it, i){
+    const ekstra = it.tilfoejetAf
+      ? '<em class="pak-ekstra">tilføjet af ' + escapeHtml(it.tilfoejetAf) + '</em>' : '';
+    const af = it.pakket && it.pakketAf
+      ? '<em class="pak-af">' + escapeHtml(it.pakketAf) + ' · ' + pakTid(it.pakketKl) + '</em>' : '';
+    return '<label class="pak-linje' + (it.pakket ? ' er-pakket' : '') + '">'
+      + '<input type="checkbox" data-pak="' + i + '"' + (it.pakket ? ' checked' : '') + '>'
+      + '<span class="pak-antal">' + (it.qty||1) + '×</span>'
+      + '<span class="pak-navn">' + (it.isPkg ? '📦 ' : '') + escapeHtml(it.name) + ekstra + af + '</span>'
+      + '</label>';
+  }).join('') || '<div class="pak-tom">Der er ikke noget udstyr på jobbet endnu.</div>';
+
+  liste.querySelectorAll('[data-pak]').forEach(function(cb){
+    cb.addEventListener('change', function(){
+      const it = PAK.items[+cb.dataset.pak];
+      it.pakket = cb.checked;
+      it.pakketAf = cb.checked ? pakNavn() : '';
+      it.pakketKl = cb.checked ? new Date().toISOString() : '';
+      pakSkriver = {ref: it.name, ts: Date.now()};
+      pakTegn(); pakGem();
+    });
+  });
+}
+
+function pakAabnTilfoej(){
+  const b = document.getElementById('pakTilfoejBoks');
+  b.classList.add('open');
+  document.getElementById('pakNytNavn').value = '';
+  document.getElementById('pakNytAntal').value = '1';
+  setTimeout(function(){ document.getElementById('pakNytNavn').focus(); }, 80);
+}
+function pakLukTilfoej(){
+  document.getElementById('pakTilfoejBoks').classList.remove('open');
+}
+function pakTilfoej(){
+  const navn = document.getElementById('pakNytNavn').value.trim();
+  const antal = Math.max(1, parseInt(document.getElementById('pakNytAntal').value,10)||1);
+  if(!navn){ document.getElementById('pakNytNavn').focus(); return; }
+  if(PAK.items.some(function(i){ return i.name.toLowerCase()===navn.toLowerCase(); })){
+    alert('"' + navn + '" står allerede på listen.');
+    return;
+  }
+  PAK.items.push({name:navn, qty:antal, pakket:true,
+                  pakketAf:pakNavn(), pakketKl:new Date().toISOString(),
+                  tilfoejetAf:pakNavn()});
+  pakLukTilfoej(); pakTegn(); pakGem();
+}
+
+/* Navnet først – ellers ved vi ikke hvem der pakker. */
+function pakSpoergNavn(){
+  return new Promise(function(res){
+    const ov = document.getElementById('pakNavnOverlay');
+    const inp = document.getElementById('pakNavnFelt');
+    inp.value = pakNavn();
+    ov.classList.add('open');
+    const gaa = function(){
+      const v = inp.value.trim();
+      if(v.length < 2){
+        document.getElementById('pakNavnFejl').textContent = 'Skriv lige dit navn først.';
+        inp.focus(); return;
+      }
+      pakSaetNavn(v);
+      ov.classList.remove('open');
+      res(v);
+    };
+    document.getElementById('pakNavnOk').onclick = gaa;
+    inp.onkeydown = function(e){ if(e.key==='Enter'){ e.preventDefault(); gaa(); } };
+    setTimeout(function(){ inp.focus(); }, 120);
+  });
+}
+
+async function pakStart(tok){
+  document.body.classList.add('pak-visning');
+  document.getElementById('gate').classList.remove('on');
+  document.body.classList.remove('locked');
+  PAK = {tok: tok, job:{}, items:[], updated_at:null};
+  await pakSpoergNavn();
+  document.getElementById('pakHvem').textContent = pakNavn();
+  try{
+    const r = await pakHent();
+    pakHentetFoerst = true;
+    PAK.job = {name:r.name, start_date:r.start_date, end_date:r.end_date};
+    PAK.items = (r.items||[]).map(function(i){
+      return Object.assign({pakket:false, pakketAf:'', pakketKl:'', tilfoejetAf:''}, i);
+    });
+    PAK.updated_at = r.updated_at;
+    pakTegn();
+    pakStatus('klar');
+  }catch(e){
+    document.getElementById('pakListe').innerHTML =
+      '<div class="pak-tom">' + escapeHtml(e.message||'Linket virker ikke.') + '</div>';
+    return;
+  }
+  clearInterval(pakTimer);
+  pakTimer = setInterval(pakPoll, 6000);
+  document.getElementById('pakTilfoejBtn').addEventListener('click', pakAabnTilfoej);
+  document.getElementById('pakNytOk').addEventListener('click', pakTilfoej);
+  document.getElementById('pakNytAnnuller').addEventListener('click', pakLukTilfoej);
+  document.getElementById('pakNytNavn').addEventListener('keydown', function(e){
+    if(e.key==='Enter'){ e.preventDefault(); pakTilfoej(); }
+  });
+}
+
+/* ── Forklaringsbobler ────────────────────────────────────────
+   Browserens egen boble kommer langsomt og kan ikke læses ordentligt.
+   Den her overtager alle title-tekster og viser dem hurtigt ved musen. */
+(function(){
+  var boks=null, timer=null, nu=null;
+  function lav(){
+    if(boks) return boks;
+    boks=document.createElement('div'); boks.id='tipboks';
+    document.body.appendChild(boks); return boks;
+  }
+  function vis(el,x,y){
+    var t=el.getAttribute('data-tip'); if(!t) return;
+    var b=lav(); b.textContent=t; b.style.display='block';
+    var r=b.getBoundingClientRect();
+    var v=x+14, o=y+18;
+    if(v+r.width > window.innerWidth-8) v=window.innerWidth-r.width-8;
+    if(o+r.height > window.innerHeight-8) o=y-r.height-12;
+    b.style.left=Math.max(8,v)+'px'; b.style.top=Math.max(8,o)+'px';
+  }
+  function skjul(){ clearTimeout(timer); if(boks) boks.style.display='none'; nu=null; }
+  document.addEventListener('mouseover', function(e){
+    var el=e.target.closest && e.target.closest('[title],[data-tip]');
+    if(!el){ skjul(); return; }
+    if(el.hasAttribute('title')){ el.setAttribute('data-tip', el.getAttribute('title')); el.removeAttribute('title'); }
+    if(el===nu) return;
+    nu=el; clearTimeout(timer);
+    var x=e.clientX, y=e.clientY;
+    timer=setTimeout(function(){ vis(el,x,y) }, 260);
+  });
+  document.addEventListener('mouseout', function(e){ if(nu && !nu.contains(e.relatedTarget)) skjul(); });
+  document.addEventListener('mousedown', skjul);
+  document.addEventListener('scroll', skjul, true);
+  window.addEventListener('blur', skjul);
+})();
+
+/* Står et vindue åbent, er brugeren midt i noget. Så henter vi ikke nyt ned
+   under fødderne på ham – hverken data eller en gentegning. */
+function nogetErAabent(){
+  return !!document.querySelector('.overlay.open, #overlay.open, [id$="Overlay"].open');
+}
+
+/* ── Luk kun et vindue ved et RIGTIGT klik udenfor ──────────────
+   Markerer man tekst i et felt og slipper musen ude på den mørke baggrund,
+   opfatter browseren hele bevægelsen som ét klik på baggrunden – og vinduet
+   lukkede uden at gemme. Vinduet må kun lukke, hvis museknappen både blev
+   trykket ned OG sluppet på baggrunden. */
+function lukVedKlikUdenfor(overlayEl, luk){
+  if(!overlayEl) return;
+  let startedeUdenfor = false;
+  overlayEl.addEventListener('mousedown', function(e){
+    startedeUdenfor = (e.target === overlayEl);
+  });
+  overlayEl.addEventListener('touchstart', function(e){
+    startedeUdenfor = (e.target === overlayEl);
+  }, {passive:true});
+  overlayEl.addEventListener('click', function(e){
+    if(e.target === overlayEl && startedeUdenfor) luk();
+    startedeUdenfor = false;
+  });
+}
+
 const EQUIPMENT_SEED = [{"name": "WL RACK 1 RX & TX (DNK 37)", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "WL RACK 2 RX & TX (Remote4)", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "WL RACK 3 RX & TX ( NY)", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "WL RACK 4 RX & TX ( NY)", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "WL RACK 5  RX", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "WL RACK 6  RX", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "WL KUFFERT 1 (DNK37)", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "WL KUFFERT 2 (Remote4)", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "WL KUFFERT 3 (OB3)", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "WL TX RACK INEAR 2 watt", "category": "TRÅDLØST LYD", "qty": 3}, {"name": "MFL RF Fiber TX/RX sæt WISYCOM", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "ANTENNE KUFFERT 1 WISYCOM", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "ANTENNE KUFFERT 2 WISYCOM", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "ANTENNE KUFFERT 3 RX WISYCOM", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "AKTIVE ANTENNER m. Filter 430-730 MHz WISYCOM 2stk.", "category": "TRÅDLØST LYD", "qty": 2}, {"name": "AKTIVE RF FILTRE m. Filter 430-730 MHz WISYCOM 4stk.", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "MCR 42 CL 1  m. HM WISYCOM", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "MCR 42 CL 2  m. HM WISYCOM", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "MCR 42 PULJE 1 m. BP WISYCOM", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "MCR 42 PULJE 2", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "TX Antenne Wisycom", "category": "TRÅDLØST LYD", "qty": 4}, {"name": "Antenne splitter 2wat.", "category": "TRÅDLØST LYD", "qty": 4}, {"name": "Remote 4 LQ 8x4W & Behringer lydmixer", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "INEAR SÆT 1 SENNHEISER 2000", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "INEAR SÆT 2 SENNHEISER 2000", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "INEAR SÆT 3 SENNHEISER 2000", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "INEAR SÆT 4 WISYCOM", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "Sound Device mixpre 10 Kuffert.", "category": "TRÅDLØST LYD", "qty": 1}, {"name": "BIG EAR 2x KLOVER-MIK m. Mikrofoner DNK 47", "category": "MIKROFONER & IN-EAR", "qty": 1}, {"name": "DPA 6066 HEADSET Kuffert 1 5 STK.", "category": "MIKROFONER & IN-EAR", "qty": 3}, {"name": "HSP 4 SENNHEISER HEADSET Kasse 6 stk. AA", "category": "MIKROFONER & IN-EAR", "qty": 1}, {"name": "HSP 4 SENNHEISER HEADSET Kasse 6 stk. BB", "category": "MIKROFONER & IN-EAR", "qty": 1}, {"name": "HSP 4 SENNHEISER HEADSET Kasse 4 stk.", "category": "MIKROFONER & IN-EAR", "qty": 1}, {"name": "HSP 4 SENNHEISER HEADSET SØLV/SORT Kasse 5 stk. DD", "category": "MIKROFONER & IN-EAR", "qty": 1}, {"name": "Westone Audio Pro X10 IEM Earphones", "category": "MIKROFONER & IN-EAR", "qty": 20}, {"name": "N-EAR INEAR 5 stk.  Kuffert  AA", "category": "MIKROFONER & IN-EAR", "qty": 1}, {"name": "N-EAR INEAR 5 stk.  Kuffert  BB", "category": "MIKROFONER & IN-EAR", "qty": 1}, {"name": "Audio-Technica BP4029  MS Mikrofon", "category": "MIKROFONER & IN-EAR", "qty": 3}, {"name": "STAGEBOX YAMAHA RIO RI8-D", "category": "STAGEBOXE", "qty": 1}, {"name": "STAGEBOX YAMAHA RIO 1608-D", "category": "STAGEBOXE", "qty": 1}, {"name": "STAGEBOX YAMAHA RIO 1608-D2", "category": "STAGEBOXE", "qty": 1}, {"name": "STAGEBOX YAMAHA RIO 3224-D", "category": "STAGEBOXE", "qty": 1}, {"name": "Yamaha QL 1 32ch dante Mixer", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Yamaha CL 1 48ch dante Mixer  GL. OB 5", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "REMOTE 2 WL KASSE", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "REMOTE 2 WL WISYCOM TX / RX", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Remote 2 Clearcom Rack", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Remote 2 Teko Rack", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Remote 2 Nimbra Rack", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Remote 2 CCU Rack", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Remote 2 Kabel Skuffe skab 1+2", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Remote 2 KOMM Rack", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Remote 2 EKSTRA Micron Rack", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Remote 2 Lyd mixer Rack", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Remote 2 Computer Rack", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "STAGEBOX YAMAHA RIO 1608-D2 REMOT2", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "2 x Sony 3500 CCU og Kamera AA Remote 2", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "2 x Sony 3500 CCU og Kamera BB Remote 2", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "1 x Sony 3500 CCU og Kamera CC Remote 2", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Cannon Wide AA Remote 2", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Cannon Wide BB Remote 2", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Cannon 24x AA Remote 2", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "Cannon 24x BB Remote 2", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "UPS EATON 5PX2200 1980 W", "category": "REMOT 2 UDSTYR", "qty": 1}, {"name": "UPS EATON 5PX 3000 W", "category": "POWER", "qty": 1}, {"name": "UPS APC. A", "category": "POWER", "qty": 1}, {"name": "UPS APC. B", "category": "POWER", "qty": 1}, {"name": "UPS APC Lille i Kuffert", "category": "POWER", "qty": 1}, {"name": "UPS APC STOR A", "category": "POWER", "qty": 1}, {"name": "UPS APC STOR B", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 02 Delta 2 (1024Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 06 Delta 2 MAX (2048Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 07 Delta 2 (1024Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 08 Delta 2 (1024Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 09 Delta 3 1500 (1500Wh) - defekt", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 10 River 2 Max (512Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 11 Delta 3 Max+ (2048Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 12 Delta 3 Max+ (2048Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 13 Delta 3 Max+ (2048Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 14 Delta 3 Max+ (2048Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 15 Delta 2 (1024Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 16 River (288Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 17 Delta 3 Max+ (2048Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 18 Delta 3 Max+ (2048Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 19 Delta 3 Max+ (2048Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 20 Delta 3 Max+ (2048Wh)", "category": "POWER", "qty": 1}, {"name": "UPS Ecoflow 21 Delta 3 Max+ (2048Wh)", "category": "POWER", "qty": 1}, {"name": "Bolero Pujle Beltpack 5 stk. Kasse AA", "category": "BOLERO", "qty": 1}, {"name": "Bolero Remote2 Beltpack 5 stk. Kasse BB", "category": "BOLERO", "qty": 1}, {"name": "Bolero Pujle Antenna # 1", "category": "BOLERO", "qty": 1}, {"name": "Bolero Pujle Antenna # 2", "category": "BOLERO", "qty": 1}, {"name": "Bolero Pujle Antenna # 1 SLAVE", "category": "BOLERO", "qty": 1}, {"name": "Bolero Pujle Antenna # DNK 47 SLAVE", "category": "BOLERO", "qty": 0}, {"name": "Bolero Pujle Antenna # OB 4  SLAVE", "category": "BOLERO", "qty": 1}, {"name": "Bolero Pujle Antenna # 4 SLAVE", "category": "BOLERO", "qty": 1}, {"name": "Bolero DNK 83 Antenne", "category": "BOLERO", "qty": 1}, {"name": "Bolero NSA SPARE", "category": "BOLERO", "qty": 1}, {"name": "Bolero NSA", "category": "BOLERO", "qty": 1}, {"name": "Bolero Medie Converter.  RJ45 -> LC", "category": "BOLERO", "qty": 6}, {"name": "Bolero AIR – Ultra Light Headset", "category": "BOLERO", "qty": 18}, {"name": "Bolero MAX – High Performance Headset", "category": "BOLERO", "qty": 15}, {"name": "Bolero OB4 Beltpack 5 stk.  UDLÅN", "category": "BOLERO", "qty": 1}, {"name": "Bolero OB4 Antenne UDLÅN", "category": "BOLERO", "qty": 1}, {"name": "Samsung Terrace Højlys TV 55''   AA", "category": "MONITOR", "qty": 1}, {"name": "Samsung Terrace Højlys TV 55''   BB", "category": "MONITOR", "qty": 1}, {"name": "Samsung Terrace Højlys TV 55''   CC", "category": "MONITOR", "qty": 1}, {"name": "Samsung 27\" Højlys monitor", "category": "MONITOR", "qty": 1}, {"name": "Samsung 32\" Højlys monitor A", "category": "MONITOR", "qty": 1}, {"name": "Kasse med 4x 50\" TV", "category": "MONITOR", "qty": 1}, {"name": "SWIT 21\"  4 K  A", "category": "MONITOR", "qty": 1}, {"name": "SWIT 21\"  4 K  B", "category": "MONITOR", "qty": 1}, {"name": "SWIT 17\" DNK 37", "category": "MONITOR", "qty": 1}, {"name": "Swit 9\" Monitor A", "category": "MONITOR", "qty": 1}, {"name": "Swit 9\" Monitor B", "category": "MONITOR", "qty": 1}, {"name": "Swit 9\" Monitor med Clearcom + Hi indvalg", "category": "MONITOR", "qty": 0}, {"name": "OSSE Monitor Pulje A", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje B", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje C", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje D", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje E", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje F", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje G", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje H", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje I", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje J", "category": "MONITOR", "qty": 1}, {"name": "OSSE Monitor Pulje K 22\"", "category": "MONITOR", "qty": 1}, {"name": "I PAD APPLE  4G  nr: 1", "category": "MONITOR", "qty": 1}, {"name": "I PAD APPLE  4G  nr: 2", "category": "MONITOR", "qty": 1}, {"name": "NETGEAR 12 Port AV-Line  A", "category": "NETVÆRK", "qty": 1}, {"name": "NETGEAR 12 Port AV-Line  B", "category": "NETVÆRK", "qty": 1}, {"name": "NETGEAR 12 Port AV-Line  C", "category": "NETVÆRK", "qty": 1}, {"name": "NETGEAR 12 Port AV-Line  D", "category": "NETVÆRK", "qty": 1}, {"name": "NETGEAR 12 Port AV-Line  E", "category": "NETVÆRK", "qty": 1}, {"name": "NETGEAR 48 Port AV-Line  F", "category": "NETVÆRK", "qty": 1}, {"name": "NETGEAR 12 Port AV-Line PLAYHUS", "category": "NETVÆRK", "qty": 1}, {"name": "NETGEAR 16x SFP Port AV-Line  H", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink RV 1", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink RV 2", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink RV 3", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink RV 4", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink Mini 1", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink Mini 2", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink Mini 3", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink Mini 4", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink Mini 5", "category": "NETVÆRK", "qty": 1}, {"name": "Starlink Mini 6", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 1", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 2", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 3", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 4", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 5", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 6", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 7", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 8", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 9", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 10", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 11", "category": "NETVÆRK", "qty": 1}, {"name": "5G WiFi Mobile Router NETGEAR 12", "category": "NETVÆRK", "qty": 1}, {"name": "NETGEAR WIFI 6 Outdoor", "category": "NETVÆRK", "qty": 1}, {"name": "ASUS Mesh router 1", "category": "NETVÆRK", "qty": 1}, {"name": "ASUS Mesh router 2", "category": "NETVÆRK", "qty": 1}, {"name": "ASUS Mesh router 3", "category": "NETVÆRK", "qty": 1}, {"name": "ASUS Mesh router 4", "category": "NETVÆRK", "qty": 1}, {"name": "ASUS Mesh router 5", "category": "NETVÆRK", "qty": 1}, {"name": "ASUS Mesh router 6", "category": "NETVÆRK", "qty": 1}, {"name": "ERECA Stage Racer 12 HD SDI RX/TX  2x RACK", "category": "SDI-DIVERSE", "qty": 1}, {"name": "Links Wireless camera System - 3 kasser", "category": "SDI-DIVERSE", "qty": 1}, {"name": "Swit link (Retur link)", "category": "SDI-DIVERSE", "qty": 1}, {"name": "RMA400 Pre-Amp / EMB", "category": "SDI-DIVERSE", "qty": 2}, {"name": "Broaman 3 - 2 rack", "category": "SDI-DIVERSE", "qty": 1}, {"name": "Canon x40 pulje optik", "category": "OPTIKER", "qty": 1}, {"name": "Canon x21 Pulje (Fra ENG)", "category": "OPTIKER", "qty": 1}, {"name": "Canon WIDE Pulje (Fra ENG)", "category": "OPTIKER", "qty": 1}, {"name": "Canon WIDE Pulje", "category": "OPTIKER", "qty": 1}, {"name": "Fujinon x21 Pulje A", "category": "OPTIKER", "qty": 1}, {"name": "Fujinon x21 Pulje B", "category": "OPTIKER", "qty": 1}, {"name": "SONY BRC-H900 Camara KOM-CAM DNK37", "category": "OPTIKER", "qty": 1}, {"name": "PTZ 10 + RCP 1", "category": "OPTIKER", "qty": 1}, {"name": "PTZ 11", "category": "OPTIKER", "qty": 1}, {"name": "PTZ 12", "category": "OPTIKER", "qty": 1}, {"name": "PTZ RCP 2", "category": "OPTIKER", "qty": 1}, {"name": "SONY PXW-X400 ENG Kamera A", "category": "KAMERA OG CCU", "qty": 1}, {"name": "SONY PXW-X400 ENG Kamera B", "category": "KAMERA OG CCU", "qty": 1}, {"name": "SONY X400 CCU AA (ENG)", "category": "KAMERA OG CCU", "qty": 1}, {"name": "SONY X400 CCU BB (ENG)", "category": "KAMERA OG CCU", "qty": 1}, {"name": "SONY X400 Kamera CCU bagpart AA (ENG)", "category": "KAMERA OG CCU", "qty": 1}, {"name": "SONY X400 Kamera CCU bagpart BB (ENG)", "category": "KAMERA OG CCU", "qty": 1}, {"name": "SONY FR7  Full-frame PTZ Camera A", "category": "KAMERA OG CCU", "qty": 1}, {"name": "SONY FR7  Full-frame PTZ Camera B", "category": "KAMERA OG CCU", "qty": 1}, {"name": "SONY FR7  PTZ Remote kontrol / RCP", "category": "KAMERA OG CCU", "qty": 1}, {"name": "Marshal kamera sæt 1 - vandtæt", "category": "KAMERA OG CCU", "qty": 1}, {"name": "Marshal kamera sæt 2", "category": "KAMERA OG CCU", "qty": 1}, {"name": "SMPTE 5-10 m Snut/kabel  Pulje", "category": "KABLER", "qty": 10}, {"name": "SMPTE 30 m Snut/kabel  Pulje", "category": "KABLER", "qty": 4}, {"name": "SMPTE 250 m Tromle Pulje", "category": "KABLER", "qty": 4}, {"name": "SMPTE 150 m Tromle Pulje", "category": "KABLER", "qty": 10}, {"name": "SMPTE 100 m Tromle Pulje", "category": "KABLER", "qty": 4}, {"name": "MX Fiber 5-10 m Snut/kabel Pulje", "category": "KABLER", "qty": 4}, {"name": "MX Fiber 10-20 m Snut/kabel Pulje", "category": "KABLER", "qty": 4}, {"name": "MX Fiber 300 m Tromle Pulje", "category": "KABLER", "qty": 4}, {"name": "MX Fiber 150 m Tromle Pulje", "category": "KABLER", "qty": 4}, {"name": "MX BOX -> LC", "category": "KABLER", "qty": 6}, {"name": "RJ 45 / Cat troler", "category": "KABLER", "qty": 6}, {"name": "BNC Tromler 7 x BNC", "category": "KABLER", "qty": 3}, {"name": "BNC Tromle Pulje 75m.", "category": "KABLER", "qty": 10}, {"name": "LC/LC 6 Par A 250m (12 fiber)", "category": "KABLER", "qty": 1}, {"name": "LC/LC 6 Par B 250m (12 fiber)", "category": "KABLER", "qty": 1}, {"name": "LC/LC 12 Par A 180m (24 fiber)", "category": "KABLER", "qty": 1}, {"name": "LC/LC 12 Par B 180m (24 fiber) bookes ved Dawall i KBH", "category": "KABLER", "qty": 1}, {"name": "Neutrik quad tromle 300 M AA", "category": "KABLER", "qty": 1}, {"name": "Neutrik quad tromle 300 M BB", "category": "KABLER", "qty": 1}, {"name": "Neutrik quad tromle 300 M CC", "category": "KABLER", "qty": 1}, {"name": "Neutrik quad tromle 300 M DD", "category": "KABLER", "qty": 1}, {"name": "Neutrik quad tromle 300 M E", "category": "KABLER", "qty": 1}, {"name": "Neutrik quad tromle 300 M F", "category": "KABLER", "qty": 1}, {"name": "Neutrik quad tromle 300 M G", "category": "KABLER", "qty": 1}, {"name": "32A 20 meter strømtromle alu. Kabel", "category": "KABLER", "qty": 12}, {"name": "DIV. Kabler i Housebox (Gl. Remote 4)", "category": "KABLER", "qty": 1}, {"name": "Fiilex 360 PRO Plus lamper OB3/Pulje", "category": "LYS", "qty": 1}, {"name": "Fiilex 360 PRO Plus lamper DNK 83", "category": "LYS", "qty": 1}, {"name": "Velvet LED 30 graders spot Remote 2", "category": "LYS", "qty": 2}, {"name": "Osprey Lite", "category": "STATIVER & GRIP", "qty": 3}, {"name": "Sachtler Hot Pod CF 10 Stativ Pulje A", "category": "STATIVER & GRIP", "qty": 1}, {"name": "Sachtler Hot Pod CF 10 Stativ Pulje B", "category": "STATIVER & GRIP", "qty": 1}, {"name": "Sachtler  20 Pulje A", "category": "STATIVER & GRIP", "qty": 1}, {"name": "Sachtler  20 Pulje B", "category": "STATIVER & GRIP", "qty": 1}, {"name": "Sachtler  20 Pulje C", "category": "STATIVER & GRIP", "qty": 1}, {"name": "Sanken 20", "category": "STATIVER & GRIP", "qty": 4}, {"name": "Manfrotto UdlæggerArme  OB3", "category": "STATIVER & GRIP", "qty": 2}, {"name": "MiniMax Udlæggerarme", "category": "STATIVER & GRIP", "qty": 2}, {"name": "Manfrotto push-Up stativ  OB3", "category": "STATIVER & GRIP", "qty": 2}, {"name": "Prosub jib til ENG + vægtklodser - 2 kasser", "category": "STATIVER & GRIP", "qty": 1}, {"name": "Gammel jib på hjul/tripod", "category": "STATIVER & GRIP", "qty": 1}, {"name": "Jern Stativer til TV", "category": "STATIVER & GRIP", "qty": 9}, {"name": "Unity Connect 4W Sæt 1", "category": "UNITY CONNECT", "qty": 1}, {"name": "Unity Connect 4W Sæt 2", "category": "UNITY CONNECT", "qty": 1}, {"name": "REMOTE 2 kommentering sæt", "category": "KOMMENTATOR BOKSE", "qty": 1}, {"name": "On-site kommentering sæt A", "category": "KOMMENTATOR BOKSE", "qty": 1}, {"name": "On-site kommentering sæt B", "category": "KOMMENTATOR BOKSE", "qty": 1}, {"name": "On-site kommentering sæt C", "category": "KOMMENTATOR BOKSE", "qty": 1}, {"name": "On-site kommentering sæt D", "category": "KOMMENTATOR BOKSE", "qty": 1}, {"name": "On-site kommentering sæt E (Remote Offtube)", "category": "KOMMENTATOR BOKSE", "qty": 1}, {"name": "On-site kommentering sæt F (Remote Offtube)", "category": "KOMMENTATOR BOKSE", "qty": 1}, {"name": "Teranex Up Cross down", "category": "Konverter", "qty": 2}, {"name": "Apple TV", "category": "Konverter", "qty": 1}, {"name": "Fiber Extension 3 stk. Sæt A", "category": "KAMERA", "qty": 1}, {"name": "Fiber Extension 3 stk. Sæt B", "category": "KAMERA", "qty": 1}, {"name": "Fiber Extension 2 stk. Sæt C", "category": "KAMERA", "qty": 1}, {"name": "2*2 m Pop-UP Telt med sider SORT.", "category": "TELTE", "qty": 2}, {"name": "3*3 m Pop-UP Telt med sider SORT.", "category": "TELTE", "qty": 2}, {"name": "3*3 m Pop-UP Telt med sider Hvid.", "category": "TELTE", "qty": 2}, {"name": "4*4m Pop-UP Telt med sider Hvid.", "category": "TELTE", "qty": 1}, {"name": "Vægt klodser til telt.", "category": "TELTE", "qty": 12}, {"name": "Pløkker", "category": "TELTE", "qty": 8}, {"name": "OB4 JIB", "category": "OB4", "qty": 1}, {"name": "OB3 Kamera Stativ", "category": "OB4", "qty": 1}]
 
 // ═══════════════════════════════════════════════════════════
@@ -1030,6 +1758,37 @@ const EQUIPMENT_SEED = [{"name": "WL RACK 1 RX & TX (DNK 37)", "category": "TRÅ
 const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_blZoSR5idK-yHYwPJTzvxg_Ea6Mbrvq';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ── Login og bruger ──────────────────────────────────────────
+   Samme Supabase-projekt som SignalFlow, så det er de samme brugere.
+   supabase-js holder selv sessionen ved lige og fornyer den. */
+let MIG = null;                      // den indloggede bruger
+function mineInitialer(){
+  try{ return localStorage.getItem('east:who') || (MIG && MIG.email ? MIG.email.split('@')[0] : '') }
+  catch(e){ return '' }
+}
+function visGate(vis){
+  document.getElementById('gate').classList.toggle('on', vis);
+  document.body.classList.toggle('locked', vis);
+}
+async function logInd(email, kode, initialer){
+  const {data, error} = await supa.auth.signInWithPassword({email:email, password:kode});
+  if(error) throw error;
+  MIG = data.user;
+  try{ if(initialer) localStorage.setItem('east:who', initialer.trim()) }catch(e){}
+  return data.user;
+}
+async function logUd(){
+  try{ await supa.auth.signOut() }catch(e){}
+  MIG=null;
+  location.reload();
+}
+/* Mister vi adgangen undervejs, skal skærmen låses igen i stedet for at
+   fejle i stilhed ved hvert kald. */
+supa.auth.onAuthStateChange(function(event, session){
+  if(event==='SIGNED_OUT' || (!session && MIG)){ MIG=null; visGate(true); }
+});
+
 
 let EQUIPMENT = [];
 let PACKAGES  = [];
@@ -1092,7 +1851,10 @@ async function loadJobs(){
   try{
     const {data,error} = await supa.from('jobs').select('*').order('start_date');
     if(error){ console.error(error); jobs=[]; return; }
-    jobs = data.map(function(j){ return {id:j.id,name:j.name,who:j.who,start:j.start_date,end:j.end_date,notes:j.notes,items:j.items||[],status:j.status||'ordre'}; });
+    jobs = data.map(function(j){ return {id:j.id,name:j.name,who:j.who,start:j.start_date,end:j.end_date,
+      notes:j.notes,items:j.items||[],status:j.status||'ordre',
+      /* delenøglen skal med, ellers kan vi ikke vise at listen er delt */
+      share_token:j.share_token||null, updated_by:j.updated_by||'', updated_at:j.updated_at||null}; });
   }catch(e){ console.error(e); jobs=[]; }
 }
 
@@ -1129,7 +1891,7 @@ function bookedQty(name,start,end,excludeJobId){
 }
 function populateCategoryDropdowns(){
   const opts = CATEGORIES.map(function(c){return '<option value="'+escapeHtml(c.name)+'">'+escapeHtml(c.name)+'</option>';}).join('');
-  ['dCategory','newEquipCat'].forEach(function(id){
+  ['dCategory','newEquipCat','qrEquipCat'].forEach(function(id){
     const el=document.getElementById(id); if(!el) return;
     const cur=el.value; el.innerHTML=opts; if(cur) el.value=cur;
   });
@@ -1230,10 +1992,25 @@ function renderJobs(){
     const itemsHtml=(j.items||[]).map(function(it){
       const eq=EQUIPMENT.find(function(e){return e.name===it.name;});
       const isPkg=it.isPkg;
-      return '<div class="item-row"><div><div>'+(isPkg?'📦 ':'')+escapeHtml(it.name)+'</div>'
+      /* Er listen delt, står der her hvem der har pakket linjen, og hvem der
+         har tilføjet den ude i marken. */
+      let spor='';
+      if(it.tilfoejetAf) spor+='<div class="pak-spor tilfoejet">+ tilføjet af '+escapeHtml(it.tilfoejetAf)+'</div>';
+      if(it.pakket) spor+='<div class="pak-spor">✓ pakket'+(it.pakketAf?' af '+escapeHtml(it.pakketAf):'')
+        +(it.pakketKl?' · '+pakTid(it.pakketKl):'')+'</div>';
+      return '<div class="item-row'+(it.pakket?' er-pakket':'')+'"><div><div>'+(isPkg?'📦 ':'')+escapeHtml(it.name)+'</div>'
         +(eq?'<div class="cat">'+escapeHtml(eq.category)+'</div>':'')
+        +spor
         +'</div><div class="item-qty">×'+it.qty+'</div></div>';
     }).join('')||'<div class="empty" style="padding:16px;">Intet udstyr tilføjet</div>';
+
+    /* Hvor langt er de med at pakke? */
+    const pakkede=(j.items||[]).filter(function(i){return i.pakket;}).length;
+    const pakMaerke = (j.share_token && itemCount)
+      ? '<span class="pak-maerke'+(pakkede===itemCount?' faerdig':'')+'" title="'
+        +(pakkede===itemCount?'Alt er pakket':'Pakkelisten er delt – '+pakkede+' af '+itemCount+' er hakket af')
+        +'">📋 '+pakkede+'/'+itemCount+'</span>'
+      : '';
 
     const card=document.createElement('div'); card.className='job-card'; card.dataset.id=j.id;
     const isTilbudJob=j.status==='tilbud';
@@ -1241,6 +2018,7 @@ function renderJobs(){
     card.innerHTML='<div class="job-head" onclick="toggleJob(\''+j.id+'\')">'
       +'<div><div class="job-title">'+(isTilbudJob?'<span style="background:#5c4521;color:var(--amber);font-size:9px;padding:1px 6px;border-radius:4px;font-family:var(--mono);font-weight:700;margin-right:5px;">TILBUD</span>':'')+escapeHtml(j.name||'(uden navn)')+(j.who?' · '+escapeHtml(j.who):'')+'</div>'
       +'<div class="job-meta">'+fmtDate(j.start)+' → '+fmtDate(j.end)+'</div></div>'
+      +pakMaerke
       +(conflictCount>0?'<div class="job-conflict-badge">⚠ '+conflictCount+' konflikt'+(conflictCount>1?'er':'')+'</div>'
         :'<div class="job-count">'+itemCount+' stk. · '+totalQtyAll+' i alt</div>')
       +'</div>'
@@ -1252,6 +2030,7 @@ function renderJobs(){
       +'<button class="btn small secondary" onclick="event.stopPropagation();openEdit(\''+j.id+'\')">Rediger</button>'
       +'<button class="btn small secondary" onclick="event.stopPropagation();openCopy(\''+j.id+'\')">Kopiér job</button>'
       +'<button class="btn small" onclick="event.stopPropagation();printPackList(\''+j.id+'\')" style="background:var(--panel-2);color:var(--amber);border:1px solid var(--amber-dim);">📄 Pakkeliste</button>'
+      +'<button class="btn small secondary" title="Kopiér et link, så den der pakker kan hakke af på sin telefon" onclick="event.stopPropagation();pakDelLink(\''+j.id+'\')">🔗 Del pakkeliste</button>'
       +'<button class="btn small danger" onclick="event.stopPropagation();deleteJob(\''+j.id+'\')">Slet</button>'
       +'</div></div>';
     list.appendChild(card);
@@ -1285,10 +2064,13 @@ function openNew(){
   renderEquipList(''); renderSelectedStrip(); renderConflicts();
   overlay.classList.add('open');
 }
-function openEdit(id){
-  console.log("openEdit called with id:", id);
+async function openEdit(id){
+  /* Hent jobbet forfra, inden vi åbner det. Ellers kan man sidde og rette i en
+     udgave, en kollega har ændret for et kvarter siden – og gemme oven i. */
+  try{ await loadJobs(); }catch(e){ console.warn('Kunne ikke opdatere før redigering:', e); }
   try{
-  const j=jobs.find(function(x){return x.id===id;}); if(!j) return;
+  const j=jobs.find(function(x){return x.id===id;});
+  if(!j){ alert('Jobbet findes ikke længere – en anden har måske slettet det.'); renderJobs(); return; }
   editingJobId=id; selectedItems={};
   (j.items||[]).forEach(function(it){
     if(it.isPkg){ const p=PACKAGES.find(function(p){return p.name===it.name;}); if(p) selectedItems['PKG:'+p.id]=it.qty; else selectedItems[it.name]=it.qty; }
@@ -1326,7 +2108,7 @@ function openCopy(id){
 function closeModal(){ overlay.classList.remove('open'); }
 document.getElementById('newJobBtn').addEventListener('click', openNew);
 document.getElementById('cancelBtn').addEventListener('click', closeModal);
-overlay.addEventListener('click', function(e){ if(e.target===overlay) closeModal(); });
+lukVedKlikUdenfor(overlay, closeModal);
 
 // ── Equipment picker ────────────────────────────────────────
 function renderEquipList(filter){
@@ -1859,7 +2641,7 @@ document.getElementById('equipImgFile').addEventListener('change', function(e){
   }; reader.readAsDataURL(file);
 });
 document.getElementById('equipDetailCancelBtn').addEventListener('click', function(){ equipOverlay.classList.remove('open'); });
-equipOverlay.addEventListener('click', function(e){ if(e.target===equipOverlay) equipOverlay.classList.remove('open'); });
+lukVedKlikUdenfor(equipOverlay, ()=>equipOverlay.classList.remove('open'));
 
 document.getElementById('equipDetailSaveBtn').addEventListener('click', async function(){
   const mode=document.getElementById('equipDetailSaveBtn').dataset.mode;
@@ -1971,7 +2753,7 @@ document.getElementById('addCatBtn').addEventListener('click', async function(){
   await loadCategories(); renderCatList();
 });
 document.getElementById('closeCatBtn').addEventListener('click', function(){ document.getElementById('catOverlay').classList.remove('open'); });
-document.getElementById('catOverlay').addEventListener('click', function(e){ if(e.target===document.getElementById('catOverlay')) document.getElementById('catOverlay').classList.remove('open'); });
+lukVedKlikUdenfor(document.getElementById('catOverlay'), ()=>document.getElementById('catOverlay').classList.remove('open'));
 
 // ═══════════════════════════════════════════════════════════
 // STATISTIK
@@ -2259,7 +3041,7 @@ function renderObConflicts(){
 document.getElementById('obStart').addEventListener('change',renderObConflicts);
 document.getElementById('obEnd').addEventListener('change',renderObConflicts);
 document.getElementById('obCancelBtn').addEventListener('click',function(){document.getElementById('obOverlay').classList.remove('open');});
-document.getElementById('obOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('obOverlay')) document.getElementById('obOverlay').classList.remove('open');});
+lukVedKlikUdenfor(document.getElementById('obOverlay'), ()=>document.getElementById('obOverlay').classList.remove('open'));
 document.getElementById('obSaveBtn').addEventListener('click', async function(){
   var btn=document.getElementById('obSaveBtn');
   var name=document.getElementById('obName').value.trim(),who=document.getElementById('obWho').value.trim();
@@ -2753,9 +3535,9 @@ function handleUnknownQr(code, onLinked){
       '<div class="panel" style="padding:12px;background:var(--panel-2);border:1px solid var(--amber);">'
       +'<div style="font-size:11px;color:var(--amber);font-family:var(--mono);margin-bottom:8px;">Opretter nyt udstyr med QR: '+escapeHtml(code)+'</div>'
       +'<div class="row3">'
-      +'<div class="field"><label>Navn</label><input type="text" id="newEquipName" placeholder="f.eks. Wisycom MCH55"></div>'
-      +'<div class="field"><label>Kategori</label><select id="newEquipCat" style="width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:7px;font-size:13px;"></select></div>'
-      +'<div class="field"><label>Antal</label><input type="number" id="newEquipQty" value="1" min="0"></div>'
+      +'<div class="field"><label>Navn</label><input type="text" id="qrEquipName" placeholder="f.eks. Wisycom MCH55"></div>'
+      +'<div class="field"><label>Kategori</label><select id="qrEquipCat" style="width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:7px;font-size:13px;"></select></div>'
+      +'<div class="field"><label>Antal</label><input type="number" id="qrEquipQty" value="1" min="0"></div>'
       +'</div>'
       +'<div class="modal-actions">'
       +'<button class="btn small secondary" onclick="document.getElementById(\'lagerNewRow\').style.display=\'none\';">Annuller</button>'
@@ -2773,9 +3555,9 @@ function handleUnknownQr(code, onLinked){
 }
 
 async function confirmAddEquipWithQr(qrCode){
-  const name = document.getElementById('newEquipName').value.trim();
-  const category = document.getElementById('newEquipCat').value || 'Diverse';
-  let qty = parseInt(document.getElementById('newEquipQty').value); if(isNaN(qty)||qty<0) qty=0;
+  const name = document.getElementById('qrEquipName').value.trim();
+  const category = document.getElementById('qrEquipCat').value || 'Diverse';
+  let qty = parseInt(document.getElementById('qrEquipQty').value); if(isNaN(qty)||qty<0) qty=0;
   if(!name){ alert('Skriv et navn.'); return; }
   const { error } = await supa.from('equipment').insert({name,category,qty,qr_code:qrCode,serial_number:qrCode});
   if(error){ alert('Fejl: '+error.message); return; }
@@ -2932,7 +3714,25 @@ var mQrCallback = null;
 var mQrScanner = null;
 var mQrMode = 'job'; // 'job' or 'avail'
 
-function isMobile(){ return window.innerWidth < 768; }
+/* Bredden alene er ikke nok: et smalt browservindue på en PC er stadig en PC,
+   og en iPad i landskab er stadig en berøringsskærm. Vi kigger på pegeredskabet. */
+function skaermType(){
+  var grov=false, kanHover=true;
+  try{
+    grov = window.matchMedia('(pointer:coarse)').matches;
+    kanHover = window.matchMedia('(hover:hover)').matches;
+  }catch(e){}
+  var beroering = grov || (navigator.maxTouchPoints||0) > 1;
+  var b = window.innerWidth;
+  if(beroering && !kanHover && b <= 920) return 'telefon';
+  if(b <= 620) return 'telefon';
+  return 'computer';
+}
+function skaermAftryk(){
+  var b=window.innerWidth;
+  return skaermType()+':'+(b<=620?'s':(b<=1024?'m':'l'));
+}
+function isMobile(){ return skaermType()==='telefon'; }
 
 // ── Navigation ─────────────────────────────────────────────
 document.querySelectorAll('#mobileNav button').forEach(function(btn){
@@ -3429,7 +4229,7 @@ document.getElementById('mSaveJobBtn').addEventListener('click', async function(
 document.getElementById('mobileNewJobBtn').addEventListener('click',function(){ openNew(); });
 
 // Close modal on overlay click
-document.getElementById('mJobOverlay').addEventListener('click',function(e){if(e.target===document.getElementById('mJobOverlay'))closeMJobModal();});
+lukVedKlikUdenfor(document.getElementById('mJobOverlay'), closeMJobModal);
 
 // ── Mobile QR Scanner ──────────────────────────────────────
 function openMobileQr(mode){
@@ -3582,20 +4382,29 @@ function updateToggleState(view){
   });
 }
 function switchToMobile(){
-  localStorage.setItem('viewPref','mobile');
+  try{ localStorage.setItem('viewPref', JSON.stringify({aftryk:skaermAftryk(), valg:'mobile'})) }catch(e){}
   document.body.classList.remove('show-desktop');
   document.body.classList.add('show-mobile','mobile-view-active');
   updateToggleState('mobile');
   renderMobileTab();
 }
 function switchToDesktop(){
-  localStorage.setItem('viewPref','desktop');
+  try{ localStorage.setItem('viewPref', JSON.stringify({aftryk:skaermAftryk(), valg:'desktop'})) }catch(e){}
   document.body.classList.remove('show-mobile','mobile-view-active');
   document.body.classList.add('show-desktop');
   updateToggleState('desktop');
 }
+function gemtVisning(){
+  try{
+    var r=localStorage.getItem('viewPref');
+    if(!r) return null;
+    if(r==='mobile'||r==='desktop') return null;      // gammelt format uden aftryk
+    var o=JSON.parse(r);
+    return (o && o.aftryk===skaermAftryk()) ? o.valg : null;
+  }catch(e){ return null }
+}
 function applyViewPreference(){
-  var saved = localStorage.getItem('viewPref');
+  var saved = gemtVisning();
   var useMobile = saved ? (saved==='mobile') : isMobile();
   if(useMobile){
     document.body.classList.add('show-mobile','mobile-view-active');
@@ -3643,9 +4452,7 @@ function openRepairModal(equipId){
 document.getElementById('repairCancelBtn').addEventListener('click', function(){
   document.getElementById('repairOverlay').classList.remove('open');
 });
-document.getElementById('repairOverlay').addEventListener('click', function(e){
-  if(e.target===document.getElementById('repairOverlay')) document.getElementById('repairOverlay').classList.remove('open');
-});
+lukVedKlikUdenfor(document.getElementById('repairOverlay'), ()=>document.getElementById('repairOverlay').classList.remove('open'));
 
 document.getElementById('repairSaveBtn').addEventListener('click', async function(){
   const equipId = document.getElementById('repairEquipId').value;
@@ -3772,9 +4579,7 @@ function openRepairDetail(repairId, returnEquipId){
 document.getElementById('historyCancelBtn').addEventListener('click', function(){
   document.getElementById('historyOverlay').classList.remove('open');
 });
-document.getElementById('historyOverlay').addEventListener('click', function(e){
-  if(e.target===document.getElementById('historyOverlay')) document.getElementById('historyOverlay').classList.remove('open');
-});
+lukVedKlikUdenfor(document.getElementById('historyOverlay'), ()=>document.getElementById('historyOverlay').classList.remove('open'));
 
 // ── Marker repareret modal ─────────────────────────────────
 function openResolveModal(repairId){
@@ -3789,9 +4594,7 @@ function openResolveModal(repairId){
 document.getElementById('resolveCancelBtn').addEventListener('click', function(){
   document.getElementById('resolveOverlay').classList.remove('open');
 });
-document.getElementById('resolveOverlay').addEventListener('click', function(e){
-  if(e.target===document.getElementById('resolveOverlay')) document.getElementById('resolveOverlay').classList.remove('open');
-});
+lukVedKlikUdenfor(document.getElementById('resolveOverlay'), ()=>document.getElementById('resolveOverlay').classList.remove('open'));
 
 document.getElementById('resolveSaveBtn').addEventListener('click', async function(){
   const id    = document.getElementById('resolveRepairId').value;
@@ -3891,7 +4694,9 @@ document.getElementById('vaerkstedCloseBtn').addEventListener('click', function(
 });
 
 
-(async function init(){
+/* ── Opstart ──────────────────────────────────────────────────
+   Intet hentes, før vi ved hvem brugeren er. */
+async function startProgram(){
   initFilterDates();
   document.getElementById('availStart').value=todayStr();
   try{
@@ -3901,13 +4706,115 @@ document.getElementById('vaerkstedCloseBtn').addEventListener('click', function(
   renderJobs();
   initMobile();
   applyViewPreference();
+  const u=document.getElementById('miguser');
+  if(u) u.textContent = mineInitialer() || (MIG&&MIG.email ? MIG.email : '');
+  const lo=document.getElementById('logoutBtn');
+  if(lo) lo.onclick=function(){ if(confirm('Log ud af East Production?')) logUd(); };
+
+  /* Import af udstyrsliste fra det gamle system */
+  document.getElementById('impAabnBtn').addEventListener('click', openImportModal);
+  document.getElementById('impLukBtn').addEventListener('click', function(){
+    document.getElementById('impOverlay').classList.remove('open');
+  });
+  document.getElementById('impLaesBtn').addEventListener('click', function(){
+    impLaes(document.getElementById('impTekst').value);
+  });
+  document.getElementById('impTilfoej').addEventListener('click', impTilfoejTilJob);
+  document.getElementById('impFil').addEventListener('change', function(){
+    const f=this.files && this.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=function(){ document.getElementById('impTekst').value=r.result; impLaes(r.result); };
+    r.readAsText(f, 'UTF-8');
+  });
+  lukVedKlikUdenfor(document.getElementById('impOverlay'), function(){
+    document.getElementById('impOverlay').classList.remove('open');
+  });
+  /* Trækkes vinduet smalt eller drejes telefonen, vurderes visningen forfra –
+     medmindre man selv har valgt noget for netop den skærmstørrelse. */
+  var sidsteAftryk=skaermAftryk(), stoerrelseTimer=null;
+  window.addEventListener('resize', function(){
+    clearTimeout(stoerrelseTimer);
+    stoerrelseTimer=setTimeout(function(){
+      var nyt=skaermAftryk();
+      if(nyt===sidsteAftryk) return;
+      sidsteAftryk=nyt;
+      applyViewPreference();
+    }, 250);
+  });
+  /* ── Løbende opdatering ──────────────────────────────────────
+     To ting var galt: den hentede kun jobs og OB-bookinger (så lager og
+     værksted stod stille hos den ene, mens den anden rettede), og den kørte
+     videre mens et redigeringsvindue var åbent — så kunne man komme til at
+     gemme oven i noget, der var skiftet ud under en. */
+  window.__opdaterKoerer = false;
   setInterval(async function(){
-    if(overlay.classList.contains('open')) return;
-    await Promise.all([loadJobs(),loadObBookinger()]);
-    renderJobs();
-    var obTab=document.getElementById('tab-obvogne');
-    if(obTab&&obTab.style.display!=='none') renderObVogne();
+    if(nogetErAabent() || window.__opdaterKoerer) return;
+    window.__opdaterKoerer = true;
+    try{
+      await Promise.all([loadJobs(), loadObBookinger()]);
+      renderJobs();
+      var obTab=document.getElementById('tab-obvogne');
+      if(obTab && obTab.style.display!=='none') renderObVogne();
+      /* Lager og værksted hentes kun, når man faktisk kigger på dem. */
+      var lagerTab=document.getElementById('tab-lager');
+      if(lagerTab && lagerTab.style.display!=='none'){
+        await Promise.all([loadEquipment(), loadPackages()]);
+        renderLager(document.getElementById('lagerSearch').value||'');
+      }
+      var vTab=document.getElementById('tab-vaerksted');
+      if(vTab && vTab.style.display!=='none'){
+        await loadRepairs();
+        if(typeof renderVaerksted==='function') renderVaerksted();
+      }
+    }catch(e){ console.warn('Opdatering fejlede:', e); }
+    finally{ window.__opdaterKoerer = false; }
   }, 15000);
+}
+
+/* Er man allerede logget ind, springer vi login over. */
+(async function(){
+  const gate=document.getElementById('gate');
+  const msg=document.getElementById('gMsg');
+  const go=document.getElementById('gGo');
+  try{ document.getElementById('gWho').value = localStorage.getItem('east:who')||'' }catch(e){}
+
+  const start=async function(){
+    visGate(false);
+    try{ await startProgram(); }
+    catch(e){ console.error('Opstart fejlede:',e); }
+  };
+
+  /* Et pakkeliste-link kræver ikke login – det er netop meningen, at en
+     chauffør eller assistent kan åbne det uden at have en bruger. */
+  const pakTok = pakErGaest();
+  if(pakTok){ await pakStart(pakTok); return; }
+
+  const {data:{session}} = await supa.auth.getSession();
+  if(session){ MIG=session.user; start(); }
+  else visGate(true);
+
+  const forsoeg=async function(){
+    const e1=document.getElementById('gEmail').value.trim();
+    const k1=document.getElementById('gPw').value;
+    const w1=document.getElementById('gWho').value.trim();
+    if(!e1||!k1){ msg.textContent='Skriv e-mail og adgangskode.'; return }
+    go.disabled=true; go.textContent='Logger ind …'; msg.textContent='';
+    try{
+      await logInd(e1,k1,w1);
+      document.getElementById('gPw').value='';
+      await start();
+    }catch(err){
+      msg.textContent = /Invalid login/i.test(err.message||'')
+        ? 'E-mail eller adgangskode passer ikke.'
+        : (err.message||'Kunne ikke logge ind.');
+    }finally{ go.disabled=false; go.textContent='Log ind' }
+  };
+  go.addEventListener('click', forsoeg);
+  ['gEmail','gPw','gWho'].forEach(function(id){
+    document.getElementById(id).addEventListener('keydown', function(ev){
+      if(ev.key==='Enter'){ ev.preventDefault(); forsoeg(); }
+    });
+  });
 })();
 
 
