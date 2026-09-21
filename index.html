@@ -554,6 +554,12 @@ body.show-desktop .app { display: block !important; }
 
 
 
+
+.m-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.m-item-navn{flex:1;min-width:0}
+.m-item-antal{color:var(--amber);font-family:var(--mono);font-weight:700;flex:none}
+.m-item.er-pakket .m-item-navn>span{color:var(--muted);text-decoration:line-through}
+.jp-hak.m{width:22px;height:22px}
 .item-row{display:flex;align-items:flex-start;gap:10px}
 .jp-hak{width:17px;height:17px;flex:none;margin-top:2px;accent-color:#3fd99c;cursor:pointer}
 .item-qty{display:flex;align-items:center;gap:5px;margin-left:auto}
@@ -638,6 +644,30 @@ body.pak-visning #pakNavnOverlay.open{display:flex;position:fixed;inset:0;z-inde
 .pak-annuller{flex:1;background:var(--panel-2);border:1px solid var(--border);color:var(--text);
  border-radius:9px;padding:13px;font-size:15px;cursor:pointer}
 .pak-fejl{min-height:16px;font-size:12px;color:#ff7b7b;margin-top:8px}
+
+
+.ji-valg{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-left:auto}
+.ji-liste{max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;margin-bottom:12px}
+.ji-job{display:flex;align-items:center;gap:10px;padding:7px 10px;border-bottom:1px solid var(--border);font-size:12.5px}
+.ji-job:last-child{border-bottom:none}
+.ji-job.dub{opacity:.45;text-decoration:line-through}
+.ji-dato{font:11px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);flex:none;width:170px}
+.ji-navn{flex:1;min-width:0}
+.ji-navn em{font-style:normal;color:var(--muted);font:11px ui-monospace,SFMono-Regular,Menlo,monospace}
+.ji-antal{font:11px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--amber,#e0a33e)}
+.ji-h{font-size:13px;font-weight:600;color:var(--text);margin:10px 0 2px}
+
+
+.ls-gruppe{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text);margin:12px 0 6px;cursor:pointer}
+.ls-liste{max-height:230px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;margin-bottom:6px}
+.ls-liste.lille{max-height:140px}
+.ls-linje{display:flex;align-items:flex-start;gap:9px;padding:7px 10px;border-bottom:1px solid var(--border);font-size:12.5px;cursor:pointer}
+.ls-linje:last-child{border-bottom:none}
+.ls-navn{flex:1;min-width:0}
+.ls-navn em{display:block;font-style:normal;font:10.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted)}
+.ls-navn s{color:#b86b6b}
+.ls-kat{font:10.5px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);flex:none;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ls-tal{font:11px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--amber,#e0a33e);flex:none}
 
 /* importvinduet */
 .imp-hjaelp{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px}
@@ -790,7 +820,8 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
       <div class="field" style="margin:0;"><label>Vis jobs fra</label><input type="date" id="filterStart" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;"></div>
       <div class="field" style="margin:0;"><label>til</label><input type="date" id="filterEnd" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;"></div>
       <button class="btn small secondary" id="filterResetBtn" style="margin-bottom:1px;" title="Nulstil filtrene og vis alle job">Nulstil</button>
-      <button class="btn small secondary" id="ganttToggleBtn" style="margin-bottom:1px;" title="Skift mellem liste og tidslinje">📅 Vis tidslinje</button>
+      <button class="btn small secondary" id="jiAabnBtn" style="margin-bottom:1px;" title="Opret mange job på én gang fra det gamle regneark">⤒ Importér job</button>
+<button class="btn small secondary" id="ganttToggleBtn" style="margin-bottom:1px;" title="Skift mellem liste og tidslinje">📅 Vis tidslinje</button>
       <input type="text" id="jobSearch" placeholder="Søg job navn, initialer..." style="min-width:220px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;">
       <div id="filterCount" style="font-size:11px; color:var(--muted); font-family:var(--mono); align-self:center;"></div>
     </div>
@@ -838,6 +869,7 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
             <option value="type">Type (pakker først)</option>
           </select>
           <button class="btn small secondary" id="addPkgBtn" title="Opret en pakke, så flere stykker udstyr kan bookes samlet">+ Ny pakke</button>
+          <button class="btn small secondary" id="lsAabnBtn" title="Sammenlign lageret med regnearkets UDSTYR-faneblad og opdatér det">⤒ Opdatér fra regneark</button>
           <button class="btn small" id="addEquipBtn">+ Tilføj udstyr</button>
           <button class="btn small secondary" onclick="openCatManager()">Kategorier</button>
           <button class="btn small secondary" id="showVaerkstedBtn">🔧 Værksted</button>
@@ -1079,6 +1111,50 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
 </div>
 
 
+
+
+<!-- Opdatér lageret fra regnearket -->
+<div class="overlay" id="lsOverlay">
+  <div class="modal" style="max-width:820px">
+    <h3 style="margin:0 0 4px">Opdatér lageret fra regnearket</h3>
+    <div class="imp-hjaelp">Åbn fanebladet <b>UDSTYR</b> i Excel, tryk <b>Ctrl+A</b> og <b>Ctrl+C</b>,
+      og sæt ind herunder. Du ser forskellene, før noget ændres – og intet slettes.</div>
+    <textarea id="lsTekst" rows="5" placeholder="Sæt hele fanebladet UDSTYR ind her …"></textarea>
+    <div class="imp-knapper">
+      <button class="btn small" id="lsLaesBtn" title="Sammenlign arket med lageret">Sammenlign</button>
+      <label class="btn small secondary" title="Vælg fanebladet gemt som csv">
+        Vælg fil <input type="file" id="lsFil" accept=".csv,.txt,.tsv" hidden></label>
+    </div>
+    <div id="lsResultat"></div>
+    <div class="modal-actions">
+      <button class="btn small secondary" id="lsLukBtn">Annuller</button>
+      <button class="btn small" id="lsUdfoer" style="display:none">Opdatér lageret</button>
+    </div>
+  </div>
+</div>
+
+<!-- Importér alle job fra det gamle regneark -->
+<div class="overlay" id="jiOverlay">
+  <div class="modal" style="max-width:820px">
+    <h3 style="margin:0 0 4px">Importér job fra regnearket</h3>
+    <div class="imp-hjaelp">Åbn fanebladet <b>OPGAVER</b> i Excel, tryk <b>Ctrl+A</b> og <b>Ctrl+C</b>,
+      og sæt ind herunder — eller vælg en <b>importfil (.json)</b> eller en <b>.csv</b>.
+      Intet oprettes, før du har set resultatet.</div>
+    <textarea id="jiTekst" rows="5" placeholder="Sæt hele fanebladet OPGAVER ind her …"></textarea>
+    <div class="imp-knapper">
+      <button class="btn small" id="jiLaesBtn" title="Læs arket og saml rækkerne til job">Læs arket</button>
+      <label class="btn small secondary" title="Vælg fanebladet gemt som csv">
+        Vælg fil <input type="file" id="jiFil" accept=".json,.csv,.txt,.tsv" hidden></label>
+      <label class="ji-valg"><input type="checkbox" id="jiKunAktive" checked> kun igangværende og kommende job</label>
+    </div>
+    <div id="jiResultat"></div>
+    <div class="modal-actions">
+      <button class="btn small secondary" id="jiLukBtn">Annuller</button>
+      <button class="btn small" id="jiOpret" style="display:none">Opret job</button>
+    </div>
+  </div>
+</div>
+
 <!-- Importér udstyrsliste fra det gamle system -->
 <div class="overlay" id="impOverlay">
   <div class="modal" style="max-width:760px">
@@ -1263,6 +1339,15 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
 
 
 
+
+/* Fjern kun anførselstegn, der OMSLUTTER en celle – som csv gør det.
+   Et enkelt tommetegn til sidst i fx 'Monitor 22"' er en del af navnet. */
+function renCelle(c){
+  c=(c==null?'':String(c)).trim();
+  if(c.length>=2 && c[0]==='"' && c[c.length-1]==='"') c=c.slice(1,-1).replace(/""/g,'"');
+  return c;
+}
+
 /* ── Importér udstyrsliste fra det gamle system ────────────────
    I overgangsperioden ligger listerne i Excel. Man kan enten markere
    cellerne i Excel og sætte ind (så kommer de som tabulator-adskilt tekst),
@@ -1289,7 +1374,7 @@ function impParse(tekst){
   if(tael(foerste,'\t')===0){
     sep = tael(foerste,';') >= tael(foerste,',') ? ';' : ',';
   }
-  const rk = linjer.map(function(l){ return l.split(sep).map(function(c){ return c.trim().replace(/^"|"$/g,''); }); });
+  const rk = linjer.map(function(l){ return l.split(sep).map(function(c){ return renCelle(c); }); });
 
   /* Find kolonnerne. Er der en overskriftsrække, bruger vi den – ellers
      antager vi navn i første kolonne og et tal i en af de næste. */
@@ -1509,6 +1594,9 @@ let pakTimer = null;
 let pakGemTimer = null;
 let pakSkriver = {ref:null, ts:0};
 let pakHentetFoerst = false;
+/* Hvilke linjer har gæsten selv rørt ved siden sidste gem? Kun dem skrives
+   ind i den friske udgave – resten tages fra serveren. */
+let pakAendret = {};
 
 function pakNavn(){
   try{ return localStorage.getItem('east:pakwho') || '' }catch(e){ return '' }
@@ -1567,10 +1655,27 @@ async function pakGem(){
     if(!PAK || !pakHentetFoerst) return;          // skriv aldrig før vi har læst
     pakStatus('gemmer …');
     try{
+      /* Hent listen forfra og læg KUN vores egne ændringer ind. Ellers ville
+         vi skrive hele listen tilbage og slette det, som kontoret har tilføjet
+         i mellemtiden. */
+      const frisk = await pakHent();
+      const friske = (frisk.items||[]).map(function(i){ return Object.assign({}, i); });
+      Object.keys(pakAendret).forEach(function(navn){
+        const min = PAK.items.find(function(i){ return i.name===navn; });
+        if(!min) return;
+        const gl = friske.find(function(i){ return i.name===navn; });
+        if(gl){
+          gl.pakket=min.pakket; gl.pakketAf=min.pakketAf; gl.pakketKl=min.pakketKl;
+          if(min.tilfoejetAf) gl.tilfoejetAf=min.tilfoejetAf;
+        }else friske.push(min);
+      });
       const {data, error} = await supa.rpc('ep_pack_set',
-        {tok: PAK.tok, nye: PAK.items, hvem: pakNavn()});
+        {tok: PAK.tok, nye: friske, hvem: pakNavn()});
       if(error) throw error;
+      pakAendret = {};
+      PAK.items = friske;
       PAK.updated_at = Array.isArray(data) ? data[0] : data;
+      pakTegn();
       pakStatus('gemt');
     }catch(e){
       pakStatus('kunne ikke gemme', true);
@@ -1641,6 +1746,7 @@ function pakTegn(){
       it.pakketAf = cb.checked ? pakNavn() : '';
       it.pakketKl = cb.checked ? new Date().toISOString() : '';
       pakSkriver = {ref: it.name, ts: Date.now()};
+      pakAendret[it.name] = true;
       pakTegn(); pakGem();
     });
   });
@@ -1669,6 +1775,7 @@ function pakTilfoej(){
   PAK.items.push({name:navn, qty:antal, pakket:true,
                   pakketAf:pakNavn(), pakketKl:new Date().toISOString(),
                   tilfoejetAf:pakNavn()});
+  pakAendret[navn] = true;
   pakLukTilfoej(); pakTegn(); pakGem();
 }
 
@@ -1719,6 +1826,7 @@ function pakTilfoejFraLager(r){
   PAK.items.push({name:r.name, qty:antal, pakket:true,
                   pakketAf:pakNavn(), pakketKl:new Date().toISOString(),
                   tilfoejetAf:pakNavn(), fraLager:true});
+  pakAendret[r.name] = true;
   pakLukTilfoej(); pakTegn(); pakGem();
 }
 
@@ -1779,6 +1887,452 @@ async function pakStart(tok){
     clearTimeout(pakSoegTimer);
     pakSoegTimer = setTimeout(pakSoegLager, 280);
   });
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   IMPORTÉR ALLE JOB FRA DET GAMLE REGNEARK
+   Fanebladet OPGAVER har én række pr. stykke udstyr, med jobbet gentaget i
+   hver række. Man markerer det hele i Excel (Ctrl+A), kopierer og sætter ind –
+   eller gemmer fanebladet som csv. Rækkerne samles til job, udstyret matches
+   mod lageret, og man ser det hele, før noget oprettes.
+   ══════════════════════════════════════════════════════════════ */
+
+let JI = {job:[], ukendte:{}, oversaet:{}};
+
+/* Datoer kommer ud af Excel på mange måder alt efter indstillinger. */
+function jiDato(t){
+  if(t==null) return null;
+  t=String(t).trim();
+  if(!t) return null;
+  let m;
+  if((m=t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+  if((m=t.match(/^(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{2,4})/))){
+    let y=m[3]; if(y.length===2) y='20'+y;
+    return y+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+  }
+  /* Excels løbenummer for datoer (dage siden 1899-12-30) */
+  if(/^\d{5}$/.test(t)){
+    const d=new Date(Date.UTC(1899,11,30)+(+t)*86400000);
+    return d.toISOString().slice(0,10);
+  }
+  return null;
+}
+
+function jiParse(tekst){
+  const linjer=tekst.replace(/\r/g,'').split('\n');
+  const tael=(l,c)=>(l.split(c).length-1);
+  /* find overskriftsrækken – den med "OPGAVE BESKRIVELSE" */
+  let hi=-1, sep='\t';
+  for(let i=0;i<Math.min(linjer.length,40);i++){
+    if(/OPGAVE\s*BESKRIVELSE/i.test(linjer[i])){
+      hi=i;
+      sep = tael(linjer[i],'\t')>0 ? '\t' : (tael(linjer[i],';')>=tael(linjer[i],',') ? ';' : ',');
+      break;
+    }
+  }
+  if(hi<0) return {fejl:'Kunne ikke finde overskriften "OPGAVE BESKRIVELSE". Markér hele fanebladet OPGAVER i Excel og kopiér det.'};
+  const split=l=>l.split(sep).map(c=>renCelle(c));
+  const hoved=split(linjer[hi]).map(h=>h.toUpperCase());
+  const kol=function(re){ return hoved.findIndex(h=>re.test(h)); };
+  const K={navn:kol(/OPGAVE/), hvem:kol(/^HVEM/), udstyr:kol(/^UDSTYR/), antal:kol(/^ANTAL/),
+           start:kol(/START/), slut:kol(/AFSLUT|SLUT/), noter:kol(/NOTE/)};
+  if(K.navn<0||K.udstyr<0||K.start<0||K.slut<0)
+    return {fejl:'Arket mangler en af kolonnerne: opgave, udstyr, start eller afslut.'};
+
+  const samlet={};            // nøgle → job
+  let tommeRaekker=0, overskrifter=0;
+  for(let i=hi+1;i<linjer.length;i++){
+    const c=split(linjer[i]);
+    const navn=(c[K.navn]||'').trim();
+    if(!navn) continue;
+    const start=jiDato(c[K.start]), slut=jiDato(c[K.slut]);
+    if(!start||!slut) continue;
+    const hvem=(K.hvem>=0?(c[K.hvem]||''):'').trim();
+    const key=navn+'|'+start+'|'+slut;
+    /* Samme job står nogle gange med og uden initialer – det er ét job */
+    const j=samlet[key]||(samlet[key]={name:navn, who:'', start:start, end:slut, notes:new Set(), linjer:{}});
+    if(hvem && !j.who) j.who=hvem;
+    if(K.noter>=0 && c[K.noter]) j.notes.add(c[K.noter].trim());
+    const udstyr=(c[K.udstyr]||'').trim();
+    if(!udstyr){ tommeRaekker++; continue; }
+    if(/^\*{2,}/.test(udstyr)){ overskrifter++; continue; }     // en kategorioverskrift, ikke udstyr
+    const antal=Math.max(1, parseInt(c[K.antal],10)||1);
+    j.linjer[udstyr]=(j.linjer[udstyr]||0)+antal;               // gentagelser lægges sammen
+  }
+  const job=Object.values(samlet)
+    .filter(j=>Object.keys(j.linjer).length)
+    .map(j=>Object.assign(j,{notes:[...j.notes].join(' · ')}));
+  return {job, tommeRaekker, overskrifter};
+}
+
+function jiAaben(){
+  JI_FIL=null;
+  document.getElementById('jiTekst').value='';
+  document.getElementById('jiFil').value='';
+  document.getElementById('jiResultat').innerHTML='';
+  document.getElementById('jiOpret').style.display='none';
+  JI={job:[], ukendte:{}, oversaet:{}};
+  document.getElementById('jiOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('jiTekst').focus(),120);
+}
+
+function jiLaes(tekst){
+  JI.fraFil=false; JI_FIL=null; JI.nytLager=[]; JI.udstyrInfo={};
+  const r=jiParse(tekst);
+  const ud=document.getElementById('jiResultat');
+  if(r.fejl){ ud.innerHTML='<div class="imp-tom">'+escapeHtml(r.fejl)+'</div>'; return; }
+  const kunAktive=document.getElementById('jiKunAktive').checked;
+  const idag=todayStr();
+  JI.alle=r.job;
+  JI.job=r.job.filter(j=>!kunAktive || j.end>=idag)
+    .sort((a,b)=>a.start<b.start?-1:a.start>b.start?1:0);   // ældste først
+
+  /* Match hvert udstyrsnavn én gang – samme navn går igen i mange job */
+  JI.ukendte={}; JI.oversaet={};
+  const navne=new Set(); JI.job.forEach(j=>Object.keys(j.linjer).forEach(n=>navne.add(n)));
+  navne.forEach(function(n){
+    const m=impFindMatch(n);
+    if(m.valg && m.sikkerhed==='præcis') JI.oversaet[n]=m.valg;
+    else JI.ukendte[n]={forslag:m.forslag, valg:m.valg||''};
+  });
+  jiTegn(r);
+}
+
+function jiTegn(r){
+  const ud=document.getElementById('jiResultat');
+  const eksisterende=new Set(jobs.map(j=>j.name+'|'+j.start+'|'+j.end));
+  const findes=JI.job.filter(j=>eksisterende.has(j.name+'|'+j.start+'|'+j.end)).length;
+  const linjer=JI.job.reduce((s,j)=>s+Object.keys(j.linjer).length,0);
+  const ukendte=Object.keys(JI.ukendte);
+
+  let h='<div class="imp-status"><b>'+JI.job.length+'</b> job · <b>'+linjer+'</b> linjer udstyr'
+    +(findes?' · <span class="imp-mangler">'+findes+' findes allerede og springes over</span>':'')
+    +(r&&r.tommeRaekker?' · '+r.tommeRaekker+' tomme rækker sprunget over':'')
+    +(r&&r.overskrifter?' · '+r.overskrifter+' kategorioverskrifter sprunget over':'')
+    +'</div>';
+
+  h+='<div class="ji-liste">'+JI.job.map(function(j){
+    const dub=eksisterende.has(j.name+'|'+j.start+'|'+j.end);
+    return '<div class="ji-job'+(dub?' dub':'')+'"><span class="ji-dato">'+j.start+' → '+j.end+'</span>'
+      +'<span class="ji-navn">'+escapeHtml(j.name)+(j.who?' <em>'+escapeHtml(j.who)+'</em>':'')+'</span>'
+      +'<span class="ji-antal">'+Object.keys(j.linjer).length+'</span></div>';
+  }).join('')+'</div>';
+
+  if(ukendte.length && JI.fraFil){
+    /* Fra en importfil er udstyret ikke ukendt – det står i filen med kategori,
+       antal og det hele. Det mangler bare i lageret endnu. */
+    h+='<div class="imp-hjaelp" style="margin-top:10px"><span class="imp-ok">'+ukendte.length
+      +' stk. udstyr</span>, som jobbene bruger, findes ikke i lageret endnu og oprettes fra filen '
+      +'med kategori, antal, TV2-nr, serienr og indhold.</div>';
+  }else if(ukendte.length){
+    h+='<div class="ji-h">'+ukendte.length+' udstyrsnavne kunne ikke findes sikkert i lageret</div>'
+      +'<div class="imp-hjaelp">Vælg hvad de skal være. Valget gælder i alle job, hvor navnet optræder.</div>'
+      +'<table class="imp-tabel"><tbody>';
+    ukendte.forEach(function(n,i){
+      const u=JI.ukendte[n];
+      const valg=['<option value="">— spring over —</option>',
+                  '<option value="__nyt__"'+(u.valg==='__nyt__'?' selected':'')+'>+ opret som nyt udstyr</option>'];
+      const set={};
+      const tilf=v=>{ if(!v||set[v])return; set[v]=1;
+        valg.push('<option value="'+escapeHtml(v)+'"'+(u.valg===v?' selected':'')+'>'+escapeHtml(impNavnFor(v))+'</option>'); };
+      (u.forslag||[]).forEach(tilf);
+      EQUIPMENT.forEach(e=>tilf(e.name));
+      h+='<tr class="'+(u.valg?'imp-usikker':'imp-ingen')+'"><td>'+escapeHtml(n)+'</td>'
+        +'<td><select data-ji="'+i+'">'+valg.join('')+'</select></td></tr>';
+    });
+    h+='</tbody></table>';
+  }
+  ud.innerHTML=h;
+  document.getElementById('jiOpret').style.display=JI.job.length?'':'none';
+  document.getElementById('jiOpret').textContent='Opret '+(JI.job.length-findes)+' job';
+  ud.querySelectorAll('[data-ji]').forEach(function(sel){
+    sel.addEventListener('change',function(){
+      const n=ukendte[+sel.dataset.ji];
+      JI.ukendte[n].valg=sel.value;
+      sel.closest('tr').className=sel.value?'imp-usikker':'imp-ingen';
+    });
+  });
+}
+
+
+/* ── Læs en færdig importfil (json) ──────────────────────────────
+   Filen indeholder både lageret og jobbene. Lageret lægges ind først, så
+   jobbene kan pege på det; udstyr der allerede findes, bliver ikke rørt. */
+let JI_FIL = null;
+
+async function jiLaesJson(tekst){
+  const ud=document.getElementById('jiResultat');
+  let d;
+  try{ d=JSON.parse(tekst); }catch(e){ ud.innerHTML='<div class="imp-tom">Filen kunne ikke læses som json.</div>'; return; }
+  if(!d || d.format!=='east-production-import' || !Array.isArray(d.job)){
+    ud.innerHTML='<div class="imp-tom">Det er ikke en East Production-importfil.</div>'; return;
+  }
+  JI_FIL=d; JI.fraFil=true;
+  const kunAktive=document.getElementById('jiKunAktive').checked;
+  const idag=todayStr();
+  const iDb=new Set(EQUIPMENT.map(e=>lsNorm(e.name)));
+  JI.udstyrInfo={};
+  (d.udstyr||[]).forEach(u=>{ JI.udstyrInfo[u.name]=u; });
+
+  JI.job=d.job.filter(j=>!kunAktive || j.end_date>=idag).map(function(j){
+    const linjer={}; (j.items||[]).forEach(i=>{ linjer[i.name]=(linjer[i.name]||0)+(+i.qty||1); });
+    return {name:j.name, who:j.who||'', start:j.start_date, end:j.end_date, notes:j.notes||'', linjer:linjer};
+  });
+  /* Udstyr, der bruges i de valgte job men mangler i lageret, oprettes med de
+     oplysninger filen har – kategori, antal, TV2-nr, serienr og indhold. */
+  JI.oversaet={}; JI.ukendte={};
+  const navne=new Set(); JI.job.forEach(j=>Object.keys(j.linjer).forEach(n=>navne.add(n)));
+  navne.forEach(function(n){
+    if(iDb.has(lsNorm(n))){
+      const e=EQUIPMENT.find(x=>lsNorm(x.name)===lsNorm(n));
+      JI.oversaet[n]=e?e.name:n;
+    }else JI.ukendte[n]={forslag:[], valg:'__nyt__'};
+  });
+  /* Hele lageret fra filen – også det, ingen job bruger endnu */
+  JI.nytLager=(d.udstyr||[]).filter(u=>!iDb.has(lsNorm(u.name)) && !JI.ukendte[u.name]);
+  jiTegn({tommeRaekker:0, overskrifter:0});
+  const st=document.querySelector('#jiResultat .imp-status');
+  if(st && JI.nytLager.length)
+    st.insertAdjacentHTML('beforeend',' · <span class="imp-ok">'+JI.nytLager.length+' stk. udstyr lægges også i lageret</span>');
+}
+
+async function jiOpret(){
+  const knap=document.getElementById('jiOpret');
+  const eksisterende=new Set(jobs.map(j=>j.name+'|'+j.start+'|'+j.end));
+  const nye=JI.job.filter(j=>!eksisterende.has(j.name+'|'+j.start+'|'+j.end));
+  if(!nye.length){ alert('Alle job findes allerede.'); return; }
+  if(!confirm('Opret '+nye.length+' job i East Production?')) return;
+  knap.disabled=true; knap.textContent='Opretter …';
+  try{
+    /* Nyt udstyr oprettes først, så jobbene kan pege på det. */
+    const nytUdstyr=Object.keys(JI.ukendte).filter(n=>JI.ukendte[n].valg==='__nyt__');
+    const info=JI.udstyrInfo||{};
+    const tilLager=nytUdstyr.map(function(n){
+      const u=info[n]||{};
+      return {name:n, category:u.category||'Diverse', qty:u.qty||1,
+              tv2_number:u.tv2_number||null, serial_number:u.serial_number||null,
+              custom_fields:u.custom_fields||[]};
+    }).concat((JI.nytLager||[]).map(u=>({name:u.name, category:u.category||'Diverse', qty:u.qty||1,
+              tv2_number:u.tv2_number||null, serial_number:u.serial_number||null,
+              custom_fields:u.custom_fields||[]})));
+    for(let i=0;i<tilLager.length;i+=40){
+      const {error}=await supa.from('equipment').insert(tilLager.slice(i,i+40));
+      if(error) throw error;
+    }
+    nytUdstyr.forEach(n=>{ JI.oversaet[n]=n; });
+    if(tilLager.length) await loadEquipment();
+    Object.keys(JI.ukendte).forEach(function(n){
+      const v=JI.ukendte[n].valg;
+      if(v && v!=='__nyt__') JI.oversaet[n]=v;
+    });
+    let sprunget=0;
+    const raekker=nye.map(function(j){
+      const items=[];
+      Object.keys(j.linjer).forEach(function(n){
+        const maal=JI.oversaet[n];
+        if(!maal){ sprunget++; return; }
+        const eks=items.find(i=>i.name===(maal.indexOf('PKG:')===0?impNavnFor(maal).replace('📦 ',''):maal));
+        if(eks){ eks.qty+=j.linjer[n]; return; }
+        if(maal.indexOf('PKG:')===0){
+          const p=PACKAGES.find(x=>x.id===maal.slice(4));
+          items.push({name:p?p.name:maal, qty:j.linjer[n], isPkg:true});
+        }else items.push({name:maal, qty:j.linjer[n]});
+      });
+      return {name:j.name, who:j.who, start_date:j.start, end_date:j.end,
+              notes:j.notes||'', items:items, status:'ordre'};
+    });
+    /* i bidder, så et stort ark ikke sprænger ét kald */
+    for(let i=0;i<raekker.length;i+=25){
+      const {error}=await supa.from('jobs').insert(raekker.slice(i,i+25));
+      if(error) throw error;
+    }
+    await loadJobs(); renderJobs();
+    document.getElementById('jiOverlay').classList.remove('open');
+    alert('Oprettet '+raekker.length+' job'
+      +(tilLager.length?' og lagt '+tilLager.length+' stykker udstyr i lageret':'')
+      +(sprunget?'. '+sprunget+' linjer blev sprunget over, fordi de ikke fik et match':'')+'.');
+  }catch(e){
+    alert('Importen stoppede: '+(e.message||e)+'\n\nDe job, der nåede at blive oprettet, springes over næste gang.');
+    await loadJobs(); renderJobs();
+  }finally{
+    knap.disabled=false; knap.textContent='Opret job';
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   OPDATÉR LAGERET FRA REGNEARKET
+   Fanebladet UDSTYR er facit i overgangsperioden. Vi sammenligner det med
+   lageret i databasen og viser tre bunker: nyt udstyr, udstyr der er ændret,
+   og udstyr der kun findes i databasen. Intet slettes automatisk.
+   ══════════════════════════════════════════════════════════════ */
+
+let LS = {nye:[], aendrede:[], kunDb:[]};
+
+function lsNorm(t){ return (t||'').toString().toLowerCase().replace(/\s+/g,' ').trim(); }
+
+function lsParse(tekst){
+  const linjer=tekst.replace(/\r/g,'').split('\n');
+  let hi=-1, sep='\t';
+  for(let i=0;i<Math.min(linjer.length,40);i++){
+    if(/UDSTYR\s*LISTE/i.test(linjer[i])){
+      hi=i;
+      const t=(c)=>linjer[i].split(c).length-1;
+      sep = t('\t')>0 ? '\t' : (t(';')>=t(',') ? ';' : ',');
+      break;
+    }
+  }
+  if(hi<0) return {fejl:'Kunne ikke finde overskriften "UDSTYR LISTE". Markér hele fanebladet UDSTYR i Excel og kopiér det.'};
+  const split=l=>l.split(sep).map(c=>renCelle(c));
+  const hoved=split(linjer[hi]).map(h=>h.toUpperCase());
+  const kol=re=>hoved.findIndex(h=>re.test(h));
+  const K={navn:kol(/UDSTYR/), indhold:kol(/INDHOLD/), tv2:kol(/TV2/), serie:kol(/SERIE/), antal:kol(/^ANTAL/)};
+  const ud=[]; let kat='Diverse';
+  for(let i=hi+1;i<linjer.length;i++){
+    const c=split(linjer[i]);
+    const navn=(c[K.navn]||'').trim();
+    if(!navn) continue;
+    const ov=navn.match(/^\*{2,}\s*(.*?)\s*\*{2,}$/);
+    if(ov){ kat=ov[1]||kat; continue; }          // "***** TRÅDLØST LYD *****" er en kategori
+    ud.push({
+      name:navn, category:kat,
+      qty:Math.max(0, parseInt(c[K.antal],10)||0) || 1,
+      indhold:K.indhold>=0?(c[K.indhold]||'').trim():'',
+      tv2:K.tv2>=0?(c[K.tv2]||'').trim():'',
+      serie:K.serie>=0?(c[K.serie]||'').trim():''
+    });
+  }
+  return {rk:ud};
+}
+
+/* Hvad er forskellen på en række i arket og det der står i databasen? */
+function lsForskel(ark, db){
+  const f=[];
+  if(lsNorm(ark.category)!==lsNorm(db.category)) f.push({felt:'kategori', fra:db.category||'', til:ark.category});
+  if(+ark.qty!==+(db.qty||0))                     f.push({felt:'antal', fra:db.qty, til:ark.qty});
+  if(ark.tv2 && ark.tv2!==(db.tv2_number||''))    f.push({felt:'TV2-nr', fra:db.tv2_number||'', til:ark.tv2});
+  if(ark.serie && ark.serie!==(db.serial_number||'')) f.push({felt:'serienr', fra:db.serial_number||'', til:ark.serie});
+  const dbInd=((db.custom_fields||[]).find(x=>/indhold/i.test(x.label||''))||{}).value||'';
+  if(ark.indhold && ark.indhold!==dbInd)          f.push({felt:'indhold', fra:dbInd, til:ark.indhold});
+  return f;
+}
+
+function lsAaben(){
+  document.getElementById('lsTekst').value='';
+  document.getElementById('lsFil').value='';
+  document.getElementById('lsResultat').innerHTML='';
+  document.getElementById('lsUdfoer').style.display='none';
+  LS={nye:[], aendrede:[], kunDb:[]};
+  document.getElementById('lsOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('lsTekst').focus(),120);
+}
+
+function lsLaes(tekst){
+  const r=lsParse(tekst);
+  const ud=document.getElementById('lsResultat');
+  if(r.fejl){ ud.innerHTML='<div class="imp-tom">'+escapeHtml(r.fejl)+'</div>'; return; }
+  const iDb={};
+  EQUIPMENT.forEach(e=>{ iDb[lsNorm(e.name)]=e; });
+  const iArk={};
+  LS.nye=[]; LS.aendrede=[]; LS.kunDb=[];
+  r.rk.forEach(function(a){
+    iArk[lsNorm(a.name)]=a;
+    const d=iDb[lsNorm(a.name)];
+    if(!d) LS.nye.push(a);
+    else{
+      const f=lsForskel(a,d);
+      if(f.length) LS.aendrede.push({ark:a, db:d, forskel:f});
+    }
+  });
+  /* Udstyr i pakker og OB-vogne hører ikke hjemme i regnearkets liste */
+  LS.kunDb=EQUIPMENT.filter(e=>!iArk[lsNorm(e.name)] && !e.package_id && !e.ob_vogn_id);
+  lsTegn(r.rk.length);
+}
+
+function lsTegn(iAlt){
+  const ud=document.getElementById('lsResultat');
+  let h='<div class="imp-status"><b>'+iAlt+'</b> stk. udstyr i arket · '
+    +'<span class="imp-ok">'+LS.nye.length+' nye</span> · '
+    +'<span class="imp-mangler">'+LS.aendrede.length+' ændret</span> · '
+    +LS.kunDb.length+' findes kun i databasen</div>';
+
+  if(LS.nye.length){
+    h+='<label class="ls-gruppe"><input type="checkbox" id="lsNyeAlle" checked> <b>Opret '+LS.nye.length+' nye</b></label>'
+      +'<div class="ls-liste">'+LS.nye.map((a,i)=>
+        '<label class="ls-linje"><input type="checkbox" data-lsny="'+i+'" checked>'
+        +'<span class="ls-navn">'+escapeHtml(a.name)+'</span>'
+        +'<span class="ls-kat">'+escapeHtml(a.category)+'</span>'
+        +'<span class="ls-tal">×'+a.qty+'</span></label>').join('')+'</div>';
+  }
+  if(LS.aendrede.length){
+    h+='<label class="ls-gruppe"><input type="checkbox" id="lsAendAlle" checked> <b>Ret '+LS.aendrede.length+' så de passer med arket</b></label>'
+      +'<div class="ls-liste">'+LS.aendrede.map((x,i)=>
+        '<label class="ls-linje"><input type="checkbox" data-lsaend="'+i+'" checked>'
+        +'<span class="ls-navn">'+escapeHtml(x.ark.name)
+        +x.forskel.map(f=>'<em>'+f.felt+': <s>'+escapeHtml(String(f.fra).slice(0,40)||'—')+'</s> → '
+          +escapeHtml(String(f.til).slice(0,40))+'</em>').join('')+'</span></label>').join('')+'</div>';
+  }
+  if(LS.kunDb.length){
+    h+='<div class="ji-h">'+LS.kunDb.length+' findes kun i databasen</div>'
+      +'<div class="imp-hjaelp">De står ikke i regnearket – typisk noget der er oprettet ved en import eller ude i marken. '
+      +'De bliver liggende. Vil du af med nogle, kan du slette dem i lageret bagefter.</div>'
+      +'<div class="ls-liste lille">'+LS.kunDb.map(e=>
+        '<div class="ls-linje"><span class="ls-navn">'+escapeHtml(e.name)+'</span>'
+        +'<span class="ls-kat">'+escapeHtml(e.category||'')+'</span></div>').join('')+'</div>';
+  }
+  if(!LS.nye.length && !LS.aendrede.length)
+    h+='<div class="imp-tom">Lageret er allerede ens med regnearket. 👍</div>';
+  ud.innerHTML=h;
+  document.getElementById('lsUdfoer').style.display=(LS.nye.length||LS.aendrede.length)?'':'none';
+
+  const koble=(alle,attr)=>{
+    const a=document.getElementById(alle); if(!a) return;
+    a.addEventListener('change',()=>ud.querySelectorAll('['+attr+']').forEach(c=>{c.checked=a.checked}));
+  };
+  koble('lsNyeAlle','data-lsny'); koble('lsAendAlle','data-lsaend');
+}
+
+async function lsUdfoer(){
+  const nye=[...document.querySelectorAll('[data-lsny]:checked')].map(c=>LS.nye[+c.dataset.lsny]);
+  const aend=[...document.querySelectorAll('[data-lsaend]:checked')].map(c=>LS.aendrede[+c.dataset.lsaend]);
+  if(!nye.length && !aend.length){ alert('Der er ikke valgt noget.'); return; }
+  if(!confirm('Opret '+nye.length+' og ret '+aend.length+' stykker udstyr?')) return;
+  const knap=document.getElementById('lsUdfoer');
+  knap.disabled=true; knap.textContent='Opdaterer …';
+  const felter=a=>{
+    const cf=[];
+    if(a.indhold) cf.push({label:'Indhold', value:a.indhold});
+    return cf;
+  };
+  try{
+    for(let i=0;i<nye.length;i+=40){
+      const {error}=await supa.from('equipment').insert(nye.slice(i,i+40).map(a=>({
+        name:a.name, category:a.category, qty:a.qty,
+        tv2_number:a.tv2||null, serial_number:a.serie||null,
+        custom_fields:felter(a)})));
+      if(error) throw error;
+    }
+    for(const x of aend){
+      const d=x.db, a=x.ark;
+      /* Behold de ekstra felter, der ikke kommer fra arket */
+      const cf=(d.custom_fields||[]).filter(f=>!/indhold/i.test(f.label||''));
+      if(a.indhold) cf.unshift({label:'Indhold', value:a.indhold});
+      const ret={category:a.category, qty:a.qty, custom_fields:cf};
+      if(a.tv2) ret.tv2_number=a.tv2;
+      if(a.serie) ret.serial_number=a.serie;
+      const {error}=await supa.from('equipment').update(ret).eq('id', d.id);
+      if(error) throw error;
+    }
+    await loadEquipment();
+    if(typeof populateCategoryDropdowns==='function') populateCategoryDropdowns();
+    if(typeof renderLager==='function') renderLager((document.getElementById('lagerSearch')||{}).value||'');
+    document.getElementById('lsOverlay').classList.remove('open');
+    alert('Lageret er opdateret: '+nye.length+' oprettet, '+aend.length+' rettet.');
+  }catch(e){
+    alert('Opdateringen stoppede: '+(e.message||e)+'\n\nKør den igen – det der nåede at blive gemt, vises ikke som forskel næste gang.');
+    await loadEquipment();
+  }finally{ knap.disabled=false; knap.textContent='Opdatér lageret'; }
 }
 
 /* ── Forklaringsbobler ────────────────────────────────────────
@@ -2143,6 +2697,33 @@ function renderJobs(){
 
 
 
+
+/* ── Flet jobbets linjer, før de gemmes ─────────────────────────
+   Redigeringsvinduet (både på computer og telefon) kender kun navn og antal.
+   Denne funktion henter jobbet forfra og bevarer hak, "tilføjet af" og linjer,
+   som andre har lagt på, mens vinduet stod åbent. Bruges begge steder, så de
+   to veje ikke kan komme til at opføre sig forskelligt. */
+async function flettetItems(jobId, nyeItems, vistVedAabning){
+  const frisk = await supa.from('jobs').select('*').eq('id', jobId);
+  if(frisk.error) throw frisk.error;
+  const friske = (frisk.data && frisk.data[0] && frisk.data[0].items) || [];
+  const efterNavn = {};
+  friske.forEach(function(i){ efterNavn[i.name]=i; });
+  const ud = nyeItems.map(function(it){
+    const gl = efterNavn[it.name];
+    if(!gl) return it;
+    return Object.assign({}, it, {
+      pakket:gl.pakket||false, pakketAf:gl.pakketAf||'', pakketKl:gl.pakketKl||'',
+      tilfoejetAf:gl.tilfoejetAf||'', fraLager:gl.fraLager||false });
+  });
+  const vist = vistVedAabning || new Set();
+  friske.forEach(function(fi){
+    const erMed = ud.some(function(g){ return g.name===fi.name; });
+    if(!erMed && !vist.has(fi.name)) ud.push(fi);
+  });
+  return ud;
+}
+
 /* Hak en linje af direkte fra jobbet. Det er de samme felter, som den der
    pakker ude i marken sætter via linket – så de to ting er det samme sted. */
 async function jobPak(jobId, navn, haket){
@@ -2165,11 +2746,21 @@ async function jobPak(jobId, navn, haket){
       .eq('id', jobId);
     if(r.error) throw r.error;
     await loadJobs(); renderJobs();
+    if(typeof renderMobileJobs==='function' && document.body.classList.contains('show-mobile')){
+      renderMobileJobs((document.getElementById('mobileSearch')||{}).value||'');
+      aabnMobilJob(jobId);
+    }
     const b=document.getElementById('body-'+jobId); if(b) b.classList.add('open');
   }catch(e){
     alert('Kunne ikke gemme: '+(e.message||e));
     await loadJobs(); renderJobs();
   }
+}
+/* Hold mobilens jobkort foldet ud efter en gentegning */
+function aabnMobilJob(jobId){
+  const h=[...document.querySelectorAll('.m-job-card')].find(function(c){
+    return c.innerHTML.indexOf(jobId)>=0; });
+  if(h){ const bb=h.querySelector('.m-job-body'); if(bb) bb.classList.add('open'); }
 }
 
 /* Hak alle af eller ryd alle hak på én gang. */
@@ -2205,7 +2796,16 @@ async function jobAntal(jobId, navn, retning){
   const b = document.getElementById('body-'+jobId);
   if(b) b.classList.add('open');            // hold jobbet åbent
   try{
-    const {error} = await supa.from('jobs').update({items:j.items}).eq('id', jobId);
+    /* Ret i den friske udgave – ellers overskriver vi de hak, en chauffør
+       har sat, siden vi sidst hentede jobbet. */
+    const frisk = await supa.from('jobs').select('*').eq('id', jobId);
+    if(frisk.error) throw frisk.error;
+    const friskeItems = (frisk.data && frisk.data[0] && frisk.data[0].items) || [];
+    const fl = friskeItems.find(function(i){ return i.name===navn; });
+    if(fl) fl.qty = nyt;
+    const {error} = await supa.from('jobs')
+      .update({items:friskeItems, updated_by:mineInitialer()||'', updated_at:new Date().toISOString()})
+      .eq('id', jobId);
     if(error) throw error;
     await loadJobs(); renderJobs();
     const b2=document.getElementById('body-'+jobId); if(b2) b2.classList.add('open');
@@ -2249,6 +2849,7 @@ async function openEdit(id){
   try{
   const j=jobs.find(function(x){return x.id===id;});
   if(!j){ alert('Jobbet findes ikke længere – en anden har måske slettet det.'); renderJobs(); return; }
+  window.__redigerStart = new Set((j.items||[]).map(function(i){ return i.name; }));
   editingJobId=id; selectedItems={};
   (j.items||[]).forEach(function(it){
     if(it.isPkg){ const p=PACKAGES.find(function(p){return p.name===it.name;}); if(p) selectedItems['PKG:'+p.id]=it.qty; else selectedItems[it.name]=it.qty; }
@@ -2461,7 +3062,9 @@ document.getElementById('saveJobBtn').addEventListener('click', async function()
   btn.disabled=true; btn.textContent='Gemmer...';
   try{
     var sv2=document.querySelector('input[name="jobStatus"]:checked');
-    const row={name,who,start_date:start,end_date:end,notes,items,status:sv2?sv2.value:'ordre'};
+    let gemItems = items;
+    if(editingJobId) gemItems = await flettetItems(editingJobId, items, window.__redigerStart);
+    const row={name,who,start_date:start,end_date:end,notes,items:gemItems,status:sv2?sv2.value:'ordre'};
     if(editingJobId){ const {error}=await supa.from('jobs').update(row).eq('id',editingJobId); if(error) throw error; }
     else { const {error}=await supa.from('jobs').insert(row); if(error) throw error; }
     await loadJobs(); renderJobs(); closeModal();
@@ -2780,16 +3383,6 @@ async function confirmAddEquip(){
   await loadEquipment();
   document.getElementById('lagerNewRow').style.display='none';
   renderLager(document.getElementById('lagerSearch').value||'');
-}
-async function saveEquipEdit(idx){
-  const it=EQUIPMENT[idx];
-  const name=document.getElementById('editName_'+idx).value.trim();
-  const category=document.getElementById('editCat_'+idx).value.trim()||'Diverse';
-  let qty=parseInt(document.getElementById('editQty_'+idx).value); if(isNaN(qty)||qty<0) qty=0;
-  if(!name){ alert('Navn må ikke være tomt.'); return; }
-  const {error}=await supa.from('equipment').update({name,category,qty}).eq('id',it.id);
-  if(error){ alert('Fejl: '+error.message); return; }
-  await loadEquipment(); editingEquipName=null; renderLager(document.getElementById('lagerSearch').value||''); renderJobs();
 }
 async function deleteEquip(idx){
   const it=EQUIPMENT[idx];
@@ -3968,7 +4561,6 @@ document.getElementById('mobileSearch').addEventListener('input', function(){ re
 // ── Jobs tab ───────────────────────────────────────────────
 function mkBtn(txt, cls, fn){
   var b = document.createElement('button');
-  console.log("mkBtn created:", txt);
   b.className = 'btn small '+(cls||'secondary');
   b.textContent = txt;
   b.style.padding = '12px 8px';
@@ -4007,16 +4599,28 @@ function renderMobileJobs(q){
     head.innerHTML = '<div style="flex:1;">'
       +'<div class="m-job-title">'+badge+escapeHtml(j.name||'')+'</div>'
       +'<div class="m-job-meta">'+(j.who?escapeHtml(j.who)+' · ':'')+fmtDate(j.start)+' → '+fmtDate(j.end)+'</div>'
-      +'</div><span style="font-size:11px;color:var(--muted);font-family:var(--mono);">'+(j.items||[]).length+' stk.</span>';
+      +'</div>'+(function(){
+        var n=(j.items||[]).length, pk=(j.items||[]).filter(function(i){return i.pakket;}).length;
+        if(n && (pk || j.share_token))
+          return '<span class="pak-maerke'+(pk===n?' faerdig':'')+'">📋 '+pk+'/'+n+'</span>';
+        return '<span style="font-size:11px;color:var(--muted);font-family:var(--mono);">'+n+' stk.</span>';
+      })();
 
     var body = document.createElement('div');
     body.className = 'm-job-body';
     head.addEventListener('click', function(){ body.classList.toggle('open'); });
 
     var itemsHtml = (j.items||[]).map(function(it){
-      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;">'
-        +'<span>'+(it.isPkg?'📦 ':'')+escapeHtml(it.name)+'</span>'
-        +'<span style="color:var(--amber);font-family:var(--mono);font-weight:700;">x'+it.qty+'</span></div>';
+      var nvn = escapeHtml(it.name).replace(/'/g,"&#39;");
+      var spor = '';
+      if(it.tilfoejetAf) spor += '<div class="pak-spor tilfoejet">+ tilføjet af '+escapeHtml(it.tilfoejetAf)+'</div>';
+      if(it.pakket) spor += '<div class="pak-spor">✓ '+(it.pakketAf?escapeHtml(it.pakketAf):'pakket')
+        +(it.pakketKl?' · '+pakTid(it.pakketKl):'')+'</div>';
+      return '<div class="m-item'+(it.pakket?' er-pakket':'')+'">'
+        +'<input type="checkbox" class="jp-hak m"'+(it.pakket?' checked':'')
+        +' onclick="event.stopPropagation();jobPak(\''+j.id+'\',\''+nvn+'\',this.checked)">'
+        +'<div class="m-item-navn"><span>'+(it.isPkg?'📦 ':'')+escapeHtml(it.name)+'</span>'+spor+'</div>'
+        +'<span class="m-item-antal">x'+it.qty+'</span></div>';
     }).join('') || '<div style="color:var(--muted);font-size:13px;padding:6px 0;">Intet udstyr</div>';
     body.innerHTML = itemsHtml;
 
@@ -4029,6 +4633,7 @@ function renderMobileJobs(q){
       acts.appendChild(mkBtn('Kopier', 'secondary', function(){ openCopy(jid); }));
       if(isTilbud) acts.appendChild(mkBtn('Ordre', '', function(){ mConvertOrdre(jid); }));
       acts.appendChild(mkBtn('Pakkeliste', 'secondary', function(){ printPackList(jid); }));
+      acts.appendChild(mkBtn('🔗 Del', 'secondary', function(){ pakDelLink(jid); }));
       acts.appendChild(mkBtn('Slet', 'danger', function(){ mDeleteJob(jid); }));
     })(j.id, j);
 
@@ -4039,7 +4644,6 @@ function renderMobileJobs(q){
   });
 }
 
-function mToggleJob(el){ el.nextElementSibling.classList.toggle("open"); }
 async function mConvertOrdre(id){
   if(!confirm('Konverter til ordre?')) return;
   await supa.from('jobs').update({status:'ordre'}).eq('id',id);
@@ -4425,7 +5029,9 @@ document.getElementById('mSaveJobBtn').addEventListener('click', async function(
   });
   btn.disabled=true;btn.textContent='Gemmer...';
   try{
-    var row={name,who,start_date:start,end_date:end,items,status};
+    var gemItems = items;
+    if(mEditingJobId) gemItems = await flettetItems(mEditingJobId, items, window.__mRedigerStart);
+    var row={name,who,start_date:start,end_date:end,items:gemItems,status};
     if(mEditingJobId){var {error}=await supa.from('jobs').update(row).eq('id',mEditingJobId);if(error)throw error;}
     else{var {error}=await supa.from('jobs').insert(row);if(error)throw error;}
     await loadJobs();closeMJobModal();renderMobileJobs(document.getElementById('mobileSearch').value||'');
@@ -4917,6 +5523,40 @@ async function startProgram(){
   if(u) u.textContent = mineInitialer() || (MIG&&MIG.email ? MIG.email : '');
   const lo=document.getElementById('logoutBtn');
   if(lo) lo.onclick=function(){ if(confirm('Log ud af East Production?')) logUd(); };
+
+  /* Opdatér lageret fra regnearket */
+  document.getElementById('lsAabnBtn').addEventListener('click', lsAaben);
+  document.getElementById('lsLukBtn').addEventListener('click', ()=>document.getElementById('lsOverlay').classList.remove('open'));
+  document.getElementById('lsLaesBtn').addEventListener('click', ()=>lsLaes(document.getElementById('lsTekst').value));
+  document.getElementById('lsUdfoer').addEventListener('click', lsUdfoer);
+  document.getElementById('lsFil').addEventListener('change', function(){
+    const f=this.files&&this.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{ document.getElementById('lsTekst').value=r.result; lsLaes(r.result); };
+    r.readAsText(f,'UTF-8');
+  });
+  lukVedKlikUdenfor(document.getElementById('lsOverlay'), ()=>document.getElementById('lsOverlay').classList.remove('open'));
+
+  /* Import af alle job fra det gamle regneark */
+  document.getElementById('jiAabnBtn').addEventListener('click', jiAaben);
+  document.getElementById('jiLukBtn').addEventListener('click', ()=>document.getElementById('jiOverlay').classList.remove('open'));
+  document.getElementById('jiLaesBtn').addEventListener('click', ()=>jiLaes(document.getElementById('jiTekst').value));
+  document.getElementById('jiKunAktive').addEventListener('change', ()=>{
+    if(JI_FIL) jiLaesJson(JSON.stringify(JI_FIL));
+    else if(document.getElementById('jiTekst').value.trim()) jiLaes(document.getElementById('jiTekst').value); });
+  document.getElementById('jiOpret').addEventListener('click', jiOpret);
+  document.getElementById('jiFil').addEventListener('change', function(){
+    const f=this.files&&this.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{
+      if(/\.json$/i.test(f.name) || /^\s*\{/.test(r.result)){
+        document.getElementById('jiTekst').value='(importfil: '+f.name+')';
+        jiLaesJson(r.result);
+      }else{ document.getElementById('jiTekst').value=r.result; jiLaes(r.result); }
+    };
+    r.readAsText(f,'UTF-8');
+  });
+  lukVedKlikUdenfor(document.getElementById('jiOverlay'), ()=>document.getElementById('jiOverlay').classList.remove('open'));
 
   /* Import af udstyrsliste fra det gamle system */
   document.getElementById('impAabnBtn').addEventListener('click', openImportModal);
