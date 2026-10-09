@@ -138,6 +138,58 @@
   .equip-item.warn{ background:#241a16; }
   .equip-item .warn-text{ color:var(--red); font-size:10.5px; font-family:var(--mono); }
 
+  /* ── Konflikt på linjen ─────────────────────────────────────
+     Tynd rød skrift, så den kan ses uden at råbe. Den er en knap, fordi man
+     på en telefon ikke kan føre musen hen over noget. */
+  .konflikt-maerke{
+    background:transparent; border:none; cursor:pointer; flex:none;
+    color:var(--red); font-family:var(--mono); font-size:10.5px; font-weight:400;
+    letter-spacing:.03em; padding:7px 6px; min-height:30px; text-align:right;
+    text-decoration:underline; text-decoration-style:dotted; text-underline-offset:3px;
+  }
+  .konflikt-maerke:hover{ color:#ff8d7a; }
+  body.show-mobile .konflikt-maerke{ min-height:34px; font-size:11px; }
+  .konflikt-top{ display:flex; align-items:center; gap:10px; justify-content:space-between;
+    margin-bottom:6px; flex-wrap:wrap; }
+  .konflikt-linje{ color:var(--red); font-size:11.5px; font-family:var(--mono);
+    line-height:1.6; }
+  .konflikt-filter{
+    background:var(--panel-2); border:1px solid var(--border); color:var(--text);
+    border-radius:7px; padding:8px 11px; font-size:12px; cursor:pointer;
+    min-height:34px; flex:none;
+  }
+  .konflikt-filter:hover{ border-color:var(--amber); color:var(--amber); }
+  .konflikt-filter.paa{ border-color:var(--red); color:var(--red); }
+  .konflikt-linje.mklik{ display:block; width:100%; text-align:left; background:transparent;
+    border:none; padding:9px 0; min-height:36px; cursor:pointer; }
+  .m-chip{ background:var(--panel-2); border:1px solid var(--border); border-radius:14px;
+    padding:6px 11px; font-size:12px; max-width:100%; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap; }
+  .m-chip b{ color:var(--amber); font-family:var(--mono); }
+
+  /* ── Historik pr. job ── */
+  .hist-linje{ display:flex; align-items:baseline; gap:10px; padding:9px 2px;
+    border-bottom:1px solid var(--border); font-size:13px; }
+  .hist-hvem{ font-family:var(--mono); font-size:11px; color:var(--amber);
+    min-width:52px; flex:none; letter-spacing:.04em; }
+  .hist-hvad{ flex:1; min-width:0; }
+  .hist-tid{ font-size:11px; color:var(--muted); flex:none; white-space:nowrap; }
+  .hist-tilfoej .hist-hvad::before{ content:'+ '; color:var(--green,#3fd99c); }
+  .hist-fjern   .hist-hvad::before{ content:'− '; color:var(--red); }
+  .hist-antal   .hist-hvad::before{ content:'± '; color:var(--muted); }
+  body.show-mobile .hist-linje{ flex-wrap:wrap; }
+
+  /* ── Konflikter på selve jobkortet ── */
+  .item-row.har-konflikt{ background:#241a16; border-radius:6px; }
+  .item-row .item-navn{ flex:1; min-width:0; }
+  .item-row .konflikt-maerke{ display:inline-block; flex:none; white-space:nowrap;
+    text-align:right; padding:4px 10px; align-self:center; }
+  /* På telefonen er der ikke plads ved siden af – der står den under navnet */
+  body.show-mobile .m-item .konflikt-maerke{ display:block; text-align:left; padding:3px 0 1px; }
+  .job-card.kun-konflikt .item-row:not([data-konflikt]){ display:none; }
+  .job-card.kun-konflikt .job-actions .kunkonf{ border-color:var(--red); color:var(--red); }
+  .m-item.har-konflikt{ background:#241a16; border-radius:8px; padding-left:6px; padding-right:6px; }
+
   .selected-strip{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
   .chip{
     background:var(--amber-dim); color:var(--amber); border-radius:20px; padding:4px 10px;
@@ -420,8 +472,20 @@
   padding: 12px 0; border-bottom: 1px solid var(--border);
 }
 .m-lager-icon { font-size: 18px; flex-shrink: 0; }
-.m-lager-name { flex: 1; font-size: 14px; font-weight: 600; }
-.m-lager-sub { font-size: 11px; color: var(--muted); }
+.m-lager-name { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; }
+.m-lager-sub { font-size: 11px; color: var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.m-lager-txt { min-width: 0; }
+
+/* ── Lange udstyrsnavne på en telefon ──────────────────────────
+   "AKTIVE ANTENNER m. Filter 430-730 MHz WISYCOM 2stk." fylder tre linjer på
+   en telefon, og så bliver listen dobbelt så lang som den behøver. Boksen
+   beholder sin højde, og skriften bliver mindre, til navnet kan være der.
+   Under 9px klippes resten – der er alligevel ingen der kan læse det. */
+.skrump { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.m-lager-item { min-height: 48px; }
+.m-item { min-height: 40px; align-items: center; }
+.m-item-navn { min-width: 0; }
+.m-item-navn > span { display: block; }
 
 /* Avail mobile */
 .m-avail-result {
@@ -559,7 +623,19 @@ body.show-desktop .app { display: block !important; }
 .m-item-navn{flex:1;min-width:0}
 .m-item-antal{color:var(--amber);font-family:var(--mono);font-weight:700;flex:none}
 .m-item.er-pakket .m-item-navn>span{color:var(--muted);text-decoration:line-through}
-.jp-hak.m{width:22px;height:22px}
+/* ── Trykflader på en telefon ──────────────────────────────────
+   Et hak på 22 pixel rammer man ikke med en handske på i en vogn. 34 er
+   mindstemålet – det er også dét, vi lagde os fast på i SignalFlow. */
+.jp-hak.m{width:26px;height:26px;margin:4px}
+body.show-mobile .jp-hak{width:26px;height:26px;margin:4px;flex:none}
+body.show-mobile .item-row{align-items:center}
+body.show-mobile .jq-knap{width:34px;height:34px;font-size:16px}
+body.show-mobile .item-qty{gap:8px}
+body.show-mobile .m-job-head{min-height:52px}
+/* Skifteknapperne mobil/PC var 26 px høje – det rammer man ikke med en
+   handske på. */
+.view-toggle button{min-width:34px;min-height:34px;padding:6px 10px}
+#mobileHeader .view-toggle button{min-width:36px;min-height:36px}
 .item-row{display:flex;align-items:flex-start;gap:10px}
 .jp-hak{width:17px;height:17px;flex:none;margin-top:2px;accent-color:#3fd99c;cursor:pointer}
 .item-qty{display:flex;align-items:center;gap:5px;margin-left:auto}
@@ -697,6 +773,36 @@ tr.imp-ingen td:first-child{border-left:2px solid #7a3b3b;padding-left:8px;color
 @media print{#tipboks{display:none!important}}
 #miguser{font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:#7d95ab;
  border:1px solid #223041;border-radius:7px;padding:6px 9px;letter-spacing:.06em}
+
+/* ── Beskeder om visningen ────────────────────────────────────
+   To fælder på en telefon: Safari kan vise siden i computerudgave, så alt
+   bliver småt, og et gammelt valg kan holde computerudgaven fast. Begge dele
+   skal kunne ses og rettes dér hvor de sker – man har ikke en konsol med i
+   vognen. */
+#fastbesked,#cubesked{position:fixed;left:8px;right:8px;bottom:72px;z-index:9600;
+ background:#2a2416;border:1px solid #6b5418;color:#e8c46a;border-radius:10px;
+ padding:11px 38px 11px 13px;font:13px/1.5 system-ui,-apple-system,sans-serif;
+ box-shadow:0 6px 20px rgba(0,0,0,.45)}
+#cubesked b,#fastbesked b{color:#f3d58a}
+#cubesked button,#fastbesked button.x{position:absolute;top:6px;right:6px;background:transparent;
+ border:none;color:#e8c46a;font-size:16px;padding:6px 9px;cursor:pointer}
+#fastbesked #fastskift{position:static;display:block;margin-top:8px;background:#3a2f12;
+ border:1px solid #8a6a1c;color:#f3d58a;border-radius:8px;padding:10px 12px;
+ font-size:13px;cursor:pointer}
+#epversion{font:10px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;
+ color:#5d748c;background:transparent;border:1px solid #1c2836;border-radius:7px;
+ padding:6px 9px;cursor:pointer;letter-spacing:.04em}
+#epversion:hover{color:#9fb6cc;border-color:#2b3c4f}
+#epversionM{background:transparent;border:1px solid #1c2836;border-radius:8px;color:#5d748c;
+ font-size:14px;min-width:34px;min-height:34px;cursor:pointer;flex:none}
+/* ── Hvem er inde ── */
+.ephvem{background:transparent;border:1px solid #1c2836;border-radius:8px;
+ font:12px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.04em;
+ min-width:34px;min-height:34px;cursor:pointer;flex:none;padding:0 8px}
+.ephvem.alene{color:#4d6176}
+.ephvem.flere{color:#3fd99c;border-color:#1f5742}
+.ephvem.advarsel{color:#e0a33e;border-color:#6b5418}
+@media print{#cubesked,#fastbesked,#epversion,#epversionM{display:none!important}}
 </style>
 </head>
 <body>
@@ -802,7 +908,9 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
     </div>
     <div style="display:flex;gap:10px;align-items:center;">
       <div class="view-toggle" id="viewToggleDesktop"><button id="btnMobileViewD" onclick="switchToMobile()" title="Mobil">📱</button><button id="btnDesktopViewD" onclick="switchToDesktop()" title="PC">🖥</button></div>
+      <button id="epHvem" class="ephvem alene" onclick="visHvemErInde()" title="Hvem er inde i programmet">●</button>
       <span id="miguser" title="Du er logget ind"></span>
+      <button id="epversion" onclick="visDiagnose()" title="Version og hvad programmet mener om skærmen"></button>
       <button class="btn secondary" id="logoutBtn" title="Log ud – programmet låses, og data hentes ikke længere">Log ud</button>
       <button class="btn" id="newJobBtn" title="Opret et nyt job og vælg udstyr til det">+ Nyt job</button>
     </div>
@@ -1010,6 +1118,17 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
     </div>
     <div id="catList" style="max-height:360px; overflow-y:auto;"></div>
     <div class="modal-actions"><button class="btn secondary" id="closeCatBtn">Luk</button></div>
+  </div>
+</div>
+
+<!-- Hvem har lagt hvad på jobbet, og hvem har taget noget af igen -->
+<div class="overlay" id="histOverlay">
+  <div class="modal" style="max-width:560px;">
+    <h2 id="histTitel">Historik</h2>
+    <div id="histIndhold" style="max-height:60vh;overflow-y:auto;margin-top:6px;"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="document.getElementById('histOverlay').classList.remove('open')">Luk</button>
+    </div>
   </div>
 </div>
 
@@ -1234,6 +1353,8 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
       <h1>EAST PRODUCTION</h1>
     </div>
 <div class="view-toggle" id="viewToggle"><button id="btnMobileView" onclick="switchToMobile()" title="Mobil">📱</button><button id="btnDesktopView" onclick="switchToDesktop()" title="PC">🖥</button></div>
+    <button id="epHvemM" class="ephvem alene" onclick="visHvemErInde()" title="Hvem er inde i programmet">●</button>
+    <button id="epversionM" onclick="visDiagnose()" title="Version og hvad programmet mener om skærmen">ⓘ</button>
     <button class="btn small" id="mobileNewJobBtn" style="padding:8px 14px;">+ Job</button>
   </div>
 
@@ -1292,9 +1413,11 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
           <button class="btn small secondary" onclick="mScanEquip()" style="padding:0 14px;font-size:20px;">📷</button>
         </div>
         <div id="mSelectedEquip" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
+        <!-- Advarslen stod før nede under listen, lige over Gem-knappen. Der
+             så man den først, når man var færdig. Nu står den over udstyret. -->
+        <div id="mConflictBox" style="margin-bottom:10px;"></div>
         <div id="mEquipList" style="max-height:240px;overflow-y:auto;"></div>
       </div>
-      <div id="mConflictBox" style="margin-bottom:10px;"></div>
       <button class="btn" id="mSaveJobBtn" style="width:100%;padding:14px;font-size:15px;">Gem job</button>
     </div>
   </div>
@@ -1590,7 +1713,8 @@ async function impTilfoejTilJob(){
    ══════════════════════════════════════════════════════════════ */
 
 let PAK = null;            // {tok, job, items, updated_at} når vi er gæst
-let pakTimer = null;
+/* pakTimer er afløst af pakGentager, som holder pause når fanen er skjult,
+   sætter takten ned ved fejl og stopper helt, hvis listen er slettet. */
 let pakGemTimer = null;
 let pakSkriver = {ref:null, ts:0};
 let pakHentetFoerst = false;
@@ -1714,7 +1838,29 @@ async function pakPoll(){
     PAK.updated_at = r.updated_at;
     pakTegn();
     pakStatus('opdateret');
-  }catch(e){ pakStatus(e.message||'ingen forbindelse', true); }
+  }catch(e){
+    /* Er jobbet slettet, nytter det ikke at blive ved hvert sjette sekund.
+       Lad listen stå – chaufføren skal kunne se hvad han har pakket – men
+       hold op med at spørge, og sig hvorfor. */
+    if(erVaek(e)){ pakVaek(); return; }
+    pakStatus(e.message||'ingen forbindelse', true);
+    throw e;                       // gentageren sætter takten ned
+  }
+}
+
+/* Listen findes ikke længere på serveren. */
+function pakVaek(){
+  if(window.pakGentager) window.pakGentager.stop();
+  pakStatus('listen er slettet på kontoret', true);
+  var el=document.getElementById('pakListe');
+  if(el && !document.getElementById('pakVaekBesked')){
+    var d=document.createElement('div');
+    d.id='pakVaekBesked'; d.className='pak-tom';
+    d.textContent='Listen er fjernet på kontoret. Det du ser her, er din '
+      + 'sidste kopi – den bliver ikke gemt længere. Ring til kontoret, '
+      + 'hvis der mangler noget.';
+    el.insertBefore(d, el.firstChild);
+  }
 }
 
 function pakTegn(){
@@ -1875,8 +2021,16 @@ async function pakStart(tok){
       '<div class="pak-tom">' + escapeHtml(e.message||'Linket virker ikke.') + '</div>';
     return;
   }
-  clearInterval(pakTimer);
-  pakTimer = setInterval(pakPoll, 6000);
+  window.pakGentager = lavGentager('Pakkeliste', pakPoll, 6000, {
+    spring: function(){ return document.hidden; },
+    doed: erVaek,
+    vedDoed: pakVaek,
+    vedOpgiv: function(){ pakStatus('ingen forbindelse – hent siden igen', true); }
+  });
+  window.pakGentager.start(false);
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden && window.pakGentager) window.pakGentager.naa();
+  });
   document.getElementById('pakTilfoejBtn').addEventListener('click', pakAabnTilfoej);
   document.getElementById('pakNytOk').addEventListener('click', pakTilfoej);
   document.getElementById('pakNytAnnuller').addEventListener('click', pakLukTilfoej);
@@ -2405,6 +2559,221 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_blZoSR5idK-yHYwPJTzvxg_Ea6Mbrvq';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+const EP_VERSION = '2026.10.09-a';
+
+/* ── Fejl der siger hvad man gør nu ────────────────────────────
+   "Fejl: duplicate key value violates unique constraint" fortæller brugeren
+   ingenting. Den skal vide hvad der ikke lykkedes, og hvad næste skridt er. */
+function sigFejl(e, hvad){
+  var raa = (e && (e.message || e.error_description)) || String(e||'');
+  var raad = 'Prøv igen. Bliver den ved, så tjek at du stadig er på nettet '
+           + 'og logget ind.';
+  if(/duplicate key|unique constraint/i.test(raa))
+    raad = 'Der findes allerede noget med det navn eller den QR-kode. Vælg et andet.';
+  else if(/permission|denied|row-level|RLS/i.test(raa))
+    raad = 'Din bruger har ikke lov til det her. Spørg den, der styrer '
+         + 'adgangen i Supabase.';
+  else if(/does not exist|relation|column/i.test(raa))
+    raad = 'Databasen mangler en tabel eller en kolonne. Kør SQL\'en fra '
+         + 'opsætningen i Supabase.';
+  else if(/fetch|network|Failed to|timeout/i.test(raa))
+    raad = 'Der er ingen forbindelse til databasen lige nu. Prøv igen om lidt.';
+  alert('Kunne ikke ' + hvad + '.\n\n' + raa + '\n\n' + raad);
+}
+
+/* ── Hvem er inde ──────────────────────────────────────────────
+   To planlæggere i den samme udstyrsliste er værre end to i den samme
+   tegning: den ene lægger på, den anden tager fra, og ingen af dem ved det.
+   Hver maskine melder sig selv hvert tiende sekund og henter de andres.
+   Linjer ældre end et minut regnes som gået igen.
+
+   Læg mærke til at tabellen med vilje IKKE har en fremmednøgle til jobs.
+   Det var netop dét, der gav 66 afviste kald i SignalFlow: et slettet job
+   gjorde hver eneste melding ulovlig. Her er "hvor" bare tekst. */
+const EP_SQL = `-- Kør denne i Supabase → SQL Editor. Den kan køres igen uden skade.
+create table if not exists ep_presence (
+  who  text primary key,
+  sted text,
+  at   timestamptz not null default now()
+);
+alter table ep_presence enable row level security;
+drop policy if exists "pres_laes"  on ep_presence;
+drop policy if exists "pres_skriv" on ep_presence;
+drop policy if exists "pres_ret"   on ep_presence;
+create policy "pres_laes"  on ep_presence for select using (auth.uid() is not null);
+create policy "pres_skriv" on ep_presence for insert with check (auth.uid() is not null);
+create policy "pres_ret"   on ep_presence for update using (auth.uid() is not null);
+
+-- ===== Hvad er der sket på jobbet? =====
+-- Én linje pr. ændring: hvem lagde hvad på, og hvem tog hvad af.
+-- Bemærk: ingen fremmednøgle til jobs. Slettes et job, skal historikken
+-- blive stående – og en melding må aldrig kunne afvises, fordi jobbet er væk.
+create table if not exists ep_job_log (
+  id        bigserial primary key,
+  job_id    uuid not null,
+  job_navn  text,
+  hvem      text,
+  handling  text not null,       -- tilfoej | fjern | antal | opret | ret
+  udstyr    text,
+  fra       int,
+  til       int,
+  at        timestamptz not null default now()
+);
+create index if not exists ep_job_log_job on ep_job_log(job_id, at desc);
+alter table ep_job_log enable row level security;
+drop policy if exists "log_laes"  on ep_job_log;
+drop policy if exists "log_skriv" on ep_job_log;
+create policy "log_laes"  on ep_job_log for select using (auth.uid() is not null);
+create policy "log_skriv" on ep_job_log for insert with check (auth.uid() is not null);`;
+
+let presFolk = [], presFejl = null;
+
+/* Hvor i programmet står man? Det er dét, kollegerne har brug for at vide. */
+function presSted(){
+  if(document.body.classList.contains('show-mobile')){
+    var navne = {jobs:'Job', ob:'OB-vogne', avail:'Ledigt', lager:'Lageret'};
+    if(typeof mEditingJobId!=='undefined' && mEditingJobId){
+      var mj = (typeof jobs!=='undefined') && jobs.find(function(x){ return x.id===mEditingJobId; });
+      if(mj) return 'Retter: ' + mj.name;
+    }
+    return (navne[typeof mCurrentTab!=='undefined' ? mCurrentTab : 'jobs'] || 'Job') + ' · telefon';
+  }
+  if(typeof editingJobId!=='undefined' && editingJobId){
+    var j = (typeof jobs!=='undefined') && jobs.find(function(x){ return x.id===editingJobId; });
+    if(j) return 'Retter: ' + j.name;
+  }
+  var faner = [['tab-lager','Lageret'], ['tab-obvogne','OB-vogne'],
+               ['tab-vaerksted','Værksted'], ['tab-stats','Statistik']];
+  for(var i=0;i<faner.length;i++){
+    var el = document.getElementById(faner[i][0]);
+    if(el && el.style.display !== 'none') return faner[i][1];
+  }
+  return 'Puljeudstyr';
+}
+
+async function presMeld(){
+  var hvem = mineInitialer();
+  if(!hvem) return;
+  try{
+    var skriv = await supa.from('ep_presence')
+      .upsert({who:hvem, sted:presSted(), at:new Date().toISOString()})
+      .select('who');
+    if(skriv.error) throw skriv.error;
+    var laes = await supa.from('ep_presence').select('who,sted,at');
+    if(laes.error) throw laes.error;
+    presFolk = laes.data || [];
+    presFejl = null;
+    tegnHvemErInde();
+  }catch(e){
+    /* Tilstedeværelse må aldrig stå i vejen for arbejdet – men vi siger til,
+       så man ved hvorfor feltet er tomt i stedet for at tro det virker. */
+    presFejl = (e && e.message) || 'kunne ikke hente';
+    tegnHvemErInde();
+    throw e;                          // gentageren sætter takten ned
+  }
+}
+
+function presAndre(){
+  var mig = (mineInitialer()||'').toLowerCase(), nu = Date.now();
+  return (presFolk||[]).filter(function(p){
+    if(!p.who || p.who.toLowerCase() === mig) return false;
+    var t = Date.parse(p.at);
+    return t && (nu - t) < 60000;
+  });
+}
+
+function tegnHvemErInde(){
+  var andre = presAndre();
+  var tekst = andre.length ? '●' + andre.length : '●';
+  var titel = presFejl
+    ? '"Hvem er inde" er ikke slået til endnu – tryk for at se hvordan'
+    : (andre.length ? andre.map(function(p){ return p.who + ' · ' + (p.sted||''); }).join('\n')
+                    : 'Ingen andre er inde lige nu');
+  ['epHvem','epHvemM'].forEach(function(id){
+    var k = document.getElementById(id);
+    if(!k) return;
+    k.textContent = presFejl ? '⚠' : tekst;
+    k.className = 'ephvem ' + (presFejl ? 'advarsel' : (andre.length ? 'flere' : 'alene'));
+    k.title = titel;
+  });
+}
+
+function visHvemErInde(){
+  if(presFejl){
+    if(confirm('"Hvem er inde" kræver en tabel i databasen.\n\n'
+             + presFejl + '\n\nKopiér SQL\'en, så den kan køres i Supabase?')){
+      try{ navigator.clipboard.writeText(EP_SQL); }catch(e){}
+      alert('SQL\'en ligger på udklipsholderen.\n\nSupabase → SQL Editor → sæt ind → Run.');
+    }
+    return;
+  }
+  var andre = presAndre();
+  alert(andre.length
+    ? 'Inde i programmet lige nu:\n\n' + andre.map(function(p){ return '· ' + p.who + ' — ' + (p.sted||'et sted'); }).join('\n')
+    : 'Der er ingen andre inde lige nu.');
+}
+
+/* ── Kald der kører i ring ─────────────────────────────────────
+   Et gentaget kald skal kunne fire ting, ellers bliver en enkelt fejl til
+   tusinder af linjer i serverloggen og et fladt telefonbatteri:
+     · aldrig køre oven i sig selv (derfor en kæde af setTimeout, ikke
+       setInterval – en langsom runde skubber bare den næste)
+     · holde pause, mens brugeren har et vindue åbent
+     · sætte takten ned, når det fejler, og holde helt op efter 25
+     · opdage at det den peger på er væk, og så stoppe med det samme
+   Bygget efter samme erfaring som i SignalFlow, hvor en slettet reference
+   gav 66 afviste kald på en halv time. */
+function lavGentager(navn, arbejd, msNormal, valg){
+  valg = valg || {};
+  var timer=null, koerer=false, fejl=0, stoppet=true;
+  function planlaeg(ms){
+    clearTimeout(timer);
+    if(stoppet) return;
+    timer = setTimeout(runde, ms);
+  }
+  async function runde(){
+    if(koerer){ planlaeg(msNormal); return; }
+    if(valg.spring && valg.spring()){ planlaeg(msNormal); return; }
+    koerer = true;
+    try{
+      await arbejd();
+      fejl = 0;
+      planlaeg(msNormal);
+    }catch(e){
+      fejl++;
+      if(valg.doed && valg.doed(e)){
+        stop();
+        if(valg.vedDoed) valg.vedDoed(e);
+        return;
+      }
+      console.warn(navn+' fejlede ('+fejl+'):', (e && e.message) || e);
+      if(fejl >= 25){
+        stop();
+        if(valg.vedOpgiv) valg.vedOpgiv(e);
+        return;
+      }
+      planlaeg(fejl >= 5 ? Math.max(msNormal, 60000) : msNormal);
+    }finally{
+      koerer = false;
+    }
+  }
+  return {
+    start: function(straks){ stoppet=false; fejl=0; planlaeg(straks===false ? msNormal : 0); },
+    stop:  stop,
+    naa:   function(){ planlaeg(0); },
+    status: function(){ return {fejl:fejl, stoppet:stoppet, koerer:koerer}; }
+  };
+  function stop(){ stoppet=true; clearTimeout(timer); timer=null; }
+}
+
+/* En række der ikke findes mere. PostgREST svarer forskelligt alt efter om
+   det er en nøgle der mangler, en RPC der ikke finder noget, eller en
+   opdatering der rammer nul rækker – derfor flere kendetegn. */
+function erVaek(e){
+  var t = ((e && (e.message || e.hint || e.details)) || '').toString();
+  return /23503|foreign key|virker ikke længere|findes ikke|PGRST116|not found/i.test(t);
+}
+
 /* ── Login og bruger ──────────────────────────────────────────
    Samme Supabase-projekt som SignalFlow, så det er de samme brugere.
    supabase-js holder selv sessionen ved lige og fornyer den. */
@@ -2506,6 +2875,22 @@ async function loadJobs(){
 
 // ── Helpers ──────────────────────────────────────────────────
 function todayStr(){ return new Date().toISOString().slice(0,10); }
+function dageMellem(a,b){
+  if(!a||!b) return 0;
+  var d1=new Date(a+'T00:00:00'), d2=new Date(b+'T00:00:00');
+  if(isNaN(d1)||isNaN(d2)) return 0;
+  return Math.max(0, Math.round((d2-d1)/86400000));
+}
+function flytDage(d,n){
+  if(!d) return '';
+  var dt=new Date(d+'T00:00:00');
+  if(isNaN(dt)) return '';
+  dt.setDate(dt.getDate()+(n||0));
+  /* Skriv datoen ud lokalt. toISOString regner om til UTC, og står man i
+     dansk sommertid, ryger datoen en dag tilbage. */
+  var m=String(dt.getMonth()+1), da=String(dt.getDate());
+  return dt.getFullYear()+'-'+(m.length<2?'0'+m:m)+'-'+(da.length<2?'0'+da:da);
+}
 function addMonths(d,n){ const dt=new Date(d+'T00:00:00'); dt.setMonth(dt.getMonth()+n); return dt.toISOString().slice(0,10); }
 function fmtDate(d){
   if(!d) return '—';
@@ -2515,7 +2900,17 @@ function escapeHtml(s){
   return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
 }
 function datesOverlap(s1,e1,s2,e2){ return s1<=e2 && s2<=e1; }
-function totalQty(name){ const it=EQUIPMENT.find(function(i){return i.name===name;}); return it?it.qty:1; }
+/* Hvor mange har vi af det? Står det ikke i lageret længere – omdøbt eller
+   slettet – så ved vi det ikke. Før svarede den bare "1", og så regnede
+   ledighedstjekket videre på et tal, ingen havde sagt. Nu siger den fra. */
+function totalQty(name){
+  const it=EQUIPMENT.find(function(i){return i.name===name;});
+  if(it) return it.qty;
+  const pk=PACKAGES.find(function(p){return p.name===name;});
+  if(pk) return pk.qty;
+  return null;                       // ukendt – ikke det samme som én
+}
+function kendtUdstyr(name){ return totalQty(name) !== null; }
 function obVognById(id){ return OB_VOGNE.find(function(v){return v.id===id;}); }
 function obBookingConflict(obVognId,start,end,excludeId){
   if(!obVognId||!start||!end) return null;
@@ -2526,14 +2921,20 @@ function obBookingConflict(obVognId,start,end,excludeId){
   })||null;
 }
 function bookedQty(name,start,end,excludeJobId){
-  let sum=0; const users=[];
+  let sum=0; const users=[]; const job=[];
   jobs.forEach(function(j){
     if(j.id===excludeJobId||!j.start||!j.end) return;
     if(!datesOverlap(start,end,j.start,j.end)) return;
     const f=(j.items||[]).find(function(it){return it.name===name;});
-    if(f){ sum+=f.qty; users.push(j.name+' ('+f.qty+')'); }
+    if(f){
+      sum+=f.qty;
+      users.push(j.name+' ('+f.qty+')');
+      /* Hvem har taget det, hvor meget, og hvornår – det er dét, man skal
+         bruge for at kunne ringe og flytte en booking. */
+      job.push({id:j.id, navn:j.name, antal:f.qty, start:j.start, slut:j.end, hvem:j.who||''});
+    }
   });
-  return {sum,users};
+  return {sum,users,job};
 }
 function populateCategoryDropdowns(){
   const opts = CATEGORIES.map(function(c){return '<option value="'+escapeHtml(c.name)+'">'+escapeHtml(c.name)+'</option>';}).join('');
@@ -2616,24 +3017,16 @@ function renderJobs(){
   visible.forEach(function(j){
     const itemCount=(j.items||[]).length;
     const totalQtyAll=(j.items||[]).reduce(function(s,i){return s+i.qty;},0);
-    let conflictCount=0;
+    /* Konflikterne regnes med den samme funktion som i redigeringsvinduet,
+       så kortet og vinduet ikke kan nå at sige hver sit. Og de gemmes pr.
+       linje, så de kan stå ved udstyret og ikke kun som et tal i hovedet. */
+    const jKonf={};
     (j.items||[]).forEach(function(it){
-      if(it.isPkg){
-        // Package: check pulje bookings + OB vogn
-        const pkg=PACKAGES.find(function(p){return p.name===it.name;});
-        if(pkg){
-          const bq=bookedQty(it.name,j.start,j.end,j.id);
-          if(bq.sum+it.qty>pkg.qty) conflictCount++;
-          if(pkg.ob_vogn_id&&obBookingConflict(pkg.ob_vogn_id,j.start,j.end,null)) conflictCount++;
-        }
-      } else {
-        // Equipment: check pulje bookings + OB vogn
-        const bq=bookedQty(it.name,j.start,j.end,j.id);
-        if(bq.sum+it.qty>totalQty(it.name)) conflictCount++;
-        const eq=EQUIPMENT.find(function(e){return e.name===it.name;});
-        if(eq&&eq.ob_vogn_id&&obBookingConflict(eq.ob_vogn_id,j.start,j.end,null)) conflictCount++;
-      }
+      const n=jobNoegle(it);
+      const k=konfliktFor(n, it.qty, j.start, j.end, j.id);
+      if(k.konflikt) jKonf[it.name]=k;
     });
+    const conflictCount=Object.keys(jKonf).length;
 
     const itemsHtml=(j.items||[]).map(function(it){
       const eq=EQUIPMENT.find(function(e){return e.name===it.name;});
@@ -2645,14 +3038,28 @@ function renderJobs(){
       if(it.pakket) spor+='<div class="pak-spor">✓ pakket'+(it.pakketAf?' af '+escapeHtml(it.pakketAf):'')
         +(it.pakketKl?' · '+pakTid(it.pakketKl):'')+'</div>';
       const nvn=escapeHtml(it.name).replace(/'/g,"&#39;");
-      return '<div class="item-row'+(it.pakket?' er-pakket':'')+'">'
+      /* Står der en konflikt på linjen, skal den kunne ses her – ikke kun
+         som et tal oppe i hovedet på kortet. Tryk eller mus giver hvilke
+         job udstyret allerede er lovet væk til. */
+      const k=jKonf[it.name];
+      const kon = k
+        ? '<button class="konflikt-maerke" title="'+escapeHtml(k.aarsager.join('\n'))+'"'
+          +' onclick="event.stopPropagation();visJobKonflikt(\''+j.id+'\',\''+nvn+'\')">'
+          +'konflikt · '+escapeHtml(k.kort)+'</button>'
+        : '';
+      return '<div class="item-row'+(it.pakket?' er-pakket':'')+(k?' har-konflikt':'')+'"'
+        +(k?' data-konflikt="1"':'')+'>'
         +'<input type="checkbox" class="jp-hak"'+(it.pakket?' checked':'')
         +' title="'+(it.pakket?'Pakket'+(it.pakketAf?' af '+escapeHtml(it.pakketAf):'')+' – klik for at fjerne hakket':'Markér som pakket')+'"'
         +' onclick="event.stopPropagation();jobPak(\''+j.id+'\',\''+nvn+'\',this.checked)">'
-        +'<div><div>'+(isPkg?'📦 ':'')+escapeHtml(it.name)+'</div>'
+        +'<div class="item-navn"><div>'+(isPkg?'📦 ':'')+escapeHtml(it.name)+'</div>'
         +(eq?'<div class="cat">'+escapeHtml(eq.category)+'</div>':'')
         +spor
-        +'</div><div class="item-qty">'
+        +'</div>'
+        /* Mærket står ude til højre på samme linje – der er plads, og en
+           linje mere pr. stykke udstyr gør kortet dobbelt så langt. */
+        +kon
+        +'<div class="item-qty">'
         +'<button class="jq-knap" title="Ét mindre" onclick="event.stopPropagation();jobAntal(\''+j.id+'\',\''+escapeHtml(it.name).replace(/'/g,"&#39;")+'\',-1)">−</button>'
         +'<span class="jq-tal">×'+it.qty+'</span>'
         +'<button class="jq-knap" title="Ét mere" onclick="event.stopPropagation();jobAntal(\''+j.id+'\',\''+escapeHtml(it.name).replace(/'/g,"&#39;")+'\',1)">+</button>'
@@ -2685,6 +3092,8 @@ function renderJobs(){
       +(isTilbudJob?'<button class="btn small" style="font-size:11px;background:var(--green);color:#0a1f14;" onclick="event.stopPropagation();convertJobToOrdre(\''+j.id+'\')">&#8594; Ordre</button>':'')
       +'<button class="btn small secondary" onclick="event.stopPropagation();openEdit(\''+j.id+'\')">Rediger</button>'
       +'<button class="btn small secondary" onclick="event.stopPropagation();openCopy(\''+j.id+'\')">Kopiér job</button>'
+      +'<button class="btn small secondary" title="Hvem har lagt udstyr på, og hvem har taget noget af" onclick="event.stopPropagation();visHistorik(\''+j.id+'\')">🕓 Historik</button>'
+      +(conflictCount>0?'<button class="btn small secondary kunkonf" title="Skjul det udstyr der er i orden" onclick="event.stopPropagation();kunKonfliktKort(\''+j.id+'\',this)">⚠ Vis kun konflikter</button>':'')
       +'<button class="btn small" onclick="event.stopPropagation();printPackList(\''+j.id+'\')" style="background:var(--panel-2);color:var(--amber);border:1px solid var(--amber-dim);">📄 Pakkeliste</button>'
       +'<button class="btn small secondary" title="Kopiér et link, så den der pakker kan hakke af på sin telefon" onclick="event.stopPropagation();pakDelLink(\''+j.id+'\')">🔗 Del pakkeliste</button>'
       +(itemCount?'<button class="btn small secondary" title="Sæt hak ved alt udstyret" onclick="event.stopPropagation();jobPakAlle(\''+j.id+'\',true)">✓ Alt pakket</button>'
@@ -2698,15 +3107,160 @@ function renderJobs(){
 
 
 
+/* ── Én vej ind i jobbet ───────────────────────────────────────
+   En opdatering der ikke rammer nogen række, er ikke en gemt ændring – det
+   er et job, en anden har slettet imens. PostgREST siger ikke fra af sig
+   selv: den svarer pænt "ok" på at have rettet ingenting. Derfor beder vi om
+   rækken tilbage og tjekker efter. Alle veje til et job går herigennem, så
+   de ikke kan nå at opføre sig forskelligt. */
+async function gemJob(jobId, felter, foerItems){
+  felter.updated_by = felter.updated_by || mineInitialer() || 'ukendt';
+  felter.updated_at = new Date().toISOString();
+  /* Skal udstyrslisten ændres, skal vi kende den gamle for at kunne skrive
+     hvad der blev lagt på og taget af. Har kalderen den allerede, bruger vi
+     den – ellers henter vi den her. */
+  let foer = foerItems;
+  if(felter.items && !foer){
+    try{ const g = await hentJob(jobId); foer = g.items || []; }
+    catch(e){ if(e && e.jobVaek) throw e; foer = null; }
+  }
+  const r = await supa.from('jobs').update(felter).eq('id', jobId).select('id,name');
+  if(r.error) throw r.error;
+  if(!r.data || !r.data.length){
+    const e = new Error('Jobbet findes ikke længere – en anden har slettet det.');
+    e.jobVaek = true;
+    throw e;
+  }
+  if(felter.items && foer){
+    /* Historikken må aldrig vælte en gemning – den noteres bagefter. */
+    skrivHistorik(jobId, felter.name || r.data[0].name, foer, felter.items);
+  }
+  return r.data[0];
+}
+
+/* ── Historik pr. job ──────────────────────────────────────────
+   "Hvem har sat den stagebox på, og hvem tog den af igen?" er det spørgsmål,
+   der ellers koster tre telefonopkald dagen før afgang. Vi sammenligner den
+   gamle og den nye udstyrsliste og skriver forskellen – ikke hele listen. */
+function skrivHistorik(jobId, jobNavn, foer, efter){
+  try{
+    var gl = {}, ny = {}, linjer = [];
+    (foer||[]).forEach(function(i){ gl[i.name] = i.qty||0; });
+    (efter||[]).forEach(function(i){ ny[i.name] = i.qty||0; });
+    var hvem = mineInitialer() || 'ukendt';
+    Object.keys(ny).forEach(function(n){
+      if(!(n in gl)) linjer.push({handling:'tilfoej', udstyr:n, fra:null, til:ny[n]});
+      else if(gl[n] !== ny[n]) linjer.push({handling:'antal', udstyr:n, fra:gl[n], til:ny[n]});
+    });
+    Object.keys(gl).forEach(function(n){
+      if(!(n in ny)) linjer.push({handling:'fjern', udstyr:n, fra:gl[n], til:null});
+    });
+    if(!linjer.length) return;
+    var nu = new Date().toISOString();
+    var raekker = linjer.map(function(l){
+      return {job_id:jobId, job_navn:jobNavn||'', hvem:hvem, handling:l.handling,
+              udstyr:l.udstyr, fra:l.fra, til:l.til, at:nu};
+    });
+    supa.from('ep_job_log').insert(raekker).then(function(r){
+      if(r && r.error) console.warn('Historik blev ikke skrevet:', r.error.message);
+    });
+  }catch(e){ console.warn('Historik fejlede:', e); }
+}
+
+function historikTekst(r){
+  if(r.handling === 'tilfoej') return 'lagde ' + (r.til||1) + ' × ' + r.udstyr + ' på';
+  if(r.handling === 'fjern')   return 'tog ' + (r.fra||1) + ' × ' + r.udstyr + ' af';
+  if(r.handling === 'antal')   return 'ændrede ' + r.udstyr + ' fra ' + r.fra + ' til ' + r.til;
+  if(r.handling === 'opret')   return 'oprettede jobbet';
+  return r.handling + ' ' + (r.udstyr||'');
+}
+
+function historikTid(t){
+  var d = new Date(t);
+  if(isNaN(d)) return '';
+  var nu = Date.now(), gaaet = nu - d.getTime();
+  if(gaaet < 60000) return 'lige nu';
+  if(gaaet < 3600000) return Math.round(gaaet/60000) + ' min siden';
+  if(gaaet < 86400000) return Math.round(gaaet/3600000) + ' timer siden';
+  return d.toLocaleString('da-DK', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
+}
+
+async function visHistorik(jobId){
+  var j = jobs.find(function(x){ return x.id === jobId; });
+  var boks = document.getElementById('histOverlay');
+  var ind  = document.getElementById('histIndhold');
+  document.getElementById('histTitel').textContent = 'Historik — ' + (j ? j.name : 'job');
+  ind.innerHTML = '<div class="empty" style="padding:18px;">Henter …</div>';
+  boks.classList.add('open');
+  try{
+    var r = await supa.from('ep_job_log').select('*').eq('job_id', jobId).order('at');
+    if(r.error) throw r.error;
+    var raekker = (r.data||[]).slice().reverse();
+    if(!raekker.length){
+      ind.innerHTML = '<div class="empty" style="padding:18px;">Der er ikke rettet i udstyret '
+        + 'på dette job, siden historikken blev slået til.</div>';
+      return;
+    }
+    ind.innerHTML = raekker.map(function(x){
+      return '<div class="hist-linje hist-' + escapeHtml(x.handling) + '">'
+        + '<div class="hist-hvem">' + escapeHtml(x.hvem||'ukendt') + '</div>'
+        + '<div class="hist-hvad">' + escapeHtml(historikTekst(x)) + '</div>'
+        + '<div class="hist-tid" title="' + escapeHtml(x.at||'') + '">' + escapeHtml(historikTid(x.at)) + '</div>'
+        + '</div>';
+    }).join('');
+  }catch(e){
+    ind.innerHTML = '<div class="empty" style="padding:18px;">'
+      + 'Historikken kræver en tabel i databasen.<br><br>'
+      + escapeHtml((e && e.message) || '')
+      + '<br><br><button class="btn small" onclick="kopierSql()">Kopiér SQL\'en</button></div>';
+  }
+}
+
+function kopierSql(){
+  try{ navigator.clipboard.writeText(EP_SQL); }catch(e){}
+  alert('SQL\'en ligger på udklipsholderen.\n\nSupabase → SQL Editor → sæt ind → Run.');
+}
+
+/* Hent jobbet forfra. Bruges før enhver fletning, så vi aldrig skriver en
+   gammel liste tilbage oven i det, en kollega har lavet imens. */
+async function hentJob(jobId){
+  const r = await supa.from('jobs').select('*').eq('id', jobId);
+  if(r.error) throw r.error;
+  if(!r.data || !r.data.length){
+    const e = new Error('Jobbet findes ikke længere – en anden har slettet det.');
+    e.jobVaek = true;
+    throw e;
+  }
+  return r.data[0];
+}
+
+/* Fælles sted at lande, når noget gik galt med et job. Siger hvad der skete
+   og hvad man gør nu – ikke bare hvad databasen svarede. */
+async function jobFejl(e, hvad){
+  if(e && (e.jobVaek || erVaek(e))){
+    alert('Jobbet findes ikke længere.\n\nEn anden har slettet det, mens du '
+        + 'havde det åbent. Listen bliver hentet forfra nu.');
+  }else{
+    alert('Kunne ikke ' + (hvad||'gemme') + '.\n\n'
+        + ((e && e.message) || e) + '\n\n'
+        + 'Prøv igen. Bliver ved med at fejle, så tjek at du stadig er på nettet.');
+  }
+  try{ await loadJobs(); renderJobs();
+    if(document.body.classList.contains('show-mobile') && typeof renderMobileTab==='function') renderMobileTab();
+  }catch(e2){}
+}
+
 /* ── Flet jobbets linjer, før de gemmes ─────────────────────────
    Redigeringsvinduet (både på computer og telefon) kender kun navn og antal.
    Denne funktion henter jobbet forfra og bevarer hak, "tilføjet af" og linjer,
    som andre har lagt på, mens vinduet stod åbent. Bruges begge steder, så de
    to veje ikke kan komme til at opføre sig forskelligt. */
+let sidsteFletFoer = null;      // listen som den så ud før fletningen – bruges til historikken
 async function flettetItems(jobId, nyeItems, vistVedAabning){
   const frisk = await supa.from('jobs').select('*').eq('id', jobId);
   if(frisk.error) throw frisk.error;
   const friske = (frisk.data && frisk.data[0] && frisk.data[0].items) || [];
+  sidsteFletFoer = JSON.parse(JSON.stringify(friske));
   const efterNavn = {};
   friske.forEach(function(i){ efterNavn[i.name]=i; });
   const ud = nyeItems.map(function(it){
@@ -2733,18 +3287,16 @@ async function jobPak(jobId, navn, haket){
   try{
     /* Hent jobbet forfra og ret i DEN udgave. Ellers ville vi skrive hele
        listen tilbage, som den så ud før chaufføren hakkede af. */
-    const {data, error} = await supa.from('jobs').select('*').eq('id', jobId);
-    if(error) throw error;
-    const friske = (data && data[0] && data[0].items) || [];
+    const job = await hentJob(jobId);
+    const friske = job.items || [];
     const linje = friske.find(function(i){ return i.name===navn; });
     if(!linje){ await loadJobs(); renderJobs(); return; }
     linje.pakket   = !!haket;
     linje.pakketAf = haket ? mig : '';
     linje.pakketKl = haket ? new Date().toISOString() : '';
-    const r = await supa.from('jobs')
-      .update({items:friske, updated_by:mig, updated_at:new Date().toISOString()})
-      .eq('id', jobId);
-    if(r.error) throw r.error;
+    /* At sætte et hak er ikke at ændre udstyret – derfor sendes listen med,
+       så historikken ikke fyldes med linjer, og vi sparer en hentning. */
+    await gemJob(jobId, {items:friske, updated_by:mig}, friske);
     await loadJobs(); renderJobs();
     if(typeof renderMobileJobs==='function' && document.body.classList.contains('show-mobile')){
       renderMobileJobs((document.getElementById('mobileSearch')||{}).value||'');
@@ -2752,8 +3304,7 @@ async function jobPak(jobId, navn, haket){
     }
     const b=document.getElementById('body-'+jobId); if(b) b.classList.add('open');
   }catch(e){
-    alert('Kunne ikke gemme: '+(e.message||e));
-    await loadJobs(); renderJobs();
+    await jobFejl(e, 'sætte hak');
   }
 }
 /* Hold mobilens jobkort foldet ud efter en gentegning */
@@ -2767,20 +3318,17 @@ function aabnMobilJob(jobId){
 async function jobPakAlle(jobId, saet){
   const mig = mineInitialer() || 'ukendt';
   try{
-    const {data, error} = await supa.from('jobs').select('*').eq('id', jobId);
-    if(error) throw error;
-    const friske = (data && data[0] && data[0].items) || [];
+    const job = await hentJob(jobId);
+    const friske = job.items || [];
     friske.forEach(function(i){
       i.pakket = !!saet;
       i.pakketAf = saet ? mig : '';
       i.pakketKl = saet ? new Date().toISOString() : '';
     });
-    const r = await supa.from('jobs')
-      .update({items:friske, updated_by:mig, updated_at:new Date().toISOString()}).eq('id', jobId);
-    if(r.error) throw r.error;
+    await gemJob(jobId, {items:friske, updated_by:mig}, friske);
     await loadJobs(); renderJobs();
     const b=document.getElementById('body-'+jobId); if(b) b.classList.add('open');
-  }catch(e){ alert('Kunne ikke gemme: '+(e.message||e)); }
+  }catch(e){ await jobFejl(e, saet ? 'hakke alt af' : 'rydde hakkene'); }
 }
 
 /* Ret antallet direkte på et gemt job – uden at åbne redigering. */
@@ -2798,20 +3346,16 @@ async function jobAntal(jobId, navn, retning){
   try{
     /* Ret i den friske udgave – ellers overskriver vi de hak, en chauffør
        har sat, siden vi sidst hentede jobbet. */
-    const frisk = await supa.from('jobs').select('*').eq('id', jobId);
-    if(frisk.error) throw frisk.error;
-    const friskeItems = (frisk.data && frisk.data[0] && frisk.data[0].items) || [];
+    const job = await hentJob(jobId);
+    const friskeItems = job.items || [];
+    const foerAntal = JSON.parse(JSON.stringify(friskeItems));
     const fl = friskeItems.find(function(i){ return i.name===navn; });
     if(fl) fl.qty = nyt;
-    const {error} = await supa.from('jobs')
-      .update({items:friskeItems, updated_by:mineInitialer()||'', updated_at:new Date().toISOString()})
-      .eq('id', jobId);
-    if(error) throw error;
+    await gemJob(jobId, {items:friskeItems}, foerAntal);
     await loadJobs(); renderJobs();
     const b2=document.getElementById('body-'+jobId); if(b2) b2.classList.add('open');
   }catch(e){
-    alert('Kunne ikke gemme antallet: '+(e.message||e));
-    await loadJobs(); renderJobs();
+    await jobFejl(e, 'gemme antallet');
   }
 }
 
@@ -2834,11 +3378,19 @@ function openNew(){
   editingJobId=null; selectedItems={};
   document.getElementById('modalTitle').textContent='Nyt job';
   document.getElementById('jobName').value='';
-  document.getElementById('jobWho').value='';
-  document.getElementById('jobStart').value=todayStr();
-  document.getElementById('jobEnd').value='';
+  /* Initialerne står i din bruger – dem skal du ikke taste hver gang. */
+  document.getElementById('jobWho').value=mineInitialer();
+  /* Slutdatoen står på samme dag som starten. Så er måned og år udfyldt,
+     og der skal kun rettes en dag – i stedet for hele datoen forfra. */
+  var idag=todayStr();
+  document.getElementById('jobStart').value=idag;
+  document.getElementById('jobEnd').value=idag;
   document.getElementById('jobNotes').value='';
   document.getElementById('equipSearch').value='';
+  /* Ordre er det normale. Tilbud er undtagelsen. */
+  document.getElementById('jobStatusOrdre').checked=true;
+  document.getElementById('jobStatusTilbud').checked=false;
+  updateStatusStyle();
   renderEquipList(''); renderSelectedStrip(); renderConflicts();
   overlay.classList.add('open');
 }
@@ -2876,9 +3428,12 @@ function openCopy(id){
   });
   document.getElementById('modalTitle').textContent='Kopiér: '+j.name;
   document.getElementById('jobName').value=(j.name||'')+' (kopi)';
-  document.getElementById('jobWho').value=j.who||'';
-  document.getElementById('jobStart').value=todayStr();
-  document.getElementById('jobEnd').value='';
+  document.getElementById('jobWho').value=j.who||mineInitialer();
+  /* Datoen er ny, men længden kender vi fra det job, der kopieres. Før stod
+     slutdatoen tom, og så skulle man selv tælle dagene op igen. */
+  var start = todayStr();
+  document.getElementById('jobStart').value = start;
+  document.getElementById('jobEnd').value = flytDage(start, dageMellem(j.start, j.end));
   document.getElementById('jobNotes').value=j.notes||'';
   document.getElementById('equipSearch').value='';
   renderEquipList(''); renderSelectedStrip(); renderConflicts();
@@ -2900,7 +3455,22 @@ function renderEquipList(filter){
   PACKAGES.forEach(function(pkg){ items.push({type:'pkg',obj:pkg,category:pkg.category,name:pkg.name}); });
   EQUIPMENT.filter(function(e){return !e.package_id;}).forEach(function(e){ items.push({type:'equip',obj:e,category:e.category,name:e.name}); });
   items.sort(function(a,b){ const c=a.category.localeCompare(b.category,'da'); return c!==0?c:a.name.localeCompare(b.name,'da'); });
-  const filtered=items.filter(function(it){return !f||it.name.toLowerCase().includes(f)||it.category.toLowerCase().includes(f);});
+  let filtered=items.filter(function(it){return !f||it.name.toLowerCase().includes(f)||it.category.toLowerCase().includes(f);});
+
+  /* "Vis kun konflikter": på en lang liste er det tre linjer ud af halvtreds,
+     man skal finde. */
+  if(kunKonflikter){
+    const k=alleKonflikter(selectedItems,start,end,editingJobId);
+    filtered=filtered.filter(function(it){
+      const n=it.type==='pkg'?'PKG:'+it.obj.id:it.obj.name;
+      return !!k[n];
+    });
+    if(filtered.length===0){
+      container.innerHTML='<div class="empty" style="padding:20px;">Ingen konflikter tilbage. '
+        +'<button type="button" class="konflikt-filter" onclick="saetKunKonflikter(false)">Vis alt udstyr</button></div>';
+      return;
+    }
+  }
 
   if(filtered.length===0){ container.innerHTML='<div class="empty" style="padding:20px;">Ingen match</div>'; return; }
   container.innerHTML=''; let lastCat=null;
@@ -2946,11 +3516,16 @@ function renderEquipList(filter){
         }
       }
       const ne=document.createElement('div'); ne.className='name'; ne.textContent=equip.name; row.appendChild(ne);
-      if(checked&&start&&end){
-        const bq=bookedQty(equip.name,start,end,editingJobId);
-        if(qty>equip.qty-bq.sum){ row.classList.add('warn'); const w=document.createElement('div'); w.className='warn-text'; w.textContent='kun '+Math.max(equip.qty-bq.sum,0)+' ledig'; row.appendChild(w); }
-      }
       const sv=document.createElement('div'); sv.className='stock'; sv.textContent='af '+equip.qty; row.appendChild(sv);
+    }
+    /* Konflikten hører til på linjen med udstyret – ikke kun i en samlet
+       boks nederst, hvor man selv skal lede efter hvad der er galt. */
+    if(checked&&start&&end){
+      const kf=konfliktFor(key,qty,start,end,editingJobId);
+      if(kf.konflikt){
+        row.classList.add('warn');
+        row.appendChild(konfliktMaerke(kf, key));
+      }
     }
     if(checked){
       /* Antallet skal kunne sættes uden at lede efter et lille felt – og uden
@@ -3005,43 +3580,168 @@ function renderSelectedStrip(){
   });
 }
 
+/* ── Hvorfor er dette stykke udstyr ikke ledigt? ───────────────
+   Ét sted regner vi konflikten ud, så listen, opsummeringen og telefonen
+   ikke kan nå at sige noget forskelligt. Svaret indeholder både den korte
+   besked og hvilke job udstyret allerede er lovet væk til – det er dét, man
+   har brug for, når man står og skal flytte en booking.
+   Kaldes med den nøgle, listen bruger: enten navnet eller 'PKG:<id>'. */
+function konfliktFor(noegle, antal, start, end, undtagJob){
+  var svar = {konflikt:false, kort:'', aarsager:[], job:[]};
+  if(!start || !end || start > end) return svar;
+
+  var navn, iAlt, obId;
+  if(noegle.indexOf('PKG:') === 0){
+    var pkg = PACKAGES.find(function(p){ return p.id === noegle.slice(4); });
+    if(!pkg) return svar;
+    navn = pkg.name; iAlt = pkg.qty; obId = pkg.ob_vogn_id;
+  }else{
+    navn = noegle; iAlt = totalQty(noegle);
+    var eq = EQUIPMENT.find(function(e){ return e.name === noegle; });
+    obId = eq && eq.ob_vogn_id;
+    if(iAlt === null){
+      /* Udstyret findes ikke i lageret. Det kan være omdøbt eller slettet –
+         enten måde kan vi ikke sige om det er ledigt, og det skal man vide. */
+      svar.konflikt = true;
+      svar.kort = 'ikke i lageret';
+      svar.aarsager.push('"' + noegle + '" står ikke i lageret længere. '
+        + 'Den er enten omdøbt eller slettet, så ledigheden kan ikke regnes ud.');
+      return svar;
+    }
+  }
+
+  var bq = bookedQty(navn, start, end, undtagJob);
+  var ledige = iAlt - bq.sum;
+  if(antal > ledige){
+    svar.konflikt = true;
+    svar.kort = ledige > 0 ? ('kun ' + ledige + ' ledig' + (ledige === 1 ? '' : 'e'))
+                           : 'ingen ledige';
+    svar.aarsager.push('Du har bedt om ' + antal + ' — der er ' + Math.max(ledige,0)
+      + ' ledig' + (ledige === 1 ? '' : 'e') + ' af ' + iAlt + ' i perioden.');
+    bq.job.forEach(function(j){
+      svar.job.push(j);
+      svar.aarsager.push('· ' + j.navn + ' (' + j.antal + ' stk., ' + j.start + ' → ' + j.slut + ')');
+    });
+  }
+  if(obId){
+    var obC = obBookingConflict(obId, start, end, null);
+    if(obC){
+      var ov = obVognById(obId);
+      svar.konflikt = true;
+      if(!svar.kort) svar.kort = 'OB-vognen er booket';
+      svar.aarsager.push('Står på OB-vogn ' + (ov ? ov.name : '?')
+        + ', som er booket til "' + obC.name + '" i perioden.');
+    }
+  }
+  return svar;
+}
+
+/* Alle konflikter på det job, der redigeres. */
+function alleKonflikter(valgte, start, end, undtagJob){
+  var ud = {};
+  Object.keys(valgte || {}).forEach(function(k){
+    var r = konfliktFor(k, valgte[k], start, end, undtagJob);
+    if(r.konflikt) ud[k] = r;
+  });
+  return ud;
+}
+
+/* En linje på et gemt job peger på en pakke ved navn, ikke ved id. Her
+   oversættes den til den nøgle, konfliktberegningen forstår. */
+function jobNoegle(it){
+  if(it && it.isPkg){
+    var p = PACKAGES.find(function(x){ return x.name === it.name; });
+    if(p) return 'PKG:' + p.id;
+  }
+  return it ? it.name : '';
+}
+
+/* Tryk på konfliktmærket ude på et jobkort. */
+function visJobKonflikt(jobId, navn){
+  var j = jobs.find(function(x){ return x.id === jobId; });
+  if(!j) return;
+  var it = (j.items||[]).find(function(x){ return x.name === navn; });
+  if(!it) return;
+  var k = konfliktFor(jobNoegle(it), it.qty, j.start, j.end, j.id);
+  alert(navn + '\n\n' + (k.aarsager.length ? k.aarsager.join('\n') : 'Ingen konflikt lige nu.'));
+}
+
+/* Vis kun de linjer, der er noget galt med – på ét jobkort. */
+function kunKonfliktKort(jobId, knap){
+  var kort = document.querySelector('.job-card[data-id="' + jobId + '"]');
+  if(!kort) return;
+  var paa = kort.classList.toggle('kun-konflikt');
+  if(knap) knap.textContent = paa ? '↩ Vis alt udstyr' : '⚠ Vis kun konflikter';
+}
+
+function konfliktNavn(noegle){
+  if(noegle.indexOf('PKG:') === 0){
+    var p = PACKAGES.find(function(x){ return x.id === noegle.slice(4); });
+    return '📦 ' + (p ? p.name : noegle);
+  }
+  return noegle;
+}
+
+let kunKonflikter = false;
+
+/* Mærket på selve linjen. Musen over giver hele forklaringen; på en telefon
+   findes der ingen mus, så et tryk viser den samme tekst. */
+function konfliktMaerke(kf, noegle){
+  var b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'konflikt-maerke';
+  b.textContent = 'konflikt · ' + kf.kort;
+  b.title = kf.aarsager.join('\n');
+  b.addEventListener('click', function(ev){
+    ev.preventDefault(); ev.stopPropagation();
+    alert(konfliktNavn(noegle) + '\n\n' + kf.aarsager.join('\n'));
+  });
+  return b;
+}
+
 function renderConflicts(){
   const box=document.getElementById('conflictBox');
   const start=document.getElementById('jobStart').value;
   const end=document.getElementById('jobEnd').value;
-  if(!start||!end||!Object.keys(selectedItems).length){ box.innerHTML=''; return; }
+  if(!start||!end||!Object.keys(selectedItems).length){ box.innerHTML=''; kunKonflikter=false; return; }
   if(start>end){ box.innerHTML='<div class="conflict-box">Slut dato skal være efter start dato.</div>'; return; }
-  const conflicts=[];
-  Object.keys(selectedItems).forEach(function(n){
-    const qty=selectedItems[n];
-    if(n.startsWith('PKG:')){
-      // Package conflict check
-      const pkg=PACKAGES.find(function(p){return p.id===n.slice(4);});
-      if(!pkg) return;
-      const bq=bookedQty(pkg.name,start,end,editingJobId);
-      const free=pkg.qty-bq.sum;
-      const obC=pkg.ob_vogn_id?obBookingConflict(pkg.ob_vogn_id,start,end,null):null;
-      const ov=obC?obVognById(pkg.ob_vogn_id):null;
-      if(qty>free) conflicts.push('⚠ 📦 '+pkg.name+': kun '+Math.max(free,0)+' ledig'+(bq.users.length?' ('+bq.users.join(', ')+')':''));
-      if(obC) conflicts.push('⚠ 📦 '+pkg.name+': OB vogn 🚐 '+(ov?ov.name:'?')+' er booket i perioden ('+obC.name+')');
-    } else {
-      // Equipment conflict check
-      const bq=bookedQty(n,start,end,editingJobId);
-      const free=totalQty(n)-bq.sum;
-      if(qty>free) conflicts.push('⚠ '+n+': ønsker '+qty+', kun '+Math.max(free,0)+' ledige'+(bq.users.length?' ('+bq.users.join(', ')+')':''));
-      const eq=EQUIPMENT.find(function(e){return e.name===n;});
-      if(eq&&eq.ob_vogn_id){
-        const obC=obBookingConflict(eq.ob_vogn_id,start,end,null);
-        if(obC){const ov=obVognById(eq.ob_vogn_id);conflicts.push('⚠ '+n+': OB vogn 🚐 '+(ov?ov.name:'?')+' er booket ('+obC.name+')');}
-      }
-    }
-  });
-  if(conflicts.length===0) box.innerHTML='<div class="conflict-box"><span class="ok">✓ Ingen konflikter.</span></div>';
-  else box.innerHTML='<div class="conflict-box">'+conflicts.map(function(c){return escapeHtml(c);}).join('<br>')+'</div>';
+
+  const k = alleKonflikter(selectedItems, start, end, editingJobId);
+  const noegler = Object.keys(k);
+  if(!noegler.length){
+    box.innerHTML='<div class="conflict-box"><span class="ok">✓ Ingen konflikter.</span></div>';
+    kunKonflikter=false;
+    return;
+  }
+  box.innerHTML='<div class="conflict-box">'
+    + '<div class="konflikt-top">'
+    +   '<b>' + (noegler.length===1 ? '1 stykke udstyr er ikke ledigt'
+                                    : noegler.length + ' ting er ikke ledige') + '</b>'
+    +   '<button type="button" class="konflikt-filter' + (kunKonflikter?' paa':'') + '" '
+    +     'onclick="saetKunKonflikter(!kunKonflikter)">'
+    +     (kunKonflikter ? '← Vis alt udstyr' : 'Vis kun konflikter') + '</button>'
+    + '</div>'
+    + noegler.map(function(n){
+        return '<div class="konflikt-linje">⚠ ' + escapeHtml(konfliktNavn(n)) + ' — '
+             + escapeHtml(k[n].kort) + '</div>';
+      }).join('')
+    + '</div>';
+}
+
+function saetKunKonflikter(paa){
+  kunKonflikter = !!paa;
+  renderEquipList(document.getElementById('equipSearch').value||'');
+  renderConflicts();
 }
 
 document.getElementById('equipSearch').addEventListener('input', function(e){ renderEquipList(e.target.value); });
-document.getElementById('jobStart').addEventListener('change', function(){ renderEquipList(document.getElementById('equipSearch').value||''); renderConflicts(); });
+document.getElementById('jobStart').addEventListener('change', function(){
+  /* Flytter man starten, følger slutdatoen med, hvis den ikke var sat eller
+     nu ville ligge før starten. Måned og år er så altid rigtige på forhånd. */
+  var e=document.getElementById('jobEnd');
+  if(!e.value || e.value < this.value) e.value = this.value;
+  renderEquipList(document.getElementById('equipSearch').value||''); renderConflicts();
+});
 document.getElementById('jobEnd').addEventListener('change', function(){ renderEquipList(document.getElementById('equipSearch').value||''); renderConflicts(); });
 
 // ── Save / Delete job ───────────────────────────────────────
@@ -3065,10 +3765,15 @@ document.getElementById('saveJobBtn').addEventListener('click', async function()
     let gemItems = items;
     if(editingJobId) gemItems = await flettetItems(editingJobId, items, window.__redigerStart);
     const row={name,who,start_date:start,end_date:end,notes,items:gemItems,status:sv2?sv2.value:'ordre'};
-    if(editingJobId){ const {error}=await supa.from('jobs').update(row).eq('id',editingJobId); if(error) throw error; }
-    else { const {error}=await supa.from('jobs').insert(row); if(error) throw error; }
+    if(editingJobId){ await gemJob(editingJobId, row, sidsteFletFoer); }
+    else {
+      const sv=await supa.from('jobs').insert(row).select('id');
+      if(sv.error) throw sv.error;
+      /* Et nyt job: alt udstyret er "lagt på" af den, der oprettede det. */
+      if(sv.data && sv.data[0]) skrivHistorik(sv.data[0].id, name, [], gemItems);
+    }
     await loadJobs(); renderJobs(); closeModal();
-  }catch(e){ console.error(e); alert('Fejl: '+(e.message||JSON.stringify(e))); }
+  }catch(e){ console.error(e); closeModal(); await jobFejl(e, 'gemme jobbet'); }
   finally{ btn.disabled=false; btn.textContent='Gem job'; }
 });
 
@@ -3369,7 +4074,34 @@ document.getElementById('addEquipBtn').addEventListener('click', function(){
     +'<div class="modal-actions"><button class="btn small secondary" onclick="document.getElementById(\'lagerNewRow\').style.display=\'none\';">Annuller</button>'
     +'<button class="btn small" onclick="confirmAddEquip()">Tilføj</button></div></div>';
   populateCategoryDropdowns();
+  /* Står man og kigger på én kategori, er det næsten altid dén, det nye
+     udstyr hører til. Før foreslog den altid den første i alfabetet. */
+  var k = synligKategori();
+  var vk = document.getElementById('newEquipCat');
+  if(k && vk) vk.value = k;
+  var nn = document.getElementById('newEquipName');
+  if(nn) nn.focus();
 });
+
+/* Hvilken kategori står man i? Enten fordi søgefeltet peger på den, eller
+   fordi der kun er én tilbage på skærmen. Ellers ved vi det ikke, og så
+   gætter vi ikke. */
+function synligKategori(){
+  var f = (document.getElementById('lagerSearch').value||'').trim().toLowerCase();
+  if(f){
+    var traef = CATEGORIES.filter(function(c){ return c.name.toLowerCase().indexOf(f)>=0; });
+    if(traef.length === 1) return traef[0].name;
+  }
+  var synlige = {};
+  PACKAGES.concat(EQUIPMENT.filter(function(e){ return !e.package_id; }))
+    .forEach(function(o){
+      var n = (o.name||'').toLowerCase();
+      if(f && n.indexOf(f) < 0 && (o.category||'').toLowerCase().indexOf(f) < 0) return;
+      if(o.category) synlige[o.category] = 1;
+    });
+  var navne = Object.keys(synlige);
+  return navne.length === 1 ? navne[0] : '';
+}
 document.getElementById('addPkgBtn').addEventListener('click', function(){ openPkgDetail(null); });
 
 async function confirmAddEquip(){
@@ -3377,9 +4109,10 @@ async function confirmAddEquip(){
   const category=document.getElementById('newEquipCat').value||'Diverse';
   let qty=parseInt(document.getElementById('newEquipQty').value); if(isNaN(qty)||qty<0) qty=0;
   if(!name){ alert('Skriv et navn.'); return; }
-  if(EQUIPMENT.some(function(e){return e.name.toLowerCase()===name.toLowerCase();})){alert('Findes allerede.');return;}
+  if(EQUIPMENT.some(function(e){return e.name.toLowerCase()===name.toLowerCase();})){
+    alert('"'+name+'" findes allerede i lageret.\n\nSkriv et andet navn, eller ret antallet på den, der allerede står der.'); return; }
   const {error}=await supa.from('equipment').insert({name,category,qty});
-  if(error){ alert('Fejl: '+error.message); return; }
+  if(error){ sigFejl(error, 'oprette udstyret'); return; }
   await loadEquipment();
   document.getElementById('lagerNewRow').style.display='none';
   renderLager(document.getElementById('lagerSearch').value||'');
@@ -3463,7 +4196,7 @@ document.getElementById('equipDetailSaveBtn').addEventListener('click', async fu
     const {error}=await supa.from('equipment').update({name,category,qty,tv2_number:document.getElementById('dTv2').value.trim(),serial_number:document.getElementById('dSerial').value.trim(),qr_code:(document.getElementById('dQrCode').value.trim()||null),power_connection:document.getElementById('dPower').value.trim(),image_url,custom_fields}).eq('id',it.id);
     if(error) throw error;
     await loadEquipment(); equipOverlay.classList.remove('open'); renderLager(document.getElementById('lagerSearch').value||''); renderJobs();
-  }catch(e){ console.error(e); alert('Fejl: '+(e.message||JSON.stringify(e))); }
+  }catch(e){ console.error(e); sigFejl(e, 'gemme ændringen'); }
   finally{ btn.disabled=false; btn.textContent='Gem detaljer'; }
 });
 
@@ -3508,7 +4241,7 @@ async function savePkgFromOverlay(){
     if(editingPkgId){ const {error}=await supa.from('packages').update(row).eq('id',editingPkgId); if(error) throw error; }
     else { const {error}=await supa.from('packages').insert(row); if(error) throw error; }
     await loadPackages(); equipOverlay.classList.remove('open'); renderLager(document.getElementById('lagerSearch').value||'');
-  }catch(e){ console.error(e); alert('Fejl: '+(e.message||JSON.stringify(e))); }
+  }catch(e){ console.error(e); sigFejl(e, 'gemme ændringen'); }
   finally{ btn.disabled=false; btn.textContent='Gem detaljer'; }
 }
 
@@ -3856,7 +4589,7 @@ document.getElementById('obSaveBtn').addEventListener('click', async function(){
     if(editId){var {error}=await supa.from('ob_bookinger').update(row).eq('id',editId);if(error) throw error;}
     else {var {error}=await supa.from('ob_bookinger').insert(row);if(error) throw error;}
     await loadObBookinger(); document.getElementById('obOverlay').classList.remove('open'); renderObVogne();
-  }catch(e){console.error(e);alert('Fejl: '+(e.message||JSON.stringify(e)));}
+  }catch(e){console.error(e);sigFejl(e, 'gemme pakken');}
   finally{btn.disabled=false;btn.textContent='Gem booking';}
 });
 
@@ -3927,8 +4660,8 @@ function printPackList(id){
 // ═══════════════════════════════════════════════════════════
 async function convertJobToOrdre(id){
   if(!confirm('Konverter dette tilbud til ordre?')) return;
-  var res=await supa.from('jobs').update({status:'ordre'}).eq('id',id);
-  if(res.error){ alert('Fejl: '+res.error.message); return; }
+  try{ await gemJob(id, {status:'ordre'}); }
+  catch(e){ await jobFejl(e, 'gøre tilbuddet til ordre'); return; }
   await loadJobs(); renderJobs();
 }
 
@@ -4115,7 +4848,7 @@ async function copyEquip(idx){
     package_id: it.package_id||null, ob_vogn_id: it.ob_vogn_id||null
   };
   const {error} = await supa.from('equipment').insert(row);
-  if(error){ alert('Fejl: '+error.message); return; }
+  if(error){ sigFejl(error, 'gemme det'); return; }
   await loadEquipment();
   renderLager(document.getElementById('lagerSearch').value||'');
 }
@@ -4135,7 +4868,7 @@ async function copyPkg(pkgId){
     custom_fields: pkg.custom_fields||[], ob_vogn_id: pkg.ob_vogn_id||null
   };
   const {error} = await supa.from('packages').insert(row);
-  if(error){ alert('Fejl: '+error.message); return; }
+  if(error){ sigFejl(error, 'gemme det'); return; }
   await loadPackages();
   renderLager(document.getElementById('lagerSearch').value||'');
 }
@@ -4320,7 +5053,7 @@ function handleUnknownQr(code, onLinked){
     const field = { qr_code: code };
     const tbl = type==='pkg' ? 'packages' : 'equipment';
     const { error } = await supa.from(tbl).update(field).eq('id', id);
-    if(error){ alert('Fejl: '+error.message); return; }
+    if(error){ sigFejl(error, 'gemme det'); return; }
     await (type==='pkg' ? loadPackages() : loadEquipment());
     closeQrScanner();
     const found = findByQr(code);
@@ -4360,7 +5093,7 @@ async function confirmAddEquipWithQr(qrCode){
   let qty = parseInt(document.getElementById('qrEquipQty').value); if(isNaN(qty)||qty<0) qty=0;
   if(!name){ alert('Skriv et navn.'); return; }
   const { error } = await supa.from('equipment').insert({name,category,qty,qr_code:qrCode,serial_number:qrCode});
-  if(error){ alert('Fejl: '+error.message); return; }
+  if(error){ sigFejl(error, 'gemme det'); return; }
   await loadEquipment();
   document.getElementById('lagerNewRow').style.display='none';
   renderLager('');
@@ -4515,7 +5248,11 @@ var mQrScanner = null;
 var mQrMode = 'job'; // 'job' or 'avail'
 
 /* Bredden alene er ikke nok: et smalt browservindue på en PC er stadig en PC,
-   og en iPad i landskab er stadig en berøringsskærm. Vi kigger på pegeredskabet. */
+   og en iPad i landskab er stadig en berøringsskærm. Vi kigger på pegeredskabet.
+   Og det er stadig ikke nok: slår man "Vis computerudgave" til i Safari,
+   påstår telefonen at den er 980 pixels bred og har en mus. Skærmens fysiske
+   mål lyver den derimod ikke om – dem spørger vi også om. iPadOS kalder sig
+   selv en Mac, så den kendes på at den har flere berøringspunkter. */
 function skaermType(){
   var grov=false, kanHover=true;
   try{
@@ -4524,6 +5261,18 @@ function skaermType(){
   }catch(e){}
   var beroering = grov || (navigator.maxTouchPoints||0) > 1;
   var b = window.innerWidth;
+  var ua = navigator.userAgent || '';
+  var haandholdt =
+    /iPhone|iPod/.test(ua) || /iPad/.test(ua) ||
+    (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints||0) > 1) ||
+    /Android|Mobile|Windows Phone/i.test(ua);
+  var kortSide = 9999;
+  try{
+    var sk = window.screen || {};
+    kortSide = Math.min(sk.width || 9999, sk.height || 9999);
+    if(window.devicePixelRatio > 1 && kortSide > 1400) kortSide = Math.round(kortSide/window.devicePixelRatio);
+  }catch(e){}
+  if(haandholdt && kortSide <= 1100) return 'telefon';
   if(beroering && !kanHover && b <= 920) return 'telefon';
   if(b <= 620) return 'telefon';
   return 'computer';
@@ -4544,6 +5293,28 @@ document.querySelectorAll('#mobileNav button').forEach(function(btn){
   });
 });
 
+/* ── Mindsk skriften, til navnet kan være i boksen ─────────────
+   Kun på telefonen. Boksen beholder sin højde; det er skriften der giver sig.
+   Samme greb som i SignalFlows kanalplan. */
+function epSkrump(el, start){
+  if(!el) return;
+  start = start || 14;
+  el.classList.add('skrump');
+  el.style.fontSize = start + 'px';
+  if(el.scrollWidth <= el.clientWidth + 1) return;
+  var fs = start, vagt = 0;
+  while(el.scrollWidth > el.clientWidth + 1 && fs > 9 && vagt++ < 24){
+    fs -= 0.5;
+    el.style.fontSize = fs + 'px';
+  }
+}
+function epSkrumpAlle(){
+  if(!document.body.classList.contains('show-mobile')) return;
+  document.querySelectorAll('.m-lager-name').forEach(function(el){ epSkrump(el, 14); });
+  document.querySelectorAll('.m-item-navn > span:first-child').forEach(function(el){ epSkrump(el, 13); });
+  document.querySelectorAll('.m-job-title').forEach(function(el){ epSkrump(el, 15); });
+}
+
 function renderMobileTab(){
   var q = (document.getElementById('mobileSearch').value||'').trim().toLowerCase();
   document.getElementById('mobileSearchBar').style.display = (mCurrentTab==='avail') ? 'none' : 'flex';
@@ -4554,6 +5325,7 @@ function renderMobileTab(){
   // Update search placeholder
   var ph = {jobs:'Søg job navn, initialer...', ob:'Søg OB vogn eller booking...', avail:'Søg udstyr eller scan...', lager:'Søg i lager...'};
   document.getElementById('mobileSearch').placeholder = ph[mCurrentTab]||'Søg...';
+  epSkrumpAlle();
 }
 
 document.getElementById('mobileSearch').addEventListener('input', function(){ renderMobileTab(); });
@@ -4601,6 +5373,11 @@ function renderMobileJobs(q){
       +'<div class="m-job-meta">'+(j.who?escapeHtml(j.who)+' · ':'')+fmtDate(j.start)+' → '+fmtDate(j.end)+'</div>'
       +'</div>'+(function(){
         var n=(j.items||[]).length, pk=(j.items||[]).filter(function(i){return i.pakket;}).length;
+        /* Er der en konflikt, er det dét, man skal se først – også uden at
+           folde kortet ud. Samme mærke som på computeren. */
+        var kn=(j.items||[]).filter(function(it){
+          return konfliktFor(jobNoegle(it), it.qty, j.start, j.end, j.id).konflikt; }).length;
+        if(kn) return '<span class="job-conflict-badge">⚠ '+kn+'</span>';
         if(n && (pk || j.share_token))
           return '<span class="pak-maerke'+(pk===n?' faerdig':'')+'">📋 '+pk+'/'+n+'</span>';
         return '<span style="font-size:11px;color:var(--muted);font-family:var(--mono);">'+n+' stk.</span>';
@@ -4616,10 +5393,18 @@ function renderMobileJobs(q){
       if(it.tilfoejetAf) spor += '<div class="pak-spor tilfoejet">+ tilføjet af '+escapeHtml(it.tilfoejetAf)+'</div>';
       if(it.pakket) spor += '<div class="pak-spor">✓ '+(it.pakketAf?escapeHtml(it.pakketAf):'pakket')
         +(it.pakketKl?' · '+pakTid(it.pakketKl):'')+'</div>';
-      return '<div class="m-item'+(it.pakket?' er-pakket':'')+'">'
+      /* Samme konfliktmærke som på computeren – her er det et tryk, der
+         fortæller hvilke job udstyret allerede er lovet væk til. */
+      var k = konfliktFor(jobNoegle(it), it.qty, j.start, j.end, j.id);
+      var kon = k.konflikt
+        ? '<button class="konflikt-maerke" onclick="event.stopPropagation();visJobKonflikt(\''+j.id+'\',\''+nvn+'\')">'
+          +'konflikt · '+escapeHtml(k.kort)+'</button>'
+        : '';
+      return '<div class="m-item'+(it.pakket?' er-pakket':'')+(k.konflikt?' har-konflikt':'')+'"'
+        +(k.konflikt?' data-konflikt="1"':'')+'>'
         +'<input type="checkbox" class="jp-hak m"'+(it.pakket?' checked':'')
         +' onclick="event.stopPropagation();jobPak(\''+j.id+'\',\''+nvn+'\',this.checked)">'
-        +'<div class="m-item-navn"><span>'+(it.isPkg?'📦 ':'')+escapeHtml(it.name)+'</span>'+spor+'</div>'
+        +'<div class="m-item-navn"><span>'+(it.isPkg?'📦 ':'')+escapeHtml(it.name)+'</span>'+kon+spor+'</div>'
         +'<span class="m-item-antal">x'+it.qty+'</span></div>';
     }).join('') || '<div style="color:var(--muted);font-size:13px;padding:6px 0;">Intet udstyr</div>';
     body.innerHTML = itemsHtml;
@@ -4634,6 +5419,7 @@ function renderMobileJobs(q){
       if(isTilbud) acts.appendChild(mkBtn('Ordre', '', function(){ mConvertOrdre(jid); }));
       acts.appendChild(mkBtn('Pakkeliste', 'secondary', function(){ printPackList(jid); }));
       acts.appendChild(mkBtn('🔗 Del', 'secondary', function(){ pakDelLink(jid); }));
+      acts.appendChild(mkBtn('🕓 Historik', 'secondary', function(){ visHistorik(jid); }));
       acts.appendChild(mkBtn('Slet', 'danger', function(){ mDeleteJob(jid); }));
     })(j.id, j);
 
@@ -4642,11 +5428,13 @@ function renderMobileJobs(q){
     card.appendChild(body);
     cont.appendChild(card);
   });
+  epSkrumpAlle();
 }
 
 async function mConvertOrdre(id){
   if(!confirm('Konverter til ordre?')) return;
-  await supa.from('jobs').update({status:'ordre'}).eq('id',id);
+  try{ await gemJob(id, {status:'ordre'}); }
+  catch(e){ await jobFejl(e, 'gøre tilbuddet til ordre'); return; }
   await loadJobs();
   renderMobileJobs(document.getElementById('mobileSearch').value||'');
 }
@@ -4815,24 +5603,26 @@ function mRunAvail(q, cont){
 function renderMobileLager(q){
   var cont = document.getElementById('mobileContent');
 
-  // Sort bar (rendered once at top)
-  if(!document.getElementById('mobileLagerSort')){
-    var sb = document.createElement('div');
-    sb.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:12px;';
-    sb.innerHTML='<span style="font-size:11px;color:var(--muted);">Sorter:</span>'
-      +'<select id="mobileLagerSort" style="flex:1;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:9px;font-size:14px;">'
-      +'<option value="category">Kategori</option>'
-      +'<option value="name">Navn (A-Z)</option>'
-      +'<option value="type">Type (pakker først)</option>'
-      +'</select>';
-    sb.querySelector('select').addEventListener('change', function(){ renderMobileLager(document.getElementById('mobileSearch').value||''); });
-    cont.appendChild(sb);
-  } else {
-    cont.innerHTML='';
-  }
+  /* Ryd altid først. Før byggede den kun sorteringslinjen, hvis den ikke
+     allerede var der – og glemte at rydde. Kom man fra "Tjek ledighed",
+     blev dén fanes datofelter stående, og lagerlisten kom nedenunder. */
+  cont.innerHTML = '';
+  var mSort = window.__lagerSort || 'category';
 
-  var mSortEl = document.getElementById('mobileLagerSort');
-  var mSort = mSortEl ? mSortEl.value : 'category';
+  var sb = document.createElement('div');
+  sb.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:12px;';
+  sb.innerHTML='<span style="font-size:11px;color:var(--muted);">Sorter:</span>'
+    +'<select id="mobileLagerSort" style="flex:1;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:9px;font-size:14px;">'
+    +'<option value="category">Kategori</option>'
+    +'<option value="name">Navn (A-Z)</option>'
+    +'<option value="type">Type (pakker først)</option>'
+    +'</select>';
+  sb.querySelector('select').value = mSort;      // valget overlever en gentegning
+  sb.querySelector('select').addEventListener('change', function(){
+    window.__lagerSort = this.value;
+    renderMobileLager(document.getElementById('mobileSearch').value||'');
+  });
+  cont.appendChild(sb);
 
   var items = [
     ...PACKAGES.map(function(p){return {type:'pkg',obj:p,name:p.name,category:p.category};}),
@@ -4844,13 +5634,23 @@ function renderMobileLager(q){
   })
   .filter(function(it){return !q||it.name.toLowerCase().includes(q)||it.category.toLowerCase().includes(q);});
 
-  if(!items.length){ cont.innerHTML='<div style="text-align:center;padding:50px 20px;color:var(--muted);">📦<br>Intet match</div>'; return; }
+  if(!items.length){
+    /* Sorteringslinjen bliver stående – ellers kan man ikke sortere sig ud
+       af en søgning, der ikke gav noget. */
+    var tom=document.createElement('div');
+    tom.style.cssText='text-align:center;padding:50px 20px;color:var(--muted);';
+    tom.innerHTML='📦<br>Intet match';
+    cont.appendChild(tom);
+    return;
+  }
 
   items.forEach(function(item){
     var row = document.createElement('div'); row.className='m-lager-item';
     var icon = item.type==='pkg'?'📦':'🔧';
     row.innerHTML = '<div class="m-lager-icon">'+icon+'</div>'
-      +'<div style="flex:1;"><div class="m-lager-name">'+escapeHtml(item.name)+'</div>'
+      /* min-width:0 — ellers vokser kolonnen med det lange navn og skubber
+         hele linjen ud over skærmkanten, i stedet for at lade navnet skrumpe */
+      +'<div class="m-lager-txt" style="flex:1;min-width:0;"><div class="m-lager-name">'+escapeHtml(item.name)+'</div>'
       +'<div class="m-lager-sub">'+escapeHtml(item.category)+(item.obj.qty?' · '+item.obj.qty+' stk.':'')+'</div></div>'
       +'<button class="btn small secondary" style="padding:8px 12px;font-size:12px;">Detaljer</button>';
     row.querySelector('button').addEventListener('click', function(){
@@ -4862,6 +5662,7 @@ function renderMobileLager(q){
     });
     cont.appendChild(row);
   });
+  epSkrumpAlle();
 }
 
 // ── Mobile Job Modal ───────────────────────────────────────
@@ -4877,15 +5678,20 @@ function openMJobModal(id, copyFrom){
   }
   document.getElementById('mJobTitle').textContent = id?'Rediger job':copyFrom?'Kopiér job':'Nyt job';
   document.getElementById('mJobName').value = j?(copyFrom?j.name+' (kopi)':j.name):'';
-  document.getElementById('mJobWho').value = j?j.who||'':'';
-  document.getElementById('mJobStart').value = j&&id?j.start||todayStr():todayStr();
-  document.getElementById('mJobEnd').value = j&&id?j.end||'':'';
+  /* Initialerne kommer fra brugeren – de skal ikke tastes hver gang. */
+  document.getElementById('mJobWho').value = (j && j.who) || mineInitialer();
+  var mIdag = todayStr();
+  document.getElementById('mJobStart').value = j&&id ? (j.start||mIdag) : mIdag;
+  /* Slutdatoen står med samme måned og år som starten, så der kun skal
+     rettes en dag. En kopi beholder desuden jobbets længde. */
+  document.getElementById('mJobEnd').value = j&&id
+    ? (j.end || j.start || mIdag)
+    : (copyFrom ? flytDage(mIdag, dageMellem(copyFrom.start, copyFrom.end)) : mIdag);
   document.getElementById('mJobStatusOrdre').checked = !j||j.status!=='tilbud';
-  document.getElementById('mJobStatusTilbud').checked = j&&j.status==='tilbud';
+  document.getElementById('mJobStatusTilbud').checked = !!(j&&j.status==='tilbud');
   updateMJobStatusStyle();
   renderMEquipList('');
   renderMSelectedEquip();
-  document.getElementById('mConflictBox').innerHTML='';
   document.getElementById('mJobOverlay').classList.add('open');
 }
 
@@ -4956,6 +5762,20 @@ function renderMEquipList(filter){
         } else if(!cb.checked && qi){
           r.removeChild(qi);
         }
+        /* Konfliktmærket på linjen skal med – både når der sættes hak, og
+           når det fjernes igen. */
+        var gl = r.querySelector('.konflikt-maerke');
+        if(gl) gl.remove();
+        r.style.background = '';
+        var s1=document.getElementById('mJobStart').value, s2=document.getElementById('mJobEnd').value;
+        if(cb.checked && s1 && s2){
+          var kf2 = konfliktFor(k, mSelectedItems[k]||1, s1, s2, mEditingJobId);
+          if(kf2.konflikt){
+            r.style.background = '#241a16';
+            var nw = r.children[1];
+            if(nw) nw.appendChild(konfliktMaerke(kf2, k));
+          }
+        }
       });
     })(key, row);
 
@@ -4975,6 +5795,17 @@ function renderMEquipList(filter){
     row.appendChild(cb);
     row.appendChild(nameWrap);
     if(checked) row.appendChild(makeQtyInput(key));
+
+    /* Konflikten skal stå ved udstyret, også på telefonen */
+    var mStart=document.getElementById('mJobStart').value;
+    var mEnd=document.getElementById('mJobEnd').value;
+    if(checked && mStart && mEnd){
+      var kf=konfliktFor(key, mSelectedItems[key]||1, mStart, mEnd, mEditingJobId);
+      if(kf.konflikt){
+        row.style.background='#241a16';
+        nameWrap.appendChild(konfliktMaerke(kf, key));
+      }
+    }
 
     cont.appendChild(row);
   });
@@ -5010,6 +5841,62 @@ function makeQtyInput(key){
 }
 
 
+/* ── Det valgte udstyr på telefonen ────────────────────────────
+   Denne funktion blev kaldt seks steder i mobiludgaven, men fandtes ikke.
+   Hver gang man satte et hak, røg der en fejl, og så kom hverken antals-
+   feltet eller konfliktboksen frem. Nu findes den – og den viser det samme
+   som på computeren: hvad der er valgt, og hvad der ikke er ledigt. */
+function renderMSelectedEquip(){
+  var strip = document.getElementById('mSelectedEquip');
+  var boks  = document.getElementById('mConflictBox');
+  if(!strip) return;
+  var noegler = Object.keys(mSelectedItems);
+  strip.innerHTML = noegler.length
+    ? noegler.map(function(n){
+        return '<span class="m-chip">' + escapeHtml(konfliktNavn(n))
+             + ' <b>' + mSelectedItems[n] + '</b></span>';
+      }).join('')
+    : '<span style="font-size:12px;color:var(--muted);">Intet udstyr valgt endnu</span>';
+
+  if(!boks) return;
+  var start = document.getElementById('mJobStart').value;
+  var end   = document.getElementById('mJobEnd').value;
+  if(!start || !end || !noegler.length){ boks.innerHTML=''; return; }
+  if(start > end){ boks.innerHTML='<div class="conflict-box">Slutdato skal være efter startdato.</div>'; return; }
+
+  var k = alleKonflikter(mSelectedItems, start, end, mEditingJobId);
+  var liste = Object.keys(k);
+  if(!liste.length){
+    boks.innerHTML='<div class="conflict-box"><span class="ok">✓ Ingen konflikter.</span></div>';
+    return;
+  }
+  boks.innerHTML = '<div class="conflict-box">'
+    + '<div class="konflikt-top"><b>' + (liste.length===1 ? '1 stykke udstyr er ikke ledigt'
+                                                         : liste.length + ' ting er ikke ledige') + '</b></div>'
+    + liste.map(function(n){
+        return '<button type="button" class="konflikt-linje mklik" data-kon="' + escapeHtml(n) + '">⚠ '
+             + escapeHtml(konfliktNavn(n)) + ' — ' + escapeHtml(k[n].kort) + ' ›</button>';
+      }).join('')
+    + '</div>';
+  boks.querySelectorAll('[data-kon]').forEach(function(el){
+    el.addEventListener('click', function(ev){
+      ev.preventDefault();
+      var n = el.getAttribute('data-kon');
+      alert(konfliktNavn(n) + '\n\n' + k[n].aarsager.join('\n'));
+    });
+  });
+  epSkrumpAlle();
+}
+
+document.getElementById('mJobStart').addEventListener('change', function(){
+  var e=document.getElementById('mJobEnd');
+  if(!e.value || e.value < this.value) e.value = this.value;
+  renderMSelectedEquip(); renderMEquipList(document.getElementById('mEquipSearch').value||'');
+});
+document.getElementById('mJobEnd').addEventListener('change', function(){
+  renderMSelectedEquip(); renderMEquipList(document.getElementById('mEquipSearch').value||'');
+});
+
 document.getElementById('mEquipSearch').addEventListener('input',function(e){renderMEquipList(e.target.value);});
 
 document.getElementById('mSaveJobBtn').addEventListener('click', async function(){
@@ -5032,10 +5919,14 @@ document.getElementById('mSaveJobBtn').addEventListener('click', async function(
     var gemItems = items;
     if(mEditingJobId) gemItems = await flettetItems(mEditingJobId, items, window.__mRedigerStart);
     var row={name,who,start_date:start,end_date:end,items:gemItems,status};
-    if(mEditingJobId){var {error}=await supa.from('jobs').update(row).eq('id',mEditingJobId);if(error)throw error;}
-    else{var {error}=await supa.from('jobs').insert(row);if(error)throw error;}
+    if(mEditingJobId){ await gemJob(mEditingJobId, row, sidsteFletFoer); }
+    else{
+      var sv=await supa.from('jobs').insert(row).select('id');
+      if(sv.error) throw sv.error;
+      if(sv.data && sv.data[0]) skrivHistorik(sv.data[0].id, name, [], gemItems);
+    }
     await loadJobs();closeMJobModal();renderMobileJobs(document.getElementById('mobileSearch').value||'');
-  }catch(e){alert('Fejl: '+(e.message||JSON.stringify(e)));}
+  }catch(e){ closeMJobModal(); await jobFejl(e, 'gemme jobbet'); }
   finally{btn.disabled=false;btn.textContent='Gem job';}
 });
 
@@ -5146,7 +6037,7 @@ function mQrLinkToExisting(){
   if(!val){alert('Vælg et stykke udstyr.');return;}
   var parts=val.split(':'),type=parts[0],id=parts[1];
   supa.from(type==='pkg'?'packages':'equipment').update({qr_code:code}).eq('id',id).then(async function(res){
-    if(res.error){alert('Fejl: '+res.error.message);return;}
+    if(res.error){sigFejl(res.error, 'knytte QR-koden til udstyret');return;}
     await (type==='pkg'?loadPackages():loadEquipment());
     document.getElementById('mobileQrUnknown').classList.remove('open');
     var found=findByQr(code);
@@ -5177,11 +6068,10 @@ document.getElementById('mobileScanFab').addEventListener('click',function(){
 function initMobile(){
   if(!isMobile()) return;
   renderMobileJobs('');
-  // Poll every 15s
-  setInterval(async function(){
-    await Promise.all([loadJobs(),loadObBookinger()]);
-    renderMobileTab();
-  }, 15000);
+  /* Opdateringen kører ét sted for hele programmet – se opdateringen nederst
+     i startProgram. Før havde mobilen sin egen timer uden try/catch og uden
+     at tjekke om et vindue var åbent: gik et kald galt, fejlede det hvert 15.
+     sekund resten af dagen, og to timere hentede det samme to gange. */
 }
 
 
@@ -5227,6 +6117,74 @@ function applyViewPreference(){
     document.body.classList.add('show-desktop');
     document.body.classList.remove('show-mobile','mobile-view-active');
     updateToggleState('desktop');
+  }
+  setTimeout(tjekComputerudgave, 400);
+  setTimeout(tjekFastlaastVisning, 500);
+}
+
+/* ── Når visningen sidder fast ─────────────────────────────────
+   Har man engang trykket "Computer" på sin telefon, bliver valget husket for
+   netop den skærmstørrelse – også når man egentlig gerne vil have mobil­ud­gaven
+   igen. Uden en vej ud sidder man fast, og der er ingen indstilling at finde
+   ude i vognen. Derfor en linje man kan trykke på, når de to ting ikke passer
+   sammen. */
+function tjekFastlaastVisning(){
+  if(document.getElementById('fastbesked')) return;
+  if(!isMobile()) return;
+  if(!document.body.classList.contains('show-desktop')) return;
+  var d = document.createElement('div');
+  d.id = 'fastbesked';
+  d.innerHTML = 'Du ser <b>computerudgaven</b> på en telefon. '
+    + '<button id="fastskift">Skift til mobiludgaven</button>'
+    + '<button id="fastluk" class="x" title="Luk">✕</button>';
+  document.body.appendChild(d);
+  d.querySelector('#fastskift').addEventListener('click', function(){
+    try{ localStorage.removeItem('viewPref') }catch(e){}
+    d.remove();
+    switchToMobile();
+  });
+  d.querySelector('#fastluk').addEventListener('click', function(){ d.remove(); });
+}
+
+/* Safaris "Vis computerudgave" gør siden 980 pixels bred, så mobiludgaven
+   bliver tegnet rigtigt, men vist i frimærkestørrelse. Det kan vi ikke rette
+   fra koden – men vi kan sige hvor knappen sidder. */
+function tjekComputerudgave(){
+  try{ if(localStorage.getItem('east:skjulcu')==='1') return; }catch(e){}
+  if(skaermType()!=='telefon' || window.innerWidth <= 700) return;
+  if(document.getElementById('cubesked')) return;
+  var d = document.createElement('div');
+  d.id = 'cubesked';
+  d.innerHTML = 'Safari viser siden i <b>computerudgave</b>, så alt bliver småt. '
+    + 'Tryk på <b>aA</b> i adresselinjen → <b>Vis mobilwebsted</b>.'
+    + '<button title="Skjul denne besked">✕</button>';
+  document.body.appendChild(d);
+  d.querySelector('button').addEventListener('click', function(){
+    d.remove();
+    try{ localStorage.setItem('east:skjulcu','1') }catch(e){}
+  });
+}
+
+/* ── Hvad kører der egentlig på den telefon? ───────────────────
+   Uden det her kan man ikke se, om telefonen har hentet den nye fil, og man
+   kan ikke se hvad programmet selv mener om skærmen. Det var præcis dét, der
+   gjorde Safari-fejlen i SignalFlow mulig at finde på afstand. */
+function visDiagnose(){
+  var g = gemtVisning();
+  var linjer = [
+    'East Production ' + EP_VERSION,
+    '',
+    'skærmen set herfra: ' + skaermType(),
+    'vindue: ' + window.innerWidth + '×' + window.innerHeight + ' px',
+    'skærm: ' + ((window.screen||{}).width||'?') + '×' + ((window.screen||{}).height||'?') + ' px',
+    'punkter: ' + (navigator.maxTouchPoints||0) + ' · pixelforhold: ' + (window.devicePixelRatio||1),
+    'gemt valg: ' + (g || 'ingen'),
+    'viser nu: ' + (document.body.classList.contains('show-mobile') ? 'mobil' : 'computer'),
+    'bruger: ' + (mineInitialer() || '—')
+  ];
+  if(confirm(linjer.join('\n') + '\n\nNulstil det gemte valg af visning?')){
+    try{ localStorage.removeItem('viewPref') }catch(e){}
+    applyViewPreference();
   }
 }
 
@@ -5285,7 +6243,7 @@ document.getElementById('repairSaveBtn').addEventListener('click', async functio
     await loadRepairs();
     document.getElementById('repairOverlay').classList.remove('open');
     renderLager(document.getElementById('lagerSearch').value||'');
-  }catch(e){ alert('Fejl: '+e.message); }
+  }catch(e){ sigFejl(e, 'gemme det'); }
   finally{ btn.disabled=false; btn.textContent='Fejlmeld'; }
 });
 
@@ -5426,7 +6384,7 @@ document.getElementById('resolveSaveBtn').addEventListener('click', async functi
     document.getElementById('resolveOverlay').classList.remove('open');
     renderLager(document.getElementById('lagerSearch').value||'');
     renderVaerksted();
-  }catch(e){ alert('Fejl: '+e.message); }
+  }catch(e){ sigFejl(e, 'gemme det'); }
   finally{ btn.disabled=false; btn.textContent='✓ Marker repareret'; }
 });
 
@@ -5521,6 +6479,8 @@ async function startProgram(){
   applyViewPreference();
   const u=document.getElementById('miguser');
   if(u) u.textContent = mineInitialer() || (MIG&&MIG.email ? MIG.email : '');
+  const v=document.getElementById('epversion');
+  if(v) v.textContent = EP_VERSION;
   const lo=document.getElementById('logoutBtn');
   if(lo) lo.onclick=function(){ if(confirm('Log ud af East Production?')) logUd(); };
 
@@ -5576,6 +6536,9 @@ async function startProgram(){
   lukVedKlikUdenfor(document.getElementById('impOverlay'), function(){
     document.getElementById('impOverlay').classList.remove('open');
   });
+  lukVedKlikUdenfor(document.getElementById('histOverlay'), function(){
+    document.getElementById('histOverlay').classList.remove('open');
+  });
   /* Trækkes vinduet smalt eller drejes telefonen, vurderes visningen forfra –
      medmindre man selv har valgt noget for netop den skærmstørrelse. */
   var sidsteAftryk=skaermAftryk(), stoerrelseTimer=null;
@@ -5593,29 +6556,52 @@ async function startProgram(){
      værksted stod stille hos den ene, mens den anden rettede), og den kørte
      videre mens et redigeringsvindue var åbent — så kunne man komme til at
      gemme oven i noget, der var skiftet ud under en. */
-  window.__opdaterKoerer = false;
-  setInterval(async function(){
-    if(nogetErAabent() || window.__opdaterKoerer) return;
-    window.__opdaterKoerer = true;
-    try{
-      await Promise.all([loadJobs(), loadObBookinger()]);
-      renderJobs();
-      var obTab=document.getElementById('tab-obvogne');
-      if(obTab && obTab.style.display!=='none') renderObVogne();
-      /* Lager og værksted hentes kun, når man faktisk kigger på dem. */
-      var lagerTab=document.getElementById('tab-lager');
-      if(lagerTab && lagerTab.style.display!=='none'){
-        await Promise.all([loadEquipment(), loadPackages()]);
-        renderLager(document.getElementById('lagerSearch').value||'');
-      }
-      var vTab=document.getElementById('tab-vaerksted');
-      if(vTab && vTab.style.display!=='none'){
-        await loadRepairs();
-        if(typeof renderVaerksted==='function') renderVaerksted();
-      }
-    }catch(e){ console.warn('Opdatering fejlede:', e); }
-    finally{ window.__opdaterKoerer = false; }
-  }, 15000);
+  window.opdatering = lavGentager('Opdatering', async function(){
+    await Promise.all([loadJobs(), loadObBookinger()]);
+    /* Mobilen og skrivebordet deler den samme hentning – kun tegningen er
+       forskellig. Før hentede de hver for sig, altså to gange det samme. */
+    if(document.body.classList.contains('show-mobile')){
+      renderMobileTab();
+      return;
+    }
+    renderJobs();
+    var obTab=document.getElementById('tab-obvogne');
+    if(obTab && obTab.style.display!=='none') renderObVogne();
+    /* Lager og værksted hentes kun, når man faktisk kigger på dem. */
+    var lagerTab=document.getElementById('tab-lager');
+    if(lagerTab && lagerTab.style.display!=='none'){
+      await Promise.all([loadEquipment(), loadPackages()]);
+      renderLager(document.getElementById('lagerSearch').value||'');
+    }
+    var vTab=document.getElementById('tab-vaerksted');
+    if(vTab && vTab.style.display!=='none'){
+      await loadRepairs();
+      if(typeof renderVaerksted==='function') renderVaerksted();
+    }
+  }, 15000, {
+    /* Hent aldrig ned under fødderne på en der har et vindue åbent, og lad
+       være at bruge strøm og kald på en fane der ligger i baggrunden. */
+    spring: function(){ return nogetErAabent() || document.hidden; },
+    vedOpgiv: function(){
+      console.warn('Opdateringen er stoppet efter for mange fejl.');
+      var s=document.getElementById('miguser');
+      if(s) s.title='Opdateringen er stoppet – hent siden igen';
+    }
+  });
+  window.opdatering.start(false);
+
+  /* Hvem er inde. Egen takt, fordi den skal være hurtigere end tallene –
+     og egen bremse, så en manglende tabel ikke fylder loggen. */
+  window.tilstede = lavGentager('Hvem er inde', presMeld, 10000, {
+    spring: function(){ return document.hidden; },
+    vedOpgiv: function(){ presFejl = presFejl || 'opgav efter for mange fejl'; tegnHvemErInde(); }
+  });
+  window.tilstede.start();
+  /* Kommer man tilbage til fanen, skal tallene være friske med det samme –
+     ikke om femten sekunder. */
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden) window.opdatering.naa();
+  });
 }
 
 /* Er man allerede logget ind, springer vi login over. */
