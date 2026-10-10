@@ -2527,7 +2527,21 @@ async function lsUdfoer(){
 /* Står et vindue åbent, er brugeren midt i noget. Så henter vi ikke nyt ned
    under fødderne på ham – hverken data eller en gentegning. */
 function nogetErAabent(){
-  return !!document.querySelector('.overlay.open, #overlay.open, [id$="Overlay"].open');
+  return !!document.querySelector('.overlay.open, #overlay.open, [id$="Overlay"].open, #mobileQrView.open');
+}
+
+/* ── Er brugeren midt i at skrive? ─────────────────────────────
+   Så må vi hverken hente nyt ned eller tegne listen om – det lukker feltet
+   midt i en sætning, og hakket man var på vej til at sætte, flytter sig.
+   Samme regel som i SignalFlow, hvor den gjorde den største forskel. */
+let sidsteTast = 0;
+document.addEventListener('input',   function(){ sidsteTast = Date.now(); }, true);
+document.addEventListener('keydown', function(){ sidsteTast = Date.now(); }, true);
+function skriverNu(){
+  var a = document.activeElement;
+  var iFelt = a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable)
+              && !a.closest('#gate');
+  return !!(iFelt && Date.now() - sidsteTast < 4000);
 }
 
 /* ── Luk kun et vindue ved et RIGTIGT klik udenfor ──────────────
@@ -2559,7 +2573,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_blZoSR5idK-yHYwPJTzvxg_Ea6Mbrvq';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.09-a';
+const EP_VERSION = '2026.10.09-b';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -3085,7 +3099,7 @@ function renderJobs(){
       +(conflictCount>0?'<div class="job-conflict-badge">⚠ '+conflictCount+' konflikt'+(conflictCount>1?'er':'')+'</div>'
         :'<div class="job-count">'+itemCount+' stk. · '+totalQtyAll+' i alt</div>')
       +'</div>'
-      +'<div class="job-body" id="body-'+j.id+'">'
+      +'<div class="job-body'+(aabneJob.has(j.id)?' open':'')+'" id="body-'+j.id+'">'
       +(j.notes?'<div class="notes">'+escapeHtml(j.notes)+'</div>':'')
       +itemsHtml
       +'<div class="job-actions">'
@@ -3359,8 +3373,17 @@ async function jobAntal(jobId, navn, retning){
   }
 }
 
+/* ── Hvilke job står foldet ud? ────────────────────────────────
+   Listen tegnes om hvert femtende sekund, når der kommer nyt fra serveren.
+   Før huskede den ikke, hvad brugeren havde åbnet – så klappede jobbet i
+   midt i arbejdet. Samme regel som i SignalFlow: en opdatering må aldrig
+   rydde op under hænderne på den, der sidder med det. */
+const aabneJob = new Set();
 function toggleJob(id){
-  const b=document.getElementById('body-'+id); if(b) b.classList.toggle('open');
+  const b=document.getElementById('body-'+id);
+  if(!b) return;
+  const aaben = b.classList.toggle('open');
+  if(aaben) aabneJob.add(id); else aabneJob.delete(id);
 }
 
 // ── Filter bar ─────────────────────────────────────────────
@@ -4608,13 +4631,40 @@ function printPackList(id){
   var cats=Object.keys(grouped).sort();
   var total=(j.items||[]).reduce(function(s,i){return s+i.qty;},0);
   function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+  /* Tomme søjler må ikke tage pladsen fra udstyrsnavnene. Står der ikke et
+     eneste serienummer på listen, er der ingen grund til at holde plads til
+     overskriften "Serienummer" – og navnene blev ellers klemt sammen til to
+     tegn pr. linje. Vi tager kun de søjler med, der har noget i sig. */
+  var alleLinjer = cats.reduce(function(a,k){ return a.concat(grouped[k]); }, []);
+  var harSerie = alleLinjer.some(function(it){ return it.eq && it.eq.serial_number; });
+  var harTv2   = alleLinjer.some(function(it){ return it.eq && it.eq.tv2_number; });
+  var sojler = 3 + (harSerie?1:0) + (harTv2?1:0) + 1;   // hak, navn, antal, (serie), (tv2), bemærkninger
+
   var catHtml=cats.map(function(cat){
     var rows=grouped[cat].map(function(it,idx){
       var eq=it.eq||{};
-      return '<tr class="'+(idx%2===0?'even':'odd')+'"><td class="check"><span class="checkbox"></span></td><td class="itemname">'+(it.isPkg?'📦 ':'')+esc(it.name)+'</td><td class="qty">'+it.qty+'</td><td class="serial">'+esc(eq.serial_number||'')+'</td><td class="tv2">'+esc(eq.tv2_number||'')+'</td><td class="notes-col"></td></tr>';
+      return '<tr class="'+(idx%2===0?'even':'odd')+'">'
+        +'<td class="check"><span class="checkbox"></span></td>'
+        +'<td class="itemname">'+(it.isPkg?'📦 ':'')+esc(it.name)+'</td>'
+        +'<td class="qty">'+it.qty+'</td>'
+        +(harSerie?'<td class="serial">'+esc(eq.serial_number||'')+'</td>':'')
+        +(harTv2  ?'<td class="tv2">'+esc(eq.tv2_number||'')+'</td>':'')
+        +'<td class="notes-col"></td></tr>';
     }).join('');
-    return '<tbody><tr class="cat-header"><td colspan="6">'+esc(cat)+'</td></tr>'+rows+'</tbody>';
+    return '<tbody><tr class="cat-header"><td colspan="'+sojler+'">'+esc(cat)+'</td></tr>'+rows+'</tbody>';
   }).join('');
+
+  /* Faste bredder, så navnet får resten. Uden table-layout:fixed fordeler
+     browseren pladsen efter overskrifternes længde, ikke efter indholdets. */
+  var colGruppe = '<colgroup>'
+    +'<col style="width:22px">'
+    +'<col>'                                  /* udstyr – får alt det der er tilbage */
+    +'<col style="width:42px">'
+    +(harSerie?'<col style="width:16%">':'')
+    +(harTv2  ?'<col style="width:11%">':'')
+    +'<col style="width:'+(harSerie||harTv2 ? '18%' : '26%')+'">'
+    +'</colgroup>';
   var now=new Date().toLocaleDateString('da-DK',{day:'2-digit',month:'long',year:'numeric'});
   var html='<!DOCTYPE html><html lang="da"><head><meta charset="UTF-8"><title>Pakkeliste — '+esc(j.name||'Job')+'</title><style>'
     +'*{box-sizing:border-box;margin:0;padding:0;}body{font-family:\'Helvetica Neue\',sans-serif;font-size:10pt;color:#1a1a1a;}'
@@ -4624,13 +4674,14 @@ function printPackList(id){
     +'.meta-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #ddd;border-radius:4px;overflow:hidden;margin-bottom:16px;}'
     +'.meta-cell{padding:8px 10px;border-right:1px solid #ddd;}.meta-cell:last-child{border-right:none;}'
     +'.meta-label{font-size:7.5pt;text-transform:uppercase;color:#888;margin-bottom:2px;}.meta-value{font-size:10.5pt;font-weight:700;}'
-    +'table{width:100%;border-collapse:collapse;font-size:9pt;}'
+    +'table{width:100%;border-collapse:collapse;font-size:9pt;table-layout:fixed;}'
+    +'td.itemname{word-break:break-word;hyphens:auto;line-height:1.35;}'
     +'thead tr{background:#1a1a1a;color:#fff;}thead th{padding:7px 8px;text-align:left;font-size:8pt;text-transform:uppercase;}'
     +'.cat-header td{background:#e8e8e8;font-weight:800;font-size:8.5pt;text-transform:uppercase;padding:5px 8px;}'
     +'tr.even td{background:#fff;}tr.odd td{background:#f6f6f6;}'
     +'td{padding:6px 8px;border-bottom:1px solid #e0e0e0;}'
-    +'td.qty{text-align:center;font-weight:700;width:36px;}td.check{text-align:center;width:24px;}'
-    +'td.serial,td.tv2{color:#555;font-size:8.5pt;}td.notes-col{width:18%;}'
+    +'td.qty{text-align:center;font-weight:700;}td.check{text-align:center;}'
+    +'td.serial,td.tv2{color:#555;font-size:8.5pt;word-break:break-all;}'
     +'.checkbox{display:inline-block;width:13px;height:13px;border:1.5px solid #aaa;border-radius:2px;}'
     +'.sig-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:24px;padding-top:14px;border-top:1px solid #ddd;}'
     +'.sig-box{border-bottom:1px solid #999;padding-bottom:28px;font-size:8pt;color:#888;}'
@@ -4645,7 +4696,11 @@ function printPackList(id){
     +'<div class="meta-cell"><div class="meta-label">Udstyr i alt</div><div class="meta-value">'+(j.items||[]).length+' poster · '+total+' stk.</div></div>'
     +'</div>'
     +(j.notes?'<div style="background:#f9f9f9;border:1px solid #ddd;border-radius:4px;padding:8px 10px;margin-bottom:16px;font-size:9pt;">'+esc(j.notes)+'</div>':'')
-    +'<table><thead><tr><th class="check">✓</th><th>Udstyr</th><th class="qty">Antal</th><th>Serienummer</th><th>TV2 nr.</th><th>Bemærkninger</th></tr></thead>'
+    +'<table>'+colGruppe+'<thead><tr><th class="check">✓</th><th>Udstyr</th>'
+    +'<th class="qty">Antal</th>'
+    +(harSerie?'<th>Serienr.</th>':'')
+    +(harTv2  ?'<th>TV2 nr.</th>':'')
+    +'<th>Bemærkninger</th></tr></thead>'
     +catHtml+'</table>'
     +'<div style="display:flex;justify-content:flex-end;margin-top:14px;"><div style="border:1px solid #ddd;border-radius:4px;padding:8px 14px;font-size:9pt;">Total: <strong>'+total+'</strong> stk.</div></div>'
     +'<div class="sig-row"><div class="sig-box">Pakket af / Dato</div><div class="sig-box">Modtaget af / Dato</div><div class="sig-box">Returneret af / Dato</div></div>'
@@ -5384,8 +5439,12 @@ function renderMobileJobs(q){
       })();
 
     var body = document.createElement('div');
-    body.className = 'm-job-body';
-    head.addEventListener('click', function(){ body.classList.toggle('open'); });
+    /* Også på telefonen: en opdatering må ikke folde jobbet sammen igen */
+    body.className = 'm-job-body' + (aabneJob.has(j.id) ? ' open' : '');
+    head.addEventListener('click', function(){
+      var aaben = body.classList.toggle('open');
+      if(aaben) aabneJob.add(j.id); else aabneJob.delete(j.id);
+    });
 
     var itemsHtml = (j.items||[]).map(function(it){
       var nvn = escapeHtml(it.name).replace(/'/g,"&#39;");
@@ -6581,7 +6640,7 @@ async function startProgram(){
   }, 15000, {
     /* Hent aldrig ned under fødderne på en der har et vindue åbent, og lad
        være at bruge strøm og kald på en fane der ligger i baggrunden. */
-    spring: function(){ return nogetErAabent() || document.hidden; },
+    spring: function(){ return nogetErAabent() || skriverNu() || document.hidden; },
     vedOpgiv: function(){
       console.warn('Opdateringen er stoppet efter for mange fejl.');
       var s=document.getElementById('miguser');
