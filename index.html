@@ -781,6 +781,24 @@ body.pak-visning #pakNavnOverlay.open{display:flex;position:fixed;inset:0;z-inde
  border-radius:8px;padding:10px 12px;margin:12px 0;line-height:1.6}
 .imp-note{margin-top:5px;color:var(--amber)}
 .imp-kilde{color:var(--muted);font-size:11px}
+.gl-prove{display:inline-block;width:30px;height:14px;border-radius:3px;vertical-align:-2px}
+/* Tidslinjen: vognsøjlen klæber, og et håndtag i hjørnet ændrer størrelsen */
+.ob-gantt{position:relative}
+.ob-gantt-ruller{overflow-x:auto}
+.gantt-navn{box-shadow:1px 0 0 var(--border)}
+.gantt-greb{position:absolute;right:0;bottom:34px;width:28px;height:28px;cursor:nwse-resize;
+ display:flex;align-items:flex-end;justify-content:flex-end;padding:4px;z-index:6;
+ background:linear-gradient(135deg,transparent 48%,var(--panel-2) 50%)}
+.gantt-greb span{display:block;width:11px;height:11px;
+ border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);opacity:.75}
+.gantt-greb:hover span{border-color:var(--amber);opacity:1}
+.ok-noter{margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
+.ok-noter-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:7px;font-size:12.5px}
+.ok-noter-top .konflikt-filter{padding:5px 9px;font-size:11.5px;min-height:28px}
+.ok-tabel select,.ok-tabel input[type=text]{background:var(--panel-2);border:1px solid var(--border);
+ color:var(--text);border-radius:6px;padding:5px 7px;font-size:11.5px;width:100%;min-width:0}
+.ok-tabel input[type=checkbox]{width:17px;height:17px;accent-color:var(--amber);cursor:pointer}
+.ok-foelge{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted);white-space:nowrap}
 /* Importen af OB-kalenderen: en lang liste man skal kunne løbe igennem */
 .ok-liste{max-height:46vh;overflow:auto;border:1px solid var(--border);border-radius:8px;margin-top:4px}
 .ok-tabel{width:100%;border-collapse:collapse;font-size:12px}
@@ -1283,7 +1301,7 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
     <div class="imp-knapper">
       <button class="btn small" id="lsLaesBtn" title="Sammenlign arket med lageret">Sammenlign</button>
       <label class="btn small secondary" title="Vælg fanebladet gemt som csv">
-        Vælg fil <input type="file" id="lsFil" accept=".xlsx,.xlsm,.xls,.csv,.txt,.tsv" hidden></label>
+        Vælg Excel-fil <input type="file" id="lsFil" accept=".xlsx,.xlsm,.xls,.csv,.txt,.tsv" hidden></label>
     </div>
     <div id="lsResultat"></div>
     <div class="modal-actions">
@@ -1304,7 +1322,7 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
     <div class="imp-knapper">
       <button class="btn small" id="jiLaesBtn" title="Læs arket og saml rækkerne til job">Læs arket</button>
       <label class="btn small secondary" title="Vælg fanebladet gemt som csv">
-        Vælg fil <input type="file" id="jiFil" accept=".json,.xlsx,.xlsm,.xls,.csv,.txt,.tsv" hidden></label>
+        Vælg Excel-fil <input type="file" id="jiFil" accept=".json,.xlsx,.xlsm,.xls,.csv,.txt,.tsv" hidden></label>
       <label class="ji-valg"><input type="checkbox" id="jiKunAktive" checked> kun igangværende og kommende job</label>
     </div>
     <div id="jiResultat"></div>
@@ -1349,7 +1367,7 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
     <div class="imp-knapper">
       <button class="btn small" id="impLaesBtn" title="Læs det indsatte og find udstyret i lageret">Læs listen</button>
       <label class="btn small secondary" title="Vælg en csv-fil gemt fra Excel">
-        Vælg fil <input type="file" id="impFil" accept=".xlsx,.xlsm,.xls,.csv,.txt,.tsv" hidden>
+        Vælg Excel-fil <input type="file" id="impFil" accept=".xlsx,.xlsm,.xls,.csv,.txt,.tsv" hidden>
       </label>
     </div>
     <div id="impResultat"></div>
@@ -2649,7 +2667,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_blZoSR5idK-yHYwPJTzvxg_Ea6Mbrvq';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.10-f';
+const EP_VERSION = '2026.10.10-j';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -2718,75 +2736,163 @@ function hvorBorTekst(eq){
    indeni, og det kan browseren ikke selv læse, så vi henter et lille
    bibliotek – men først når nogen faktisk vælger en .xlsx. Så koster det
    ikke noget ved opstart, og alt det andet virker uden net. */
-/* Flere steder at hente den fra: er ét sted spærret på huset net, prøver
-   vi det næste. Og en tidsgrænse, for et kald der bare hænger, er værre end
-   et der fejler – så står der "læser …" i al evighed. */
-const XLSX_KILDER = [
-  'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
-  'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
-];
-let xlsxHentes = null;
-function hentEtScript(url, msGraense){
-  return new Promise(function(klar, fejl){
-    var faerdig = false;
-    var ur = setTimeout(function(){
-      if(faerdig) return;
-      faerdig = true; fejl(new Error('tog for lang tid: ' + url));
-    }, msGraense || 12000);
-    var s = document.createElement('script');
-    s.src = url;
-    s.onload = function(){
-      if(faerdig) return;
-      faerdig = true; clearTimeout(ur);
-      window.XLSX ? klar(window.XLSX) : fejl(new Error('kom tom tilbage'));
-    };
-    s.onerror = function(){
-      if(faerdig) return;
-      faerdig = true; clearTimeout(ur);
-      fejl(new Error('kunne ikke hentes: ' + url));
-    };
-    document.head.appendChild(s);
+/* ── Læs en xlsx uden hjælp udefra ─────────────────────────────
+   Første forsøg hentede et bibliotek fra nettet. Det blev aldrig hentet
+   her i huset, og så stod programmet bare og tyggede. Men en xlsx er en
+   zip med xml indeni, og begge dele kan browseren selv: DecompressionStream
+   pakker ud, DOMParser læser xml'en. Ingen afhængigheder, intet net, og
+   ingenting der kan hænge. Samme fremgangsmåde som intercom-panelerne i
+   SignalFlow, hvor den har virket i praksis.
+
+   En xlsx er bygget sådan:
+     xl/sharedStrings.xml   al tekst, nummereret – cellerne henviser bare
+     xl/workbook.xml        fanebladenes navne
+     xl/worksheets/*.xml    selve cellerne
+     xl/styles.xml          bruges til at se hvilke tal der er datoer  */
+async function xlsxTilGitter(buf, oensketArk){
+  var u8 = new Uint8Array(buf), dv = new DataView(buf);
+  /* Zip-filens indholdsfortegnelse står til sidst */
+  var eocd = -1;
+  for(var i = u8.length - 22; i >= Math.max(0, u8.length - 66000); i--){
+    if(dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+  }
+  if(eocd < 0) throw new Error('Filen er ikke en Excel-fil (.xlsx).');
+  var antal = dv.getUint16(eocd + 10, true), p2 = dv.getUint32(eocd + 16, true);
+  var filer = {}, dek = new TextDecoder();
+  for(var n = 0; n < antal; n++){
+    var metode = dv.getUint16(p2 + 10, true), csize = dv.getUint32(p2 + 20, true);
+    var nl = dv.getUint16(p2 + 28, true), el = dv.getUint16(p2 + 30, true), cl = dv.getUint16(p2 + 32, true);
+    var lokal = dv.getUint32(p2 + 42, true);
+    filer[dek.decode(u8.subarray(p2 + 46, p2 + 46 + nl))] = {metode:metode, csize:csize, lokal:lokal};
+    p2 += 46 + nl + el + cl;
+  }
+  var hent = async function(navn){
+    var f = filer[navn];
+    if(!f) return null;
+    var l = f.lokal, nl2 = dv.getUint16(l + 26, true), el2 = dv.getUint16(l + 28, true);
+    var data = u8.subarray(l + 30 + nl2 + el2, l + 30 + nl2 + el2 + f.csize);
+    if(f.metode === 0) return dek.decode(data);          // slet ikke pakket
+    if(typeof DecompressionStream === 'undefined')
+      throw new Error('Denne browser kan ikke pakke Excel-filer ud. '
+        + 'Kopiér cellerne fra Excel og sæt dem ind i stedet.');
+    var str = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    return await new Response(str).text();
+  };
+  var xml = function(t){ return new DOMParser().parseFromString(t, 'text/xml'); };
+
+  /* Teksterne ligger samlet ét sted og nummereret */
+  var delte = [];
+  var ss = await hent('xl/sharedStrings.xml');
+  if(ss) Array.prototype.forEach.call(xml(ss).getElementsByTagName('si'), function(si){
+    delte.push(Array.prototype.map.call(si.getElementsByTagName('t'),
+      function(t){ return t.textContent; }).join(''));
   });
-}
-function hentXlsx(){
-  if(window.XLSX) return Promise.resolve(window.XLSX);
-  if(xlsxHentes) return xlsxHentes;
-  xlsxHentes = XLSX_KILDER.reduce(function(kaede, url){
-    return kaede.catch(function(){ return hentEtScript(url); });
-  }, Promise.reject()).catch(function(e){
-    xlsxHentes = null;                 // så man kan prøve igen senere
-    console.warn('Excel-læseren:', e && e.message);
-    throw new Error('Kunne ikke hente Excel-læseren. '
-      + 'Enten er der ikke net, eller også er den spærret på netværket her.');
+
+  /* Hvilke talformater er datoer? Ellers kommer 1. oktober ud som 46296. */
+  var datoStil = {};
+  var st = await hent('xl/styles.xml');
+  if(st){
+    var sx = xml(st);
+    var egne = {};
+    Array.prototype.forEach.call(sx.getElementsByTagName('numFmt'), function(f){
+      egne[f.getAttribute('numFmtId')] = f.getAttribute('formatCode') || '';
+    });
+    var xfs = sx.getElementsByTagName('cellXfs')[0];
+    if(xfs) Array.prototype.forEach.call(xfs.getElementsByTagName('xf'), function(xf, idx){
+      var id = xf.getAttribute('numFmtId') || '0';
+      var indb = (+id >= 14 && +id <= 22) || (+id >= 45 && +id <= 47);
+      var kode = egne[id] || '';
+      var egenDato = /[dmy]/i.test(kode) && !/[#?]/.test(kode.replace(/\[[^\]]*\]/g, ''));
+      if(indb || egenDato) datoStil[idx] = true;
+    });
+  }
+  var serieTilDato = function(tal){
+    /* Excel tæller dage fra 1900 og tror fejlagtigt at 1900 var skudår */
+    var d = new Date(Date.UTC(1899, 11, 30) + Math.round(tal) * 86400000);
+    if(isNaN(d)) return String(tal);
+    var m = d.getUTCMonth() + 1, da = d.getUTCDate();
+    return d.getUTCFullYear() + '-' + (m<10?'0':'') + m + '-' + (da<10?'0':'') + da;
+  };
+
+  /* Find det rigtige faneblad */
+  var arkSti = 'xl/worksheets/sheet1.xml';
+  var wb = await hent('xl/workbook.xml'), rel = await hent('xl/_rels/workbook.xml.rels');
+  var arkNavne = [];
+  if(wb && rel){
+    var ark = Array.prototype.slice.call(xml(wb).getElementsByTagName('sheet'));
+    arkNavne = ark.map(function(a){ return a.getAttribute('name') || ''; });
+    var valgt = null;
+    if(oensketArk) valgt = ark.find(function(a){
+      return (a.getAttribute('name')||'').toLowerCase().indexOf(oensketArk.toLowerCase()) >= 0; });
+    if(!valgt) valgt = ark[0];
+    var rid = valgt && (valgt.getAttribute('r:id') || valgt.getAttributeNS(
+      'http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id'));
+    var r = Array.prototype.slice.call(xml(rel).getElementsByTagName('Relationship'))
+      .find(function(x){ return x.getAttribute('Id') === rid; });
+    if(r){
+      var t2 = r.getAttribute('Target');
+      arkSti = t2.charAt(0) === '/' ? t2.slice(1) : 'xl/' + t2.replace(/^\.\//, '');
+    }
+  }
+  var sh = await hent(arkSti);
+  if(!sh) throw new Error('Kunne ikke finde regnearket inde i filen.');
+
+  var gitter = [], bredest = 0;
+  Array.prototype.forEach.call(xml(sh).getElementsByTagName('c'), function(c){
+    var ref = c.getAttribute('r') || '';
+    var m2 = ref.match(/^([A-Z]+)(\d+)$/);
+    if(!m2) return;
+    var col = 0, b2 = m2[1];
+    for(var k = 0; k < b2.length; k++) col = col * 26 + (b2.charCodeAt(k) - 64);
+    var row = +m2[2], t3 = c.getAttribute('t'), v = '';
+    if(t3 === 's'){
+      var vv = c.getElementsByTagName('v')[0];
+      v = vv ? (delte[+vv.textContent] || '') : '';
+    }else if(t3 === 'inlineStr'){
+      v = Array.prototype.map.call(c.getElementsByTagName('t'),
+        function(x){ return x.textContent; }).join('');
+    }else{
+      var vv2 = c.getElementsByTagName('v')[0];
+      v = vv2 ? vv2.textContent : '';
+      var si = c.getAttribute('s');
+      if(v !== '' && si !== null && datoStil[+si] && !isNaN(+v)) v = serieTilDato(+v);
+    }
+    v = String(v).trim();
+    if(!v) return;
+    if(!gitter[row-1]) gitter[row-1] = [];
+    gitter[row-1][col-1] = v;
+    if(col > bredest) bredest = col;
   });
-  return xlsxHentes;
+
+  /* Kun de rækker der faktisk har noget i sig.
+     Regneark slæber ofte rundt på en forladt celle helt nede i række
+     1.048.263 – den sidste i Excel. Gik vi rækkerne igennem fra 1 til
+     sidste nummer, byggede vi en million tomme linjer og gik i stå.
+     Vi tager derfor kun de rækker der findes, i rækkefølge – og stopper,
+     hvis der pludselig er hundrede tomme rækker: så er arket slut, og
+     resten er rester. */
+  var numre = [];
+  for(var r2 = 0; r2 < gitter.length; r2++) if(gitter[r2]) numre.push(r2);
+  var ud = [], sidste = -1;
+  for(var i2 = 0; i2 < numre.length; i2++){
+    var nr = numre[i2];
+    if(sidste >= 0 && nr - sidste > 100) break;        // her slutter arket
+    /* behold tomme rækker indeni, så dagene står på deres plads */
+    for(var hul = sidste + 1; sidste >= 0 && hul < nr; hul++) ud.push('');
+    var raekke = gitter[nr];
+    var linje = [];
+    for(var c3 = 0; c3 < bredest; c3++) linje.push(raekke[c3] || '');
+    ud.push(linje.join('\t').replace(/\t+$/, ''));
+    sidste = nr;
+  }
+  return {tekst: ud.join('\n'), ark: arkNavne, valgt: arkSti, raekker: ud.length};
 }
+
 function erExcel(fil){
   return /\.(xlsx|xlsm|xltx|xls)$/i.test((fil && fil.name) || '');
 }
 /* Giver altid tekst tilbage, med tabulator mellem søjlerne – samme form
    som når man kopierer fra Excel. Så er der kun én slags tekst at læse. */
-/* Hvilket faneblad skal læses? Jobarket har både OPGAVER og UDSTYR, og tager
-   man bare det første, henter man den forkerte liste. Står der et ønske,
-   leder vi efter det navn; ellers tages det ark, der har mest i sig. */
-function vaelgArk(bog, oensket){
-  var navne = bog.SheetNames || [];
-  if(oensket){
-    var traef = navne.find(function(n){
-      return (n||'').toLowerCase().indexOf(oensket.toLowerCase()) >= 0; });
-    if(traef) return traef;
-  }
-  var bedst = navne[0], flest = -1;
-  navne.forEach(function(n){
-    var ref = (bog.Sheets[n] && bog.Sheets[n]['!ref']) || '';
-    var m = ref.match(/[A-Z]+(\d+)$/);
-    var raekker = m ? +m[1] : 0;
-    if(raekker > flest){ flest = raekker; bedst = n; }
-  });
-  return bedst;
-}
-
 function laesRegneark(fil, oensketArk){
   if(!erExcel(fil)){
     return new Promise(function(klar, fejl){
@@ -2796,25 +2902,9 @@ function laesRegneark(fil, oensketArk){
       l.readAsText(fil, 'UTF-8');
     });
   }
-  return hentXlsx().then(function(X){
-    return new Promise(function(klar, fejl){
-      var l = new FileReader();
-      l.onload = function(){
-        try{
-          var bog = X.read(new Uint8Array(l.result), {type:'array', cellDates:false});
-          var ark = bog.Sheets[vaelgArk(bog, oensketArk)];
-          /* raw:false giver datoerne som de står på skærmen i Excel –
-             ikke som Excels interne tal. */
-          var rk = X.utils.sheet_to_json(ark, {header:1, raw:false, defval:''});
-          klar(rk.map(function(r){
-            return r.map(function(c){ return (c===null||c===undefined)?'':String(c).trim(); }).join('\t');
-          }).join('\n'));
-        }catch(e){ fejl(new Error('Filen kunne ikke læses som et regneark.')); }
-      };
-      l.onerror = function(){ fejl(new Error('Kunne ikke læse filen.')); };
-      l.readAsArrayBuffer(fil);
-    });
-  });
+  return fil.arrayBuffer().then(function(buf){
+    return xlsxTilGitter(buf, oensketArk);
+  }).then(function(r){ return r.tekst; });
 }
 /* Fælles håndtering af "vælg fil": læs den, og giv teksten videre.
    Går det galt, skal brugeren få at vide hvad han selv kan gøre. */
@@ -2862,6 +2952,7 @@ function filValgt(input, tekstFelt, brug, oensketArk){
    Der oprettes kun for de vogne, der findes i systemet. Resten nævnes, så
    man kan se hvad der blev sprunget over. */
 let OK_RAEKKER = [];        // det læste resultat, klar til at blive oprettet
+let OK_NOTER = [];          // felter med tekst men uden X – dem bestemmer man selv
 
 function okNorm(t){
   return (t||'').toString().toLowerCase()
@@ -2880,8 +2971,29 @@ function okSammeVogn(a, b){
   if(x === y) return true;
   return !!(OK_KALDENAVNE[x] && OK_KALDENAVNE[x] === OK_KALDENAVNE[y]);
 }
+/* "A Teknik ×11 · EVS ×4 · …" – kort nok til at stå på én linje */
+function okKortListe(liste){
+  var tael = {};
+  liste.forEach(function(x){
+    var t = x.split(': ').slice(1).join(': ') || x;
+    tael[t] = (tael[t]||0) + 1;
+  });
+  return Object.keys(tael).sort(function(a,b){ return tael[b]-tael[a]; })
+    .slice(0,5).map(function(t){ return t + (tael[t]>1 ? ' ×'+tael[t] : ''); }).join(' · ');
+}
+
 function okFindVogn(overskrift){
   return (OB_VOGNE||[]).find(function(v){ return okSammeVogn(v.name, overskrift); });
+}
+/* Kun et kryds betyder "vognen er med".
+   Kollegerne skriver også noter i de samme felter – "A Teknik" når bilen er
+   til service, "EVS", "Sony", "UHD1". Det er oplysninger, ikke bookinger,
+   og tog vi dem med, blev vognen booket på et job den slet ikke er på.
+   Et X behøver ikke stå alene: "X / MV" og "X 1. - 7/10" tæller også.
+   Men X'et skal stå for sig – "EKSTERN" og "UHD1" er ikke et kryds. */
+const OK_KRYDS = /(^|[\s(\/,;-])x(?=$|[\s(\/,;.:-])/i;
+function okHarKryds(t){
+  return OK_KRYDS.test((t||'').toString().trim());
 }
 function okErKryds(t){
   return /^x$/i.test((t||'').toString().trim());
@@ -2937,7 +3049,7 @@ let okFilNavn = '';
 
 function okLaes(tekst){
   var ud = document.getElementById('okResultat');
-  OK_RAEKKER = [];
+  OK_RAEKKER = []; OK_NOTER = [];
   document.getElementById('okOpret').style.display = 'none';
   if(!(tekst||'').trim()){
     ud.innerHTML = '<div class="imp-fejl">Der er ikke noget at læse endnu. '
@@ -3014,7 +3126,7 @@ function okLaes(tekst){
 
   /* 4. Gå rækkerne igennem og saml én linje pr. vogn pr. dag */
   var fundet = [];                 // {vognId, vognNavn, dag, slutDag, navn, note}
-  var dag = null, sprunget = 0;
+  var dag = null, noter = [];
   for(var r = hoved+1; r < rk.length; r++){
     var raekke = rk[r];
     if(!raekke || !raekke.length) continue;
@@ -3025,6 +3137,14 @@ function okLaes(tekst){
     vognSojler.forEach(function(vs){
       var celle = (raekke[vs.sojle]||'').trim();
       if(!celle) return;
+      if(!okHarKryds(celle)){
+        /* Ikke et kryds – så er det en note. Som regel at vognen er til
+           service. Den smider vi ikke væk; den lægges til side, så man selv
+           kan bestemme hvad den er. */
+        noter.push({vognId:vs.vogn.id, vognNavn:vs.vogn.name,
+                    fra:dag, til:dag, tekst:celle, event:event});
+        return;
+      }
       var p = okPeriode(celle);
       var fraDag = dag, tilDag = dag;
       if(p && (!p.maaned || p.maaned === maaned)){ fraDag = p.fra; tilDag = p.til; }
@@ -3058,6 +3178,29 @@ function okLaes(tekst){
     });
   });
 
+  /* 5b. Noterne samles på samme måde: samme vogn, samme tekst, dage i træk */
+  var nEfter = {};
+  noter.forEach(function(f){
+    var n = f.vognId + '|' + okNorm(f.tekst);
+    (nEfter[n] = nEfter[n] || []).push(f);
+  });
+  OK_NOTER = [];
+  Object.keys(nEfter).forEach(function(n){
+    var liste = nEfter[n].slice().sort(function(a,b){ return a.fra - b.fra; });
+    var nu = null;
+    liste.forEach(function(f){
+      if(nu && f.fra <= nu.til + 1){ nu.til = Math.max(nu.til, f.til); }
+      else{
+        nu = {vognId:f.vognId, vognNavn:f.vognNavn, fra:f.fra, til:f.til,
+              tekst:f.tekst, event:f.event,
+              /* Service er det almindelige, så det er forvalgt – men intet
+                 oprettes, før man har set listen og trykket Opret. */
+              med:true, slags:'service', foelge:false, note:f.tekst};
+        OK_NOTER.push(nu);
+      }
+    });
+  });
+
   /* 6. Findes bookingen allerede, skal den ikke laves igen */
   var sidsteDag = new Date(aar, maaned, 0).getDate();
   samlet.forEach(function(s){
@@ -3068,6 +3211,13 @@ function okLaes(tekst){
       return b.ob_vogn_id === s.vognId && b.start_date === s.start
           && b.end_date === s.slut && okNorm(b.name) === okNorm(s.navn);
     });
+  });
+  OK_NOTER.forEach(function(s2){
+    s2.start = okDato(aar, maaned, Math.min(Math.max(s2.fra,1), sidsteDag));
+    s2.slut  = okDato(aar, maaned, Math.min(Math.max(s2.til,1), sidsteDag));
+  });
+  OK_NOTER.sort(function(a,b){
+    return a.start.localeCompare(b.start) || a.vognNavn.localeCompare(b.vognNavn,'da');
   });
   samlet.sort(function(a,b){
     return a.start.localeCompare(b.start) || a.vognNavn.localeCompare(b.vognNavn,'da');
@@ -3086,6 +3236,8 @@ function okLaes(tekst){
       + Object.keys(pr).map(function(k){ return escapeHtml(k)+' '+pr[k]; }).join(' · ')
       + (ukendte.length ? '<div class="imp-note">Søjler uden en vogn i systemet: '
           + ukendte.map(escapeHtml).join(', ') + ' — de springes over.</div>' : '')
+      + (OK_NOTER.length ? '<div class="imp-note">' + OK_NOTER.length
+          + ' felter har tekst men intet X — dem bestemmer du selv nedenfor.</div>' : '')
     + '</div>'
     + '<div class="ok-liste"><table class="ok-tabel"><thead><tr>'
     + '<th>Vogn</th><th>Produktion</th><th>Fra</th><th>Til</th><th>Bemærkning</th></tr></thead><tbody>'
@@ -3097,18 +3249,104 @@ function okLaes(tekst){
           + '<td>' + fmtDate(s.slut) + '</td>'
           + '<td>' + escapeHtml(s.findes ? 'findes allerede' : s.note) + '</td></tr>';
       }).join('')
-    + '</tbody></table></div>';
-  document.getElementById('okOpret').style.display = OK_RAEKKER.length ? '' : 'none';
+    + '</tbody></table></div>'
+    + okNoteTabel();
+  okTegnNoter();
+  okTaelOpret();
+}
+
+/* ── Felterne uden X ───────────────────────────────────────────
+   Kollegerne skriver noter dér hvor der skulle stå et kryds – oftest at
+   vognen er til service. Vi gætter ikke på hvad de betyder: du vælger for
+   hver enkelt, om den skal med, hvad den er, om der er følgevogn, og hvad
+   der skal stå. */
+function okNoteTabel(){
+  if(!OK_NOTER.length) return '';
+  return '<div class="ok-noter">'
+    + '<div class="ok-noter-top"><b>Felter uden X — hvad er de?</b>'
+    + '<span class="imp-kilde">Oftest service. Fjern hakket på dem der ikke skal med.</span>'
+    + '<button type="button" class="konflikt-filter" onclick="okAlleNoter(false)">Fravælg alle</button>'
+    + '<button type="button" class="konflikt-filter" onclick="okAlleNoter(true)">Vælg alle</button>'
+    + '</div>'
+    + '<div class="ok-liste"><table class="ok-tabel"><thead><tr>'
+    + '<th style="width:34px"></th><th>Vogn</th><th>Dage</th><th>Står der</th>'
+    + '<th>Hvad er det</th><th>Følgevogn</th><th>Note</th></tr></thead>'
+    + '<tbody id="okNoteKrop"></tbody></table></div></div>';
+}
+
+function okTegnNoter(){
+  var krop = document.getElementById('okNoteKrop');
+  if(!krop) return;
+  krop.innerHTML = OK_NOTER.map(function(n, i){
+    return '<tr' + (n.med ? '' : ' class="ok-findes"') + '>'
+      + '<td><input type="checkbox" data-note-med="' + i + '"' + (n.med ? ' checked' : '') + '></td>'
+      + '<td>' + escapeHtml(n.vognNavn) + '</td>'
+      + '<td>' + fmtDate(n.start) + (n.start !== n.slut ? ' → ' + fmtDate(n.slut) : '') + '</td>'
+      + '<td><i>' + escapeHtml(n.tekst) + '</i></td>'
+      + '<td><select data-note-slags="' + i + '">'
+      +   '<option value="service"' + (n.slags==='service'?' selected':'') + '>Service</option>'
+      +   '<option value="booking"' + (n.slags==='booking'?' selected':'') + '>Booking</option>'
+      +   '<option value="andet"'   + (n.slags==='andet'  ?' selected':'') + '>Andet</option>'
+      + '</select></td>'
+      + '<td><label class="ok-foelge"><input type="checkbox" data-note-foelge="' + i + '"'
+      +   (n.foelge ? ' checked' : '') + '> med</label></td>'
+      + '<td><input type="text" data-note-note="' + i + '" value="' + escapeHtml(n.note)
+      +   '" placeholder="hvor og hvilken service"></td>'
+      + '</tr>';
+  }).join('');
+  krop.querySelectorAll('[data-note-med]').forEach(function(el){
+    el.addEventListener('change', function(){
+      OK_NOTER[+el.dataset.noteMed].med = el.checked;
+      el.closest('tr').className = el.checked ? '' : 'ok-findes';
+      okTaelOpret();
+    });
+  });
+  krop.querySelectorAll('[data-note-slags]').forEach(function(el){
+    el.addEventListener('change', function(){ OK_NOTER[+el.dataset.noteSlags].slags = el.value; });
+  });
+  krop.querySelectorAll('[data-note-foelge]').forEach(function(el){
+    el.addEventListener('change', function(){ OK_NOTER[+el.dataset.noteFoelge].foelge = el.checked; });
+  });
+  krop.querySelectorAll('[data-note-note]').forEach(function(el){
+    el.addEventListener('input', function(){ OK_NOTER[+el.dataset.noteNote].note = el.value; });
+  });
+}
+
+function okAlleNoter(med){
+  OK_NOTER.forEach(function(n){ n.med = !!med; });
+  okTegnNoter(); okTaelOpret();
+}
+
+/* Knappen skal sige hvor mange der faktisk bliver oprettet */
+function okTaelOpret(){
+  var k = document.getElementById('okOpret');
+  if(!k) return;
+  var n = OK_RAEKKER.length + OK_NOTER.filter(function(x){ return x.med; }).length;
+  k.textContent = n ? 'Opret ' + n + ' bookinger' : 'Opret bookinger';
+  k.style.display = n ? '' : 'none';
+}
+
+/* Navn og note på en valgt notelinje */
+function okNoteRaekke(n){
+  var navn = n.slags === 'service' ? ('Service: ' + (n.note || n.tekst))
+           : n.slags === 'booking' ? (n.event || n.note || n.tekst)
+           : (n.note || n.tekst);
+  var stykker = [];
+  if(n.note && n.note !== n.tekst) stykker.push(n.note);
+  stykker.push(n.foelge ? 'med følgevogn' : 'uden følgevogn');
+  stykker.push('fra arket: "' + n.tekst + '"');
+  return {vognId:n.vognId, navn:navn, start:n.start, slut:n.slut, note:stykker.join(' · ')};
 }
 
 async function okOpretBookinger(){
   var knap = document.getElementById('okOpret');
-  if(!OK_RAEKKER.length) return;
+  var valgteNoter = OK_NOTER.filter(function(n){ return n.med; }).map(okNoteRaekke);
+  if(!OK_RAEKKER.length && !valgteNoter.length) return;
   knap.disabled = true; knap.textContent = 'Opretter …';
   var hvem = mineInitialer() || '';
   var lavet = 0;
   try{
-    var raekker = OK_RAEKKER.map(function(s){
+    var raekker = OK_RAEKKER.concat(valgteNoter).map(function(s){
       return {ob_vogn_id:s.vognId, name:s.navn, who:hvem,
               start_date:s.start, end_date:s.slut, notes:s.note, status:'ordre'};
     });
@@ -3460,6 +3698,14 @@ function totalQty(name){
 }
 function kendtUdstyr(name){ return totalQty(name) !== null; }
 function obVognById(id){ return OB_VOGNE.find(function(v){return v.id===id;}); }
+/* Vognens farve med gennemsigtighed. Tager både #rgb og #rrggbb. */
+function obFarve(hex, alfa){
+  var h = (hex||'').toString().replace('#','').trim();
+  if(h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  if(!/^[0-9a-f]{6}$/i.test(h)) return 'rgba(95,184,138,'+alfa+')';
+  return 'rgba(' + parseInt(h.slice(0,2),16) + ',' + parseInt(h.slice(2,4),16)
+       + ',' + parseInt(h.slice(4,6),16) + ',' + alfa + ')';
+}
 function obBookingConflict(obVognId,start,end,excludeId){
   if(!obVognId||!start||!end) return null;
   return OB_BOOKINGER.find(function(b){
@@ -5061,18 +5307,44 @@ document.getElementById('statsCloseBtn').addEventListener('click', function(){
 // ═══════════════════════════════════════════════════════════
 // OB VOGNE - GANTT + BOOKING
 // ═══════════════════════════════════════════════════════════
+/* Hvor stor skal tidslinjen være? Man sidder ikke med den samme skærm i
+   vognen og på kontoret, så målene huskes pr. maskine. */
+const GANTT_LS = 'east:gantt';
+function ganttMaal(){
+  var d = {dag:28, raekke:30, navn:120};
+  try{
+    var r = JSON.parse(localStorage.getItem(GANTT_LS) || '{}');
+    if(r && +r.dag)    d.dag    = Math.min(90, Math.max(14, +r.dag));
+    if(r && +r.raekke) d.raekke = Math.min(70, Math.max(22, +r.raekke));
+    if(r && +r.navn)   d.navn   = Math.min(260, Math.max(80, +r.navn));
+  }catch(e){}
+  return d;
+}
+function gemGanttMaal(m){
+  try{ localStorage.setItem(GANTT_LS, JSON.stringify(m)) }catch(e){}
+}
+
 function renderGantt(containerEl){
-  const DAYS_BACK=7, DAYS_TOTAL=84, COL_W=28;
+  var MAAL = ganttMaal();
+  const DAYS_BACK=7, DAYS_TOTAL=84, COL_W=MAAL.dag;
   const today=new Date(); today.setHours(0,0,0,0);
   const startDate=new Date(today); startDate.setDate(startDate.getDate()-DAYS_BACK);
   const days=[]; for(var i=0;i<DAYS_TOTAL;i++){var d=new Date(startDate);d.setDate(d.getDate()+i);days.push(d);}
   const DA_M=['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
   const DA_D=['Sø','Ma','Ti','On','To','Fr','Lø'];
   const todayIdx=DAYS_BACK;
+  /* Ydre kasse står stille; kun selve gitteret ruller. Ellers forsvinder
+     håndtaget ud til højre sammen med indholdet, når man ruller. */
   const wrapper=document.createElement('div');
-  wrapper.style.cssText='overflow-x:auto;border:1px solid var(--border);border-radius:10px;margin-bottom:18px;';
+  wrapper.className='ob-gantt';
+  wrapper.style.cssText='position:relative;border:1px solid var(--border);border-radius:10px;margin-bottom:18px;';
+  const ruller=document.createElement('div');
+  ruller.className='ob-gantt-ruller';
+  ruller.style.cssText='overflow-x:auto;';
   const table=document.createElement('div');
-  table.style.cssText='display:grid;grid-template-columns:90px repeat('+DAYS_TOTAL+','+COL_W+'px);min-width:'+(90+DAYS_TOTAL*COL_W)+'px;font-size:11px;';
+  table.className='gantt-tabel';
+  table.style.cssText='display:grid;grid-template-columns:'+MAAL.navn+'px repeat('+DAYS_TOTAL+','+COL_W+'px);min-width:'+(MAAL.navn+DAYS_TOTAL*COL_W)+'px;font-size:11px;';
+  table.style.setProperty('--gantt-raekke', MAAL.raekke+'px');
 
   // Month header
   var corner=document.createElement('div'); corner.style.cssText='background:var(--panel-2);border-bottom:1px solid var(--border);padding:4px 0;'; table.appendChild(corner);
@@ -5085,7 +5357,9 @@ function renderGantt(containerEl){
   });
 
   // Day header
-  var dCorner=document.createElement('div'); dCorner.style.cssText='background:var(--panel-2);border-bottom:1px solid var(--border);padding:3px 6px;color:var(--muted);font-family:var(--mono);'; dCorner.textContent='Vogn'; table.appendChild(dCorner);
+  var dCorner=document.createElement('div');
+  dCorner.style.cssText='background:var(--panel-2);border-bottom:1px solid var(--border);padding:3px 6px;color:var(--muted);font-family:var(--mono);position:sticky;left:0;z-index:4;';
+  dCorner.textContent='Vogn'; table.appendChild(dCorner);
   days.forEach(function(d,i){
     var isWE=d.getDay()===0||d.getDay()===6, isT=i===todayIdx;
     var c=document.createElement('div');
@@ -5098,13 +5372,15 @@ function renderGantt(containerEl){
     var isLast=ri===OB_VOGNE.length-1;
     var border=isLast?'none':'1px solid var(--border)';
     var lc=document.createElement('div');
-    lc.style.cssText='padding:8px 10px;border-bottom:'+border+';display:flex;align-items:center;gap:7px;background:var(--panel);';
+    /* Navnet skal kunne læses, også når man er rullet langt ud i november.
+       Derfor klæber den første søjle til venstre kant. */
+    lc.className='gantt-navn';
+    lc.style.cssText='padding:6px 10px;border-bottom:'+border+';display:flex;align-items:center;gap:7px;'
+      +'background:var(--panel);position:sticky;left:0;z-index:3;min-height:var(--gantt-raekke);';
     var dot=document.createElement('span'); dot.style.cssText='width:9px;height:9px;border-radius:50%;background:'+vogn.color+';flex-shrink:0;box-shadow:0 0 5px '+vogn.color+'88;'; lc.appendChild(dot);
     var nm=document.createElement('span');
-    /* Navnet brækkede over to linjer i tidslinjen og skubbede rækkerne
-       skæve. Hellere lidt mindre skrift end to linjer. */
-    nm.style.cssText='font-weight:700;font-size:'+(vogn.name.length>7?'11px':'12px')
-      +';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    nm.style.cssText='font-weight:700;font-size:12px;white-space:nowrap;'
+      +'overflow:hidden;text-overflow:ellipsis;';
     nm.title=vogn.name;
     nm.textContent=vogn.name; lc.appendChild(nm);
     table.appendChild(lc);
@@ -5123,26 +5399,103 @@ function renderGantt(containerEl){
         var span=0;
         while(i+span<DAYS_TOTAL&&days[i+span].toISOString().slice(0,10)>=booking.start_date&&days[i+span].toISOString().slice(0,10)<=booking.end_date) span++;
         var isTilbud=booking.status==='tilbud';
-        var color=isTilbud?'#e8a33d':'#5fb88a',bg=isTilbud?'rgba(232,163,61,.18)':'rgba(95,184,138,.18)';
+        /* Blokken får vognens egen farve. Før var alt grønt, og så kunne man
+           ikke se på en skærm hvilken vogn en stribe hørte til, når man
+           kiggede på tværs. Et tilbud er ikke en anden farve – det er den
+           samme farve, stribet, så man kan se at det ikke er fast endnu. */
+        var color=vogn.color||'#5fb88a';
         var block=document.createElement('div');
-        block.style.cssText='grid-column:span '+span+';border-bottom:'+border+';background:'+bg+';border-left:3px solid '+color+';padding:3px 5px;display:flex;align-items:center;cursor:pointer;overflow:hidden;';
-        block.title=(isTilbud?'TILBUD: ':'')+booking.name+(booking.who?' ('+booking.who+')':'')+'\n'+fmtDate(booking.start_date)+' → '+fmtDate(booking.end_date);
-        var lbl=document.createElement('span'); lbl.style.cssText='font-size:10px;font-weight:700;color:'+color+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;';
-        lbl.textContent=(isTilbud?'◐ ':'● ')+booking.name; block.appendChild(lbl);
+        var bund = isTilbud
+          ? 'repeating-linear-gradient(45deg,'+obFarve(color,.26)+' 0 5px,'
+            + obFarve(color,.05)+' 5px 11px)'
+          : obFarve(color,.20);
+        block.style.cssText='grid-column:span '+span+';border-bottom:'+border
+          +';min-height:var(--gantt-raekke)'
+          +';background:'+bund
+          +';border-left:3px '+(isTilbud?'dashed':'solid')+' '+color
+          +';padding:3px 5px;display:flex;align-items:center;cursor:pointer;overflow:hidden;';
+        block.title=(isTilbud?'TILBUD: ':'')+booking.name+(booking.who?' ('+booking.who+')':'')+' · '+vogn.name+'\n'+fmtDate(booking.start_date)+' → '+fmtDate(booking.end_date);
+        var lbl=document.createElement('span'); lbl.style.cssText='font-size:10px;font-weight:700;color:'+color+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;'+(isTilbud?'font-style:italic;':'');
+        lbl.textContent=(isTilbud?'◌ ':'● ')+booking.name; block.appendChild(lbl);
         (function(v,b){ block.addEventListener('click',function(){openObModal(v.id,b);}); })(vogn,booking);
         table.appendChild(block); i+=Math.max(span,1);
       } else {
         var c=document.createElement('div');
-        c.style.cssText='border-bottom:'+border+';border-left:1px solid '+(isT?'var(--amber)':'var(--border)')+';background:'+(isT?'rgba(232,163,61,.04)':isWE?'rgba(255,255,255,.01)':'transparent')+';';
+        c.style.cssText='border-bottom:'+border+';min-height:var(--gantt-raekke);border-left:1px solid '+(isT?'var(--amber)':'var(--border)')+';background:'+(isT?'rgba(232,163,61,.04)':isWE?'rgba(255,255,255,.01)':'transparent')+';';
         table.appendChild(c); i++;
       }
     }
   });
 
-  wrapper.appendChild(table);
+  ruller.appendChild(table);
+  wrapper.appendChild(ruller);
+
+  /* ── Træk den i den størrelse der passer til skærmen ──────────
+     På en lille skærm skal der være så mange dage som muligt; på en stor
+     vil man hellere kunne læse navnene. Trækker man til højre, bliver
+     dagene bredere; nedad bliver rækkerne højere. Målene huskes. */
+  var greb = document.createElement('div');
+  greb.className = 'gantt-greb';
+  greb.title = 'Træk for at gøre tidslinjen større eller mindre · dobbeltklik nulstiller';
+  greb.innerHTML = '<span></span>';
+  wrapper.appendChild(greb);
+  (function(){
+    var start = null;
+    var nu = {dag:MAAL.dag, raekke:MAAL.raekke, navn:MAAL.navn};
+    function saet(m){
+      table.style.gridTemplateColumns = m.navn+'px repeat('+DAYS_TOTAL+','+m.dag+'px)';
+      table.style.minWidth = (m.navn + DAYS_TOTAL*m.dag) + 'px';
+      table.style.setProperty('--gantt-raekke', m.raekke+'px');
+    }
+    function flyt(e){
+      if(!start) return;
+      var x = (e.touches ? e.touches[0].clientX : e.clientX) - start.x;
+      var y = (e.touches ? e.touches[0].clientY : e.clientY) - start.y;
+      nu.dag    = Math.min(90, Math.max(14, Math.round(start.dag + x/24)));
+      nu.raekke = Math.min(70, Math.max(22, Math.round(start.raekke + y/6)));
+      saet(nu);
+      e.preventDefault();
+    }
+    function slip(){
+      if(!start) return;
+      start = null;
+      document.body.style.userSelect = '';
+      gemGanttMaal(nu);
+      window.removeEventListener('mousemove', flyt);
+      window.removeEventListener('touchmove', flyt);
+    }
+    function tag(e){
+      start = {x:(e.touches?e.touches[0].clientX:e.clientX),
+               y:(e.touches?e.touches[0].clientY:e.clientY),
+               dag:nu.dag, raekke:nu.raekke};
+      document.body.style.userSelect = 'none';
+      window.addEventListener('mousemove', flyt);
+      window.addEventListener('touchmove', flyt, {passive:false});
+      window.addEventListener('mouseup', slip, {once:true});
+      window.addEventListener('touchend', slip, {once:true});
+      e.preventDefault();
+    }
+    greb.addEventListener('mousedown', tag);
+    greb.addEventListener('touchstart', tag, {passive:false});
+    greb.addEventListener('dblclick', function(){
+      nu = {dag:28, raekke:30, navn:MAAL.navn};
+      saet(nu); gemGanttMaal(nu);
+    });
+  })();
+
   var legend=document.createElement('div');
-  legend.style.cssText='display:flex;gap:16px;padding:8px 12px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);';
-  legend.innerHTML='<span style="color:#5fb88a;">● Ordre</span><span style="color:#e8a33d;">◐ Tilbud</span><span>Klik på blok for at redigere</span>';
+  legend.className='ob-gantt-forklaring';
+  legend.style.cssText='display:flex;gap:10px;align-items:center;padding:8px 12px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);';
+  /* Forklaringen skal vise hvad striberne betyder, ikke to farver der
+     ikke længere findes. Prøven viser en af vognenes egne farver. */
+  var pf = (OB_VOGNE[0] && OB_VOGNE[0].color) || '#5fb88a';
+  legend.innerHTML =
+      '<span class="gl-prove" style="background:'+obFarve(pf,.20)+';border-left:3px solid '+pf+';"></span>'
+    + '<span>Ordre</span>'
+    + '<span class="gl-prove" style="background:repeating-linear-gradient(45deg,'+obFarve(pf,.26)
+    +   ' 0 5px,'+obFarve(pf,.05)+' 5px 11px);border-left:3px dashed '+pf+';"></span>'
+    + '<span><i>Tilbud</i></span>'
+    + '<span style="margin-left:auto">Hver vogn har sin egen farve · klik på en blok for at redigere</span>';
   wrapper.appendChild(legend);
   containerEl.appendChild(wrapper);
 }
@@ -7277,7 +7630,7 @@ async function startProgram(){
     document.getElementById('okResultat').innerHTML='';
     document.getElementById('okOpret').style.display='none';
     document.getElementById('okMaaned').value='';
-    OK_RAEKKER=[]; okFilNavn=''; okAutoMaaned='';
+    OK_RAEKKER=[]; OK_NOTER=[]; okFilNavn=''; okAutoMaaned='';
     var st=document.getElementById('okFilStatus'); if(st) st.textContent='';
     document.getElementById('okOverlay').classList.add('open');
     setTimeout(function(){ document.getElementById('okTekst').focus() },120);
