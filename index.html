@@ -182,6 +182,8 @@
   .hvor-pulje{ font-size:12px; color:var(--muted); font-family:var(--mono); }
   .hvor-pulje.fejl{ color:var(--red); }
   .lager-hvor{ font-size:10.5px; color:var(--amber); font-family:var(--mono); margin-top:2px; }
+  .fil-status{ font-size:11.5px; color:var(--muted); font-family:var(--mono); flex-basis:100%; }
+  .fil-status.fejl{ color:var(--red); }
 
   /* ── Historik pr. job ── */
   .hist-linje{ display:flex; align-items:baseline; gap:10px; padding:9px 2px;
@@ -259,7 +261,13 @@
   /* ob vogne */
   .ob-card{ border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:14px; }
   .ob-head{ padding:16px 18px; display:flex; align-items:center; gap:12px; background:var(--panel-2); }
-  .ob-badge{ width:38px; height:38px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; color:#fff; flex-shrink:0; }
+  /* Mærket var et fast kvadrat på 38 px. "REMOTE 1" er dobbelt så bredt
+     som "OB4", så teksten løb ud over kanten. Nu vokser mærket med navnet
+     og bliver aldrig smallere end et kvadrat. */
+  .ob-badge{ min-width:38px; height:38px; padding:0 11px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center; font-weight:800;
+    font-size:13px; color:#fff; flex-shrink:0; white-space:nowrap; letter-spacing:.01em; }
+  .ob-badge.lang{ font-size:11.5px; padding:0 9px; }
   .ob-booking-row{ display:flex; justify-content:space-between; align-items:center; padding:7px 10px; background:var(--panel-2); border-radius:7px; margin-bottom:5px; font-size:12.5px; }
   .ob-booking-dates{ font-family:var(--mono); font-size:10.5px; color:var(--muted); }
   .ob-section{ padding:12px 18px; border-bottom:1px solid var(--border); }
@@ -470,10 +478,12 @@
   background: var(--panel-2); cursor: pointer;
 }
 .m-ob-badge {
-  width: 36px; height: 36px; border-radius: 8px;
+  min-width: 36px; height: 36px; border-radius: 8px; padding: 0 10px;
   display: flex; align-items: center; justify-content: center;
   font-weight: 800; font-size: 12px; color: #fff; flex-shrink: 0;
+  white-space: nowrap;
 }
+.m-ob-badge.lang { font-size: 10.5px; padding: 0 8px; }
 .m-ob-body { display: none; padding: 12px 16px; border-top: 1px solid var(--border); }
 .m-ob-body.open { display: block; }
 .m-ob-booking {
@@ -770,6 +780,7 @@ body.pak-visning #pakNavnOverlay.open{display:flex;position:fixed;inset:0;z-inde
 .imp-fejl{font-size:12.5px;color:var(--red);background:#241a16;border:1px solid #5a2f28;
  border-radius:8px;padding:10px 12px;margin:12px 0;line-height:1.6}
 .imp-note{margin-top:5px;color:var(--amber)}
+.imp-kilde{color:var(--muted);font-size:11px}
 /* Importen af OB-kalenderen: en lang liste man skal kunne løbe igennem */
 .ok-liste{max-height:46vh;overflow:auto;border:1px solid var(--border);border-radius:8px;margin-top:4px}
 .ok-tabel{width:100%;border-collapse:collapse;font-size:12px}
@@ -1317,7 +1328,7 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
       <button class="btn small" id="okLaesBtn" title="Læs arket og saml bookingerne">Læs arket</button>
       <label class="btn small secondary" title="Vælg månedsarket gemt som csv">
         Vælg Excel-fil <input type="file" id="okFil" accept=".xlsx,.xlsm,.xls,.csv,.txt,.tsv" hidden></label>
-      <label class="ji-valg" title="Måned og år bruges, hvis de ikke står i arket">Måned
+      <label class="ji-valg" title="Udfyldes af sig selv ud fra arket eller filnavnet">Måned
         <input type="month" id="okMaaned" style="background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:7px;font-size:12px;margin-left:6px;"></label>
     </div>
     <div id="okResultat"></div>
@@ -2638,7 +2649,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_blZoSR5idK-yHYwPJTzvxg_Ea6Mbrvq';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.10-e';
+const EP_VERSION = '2026.10.10-f';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -2707,23 +2718,47 @@ function hvorBorTekst(eq){
    indeni, og det kan browseren ikke selv læse, så vi henter et lille
    bibliotek – men først når nogen faktisk vælger en .xlsx. Så koster det
    ikke noget ved opstart, og alt det andet virker uden net. */
-const XLSX_URL = 'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';
+/* Flere steder at hente den fra: er ét sted spærret på huset net, prøver
+   vi det næste. Og en tidsgrænse, for et kald der bare hænger, er værre end
+   et der fejler – så står der "læser …" i al evighed. */
+const XLSX_KILDER = [
+  'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+  'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
+];
 let xlsxHentes = null;
+function hentEtScript(url, msGraense){
+  return new Promise(function(klar, fejl){
+    var faerdig = false;
+    var ur = setTimeout(function(){
+      if(faerdig) return;
+      faerdig = true; fejl(new Error('tog for lang tid: ' + url));
+    }, msGraense || 12000);
+    var s = document.createElement('script');
+    s.src = url;
+    s.onload = function(){
+      if(faerdig) return;
+      faerdig = true; clearTimeout(ur);
+      window.XLSX ? klar(window.XLSX) : fejl(new Error('kom tom tilbage'));
+    };
+    s.onerror = function(){
+      if(faerdig) return;
+      faerdig = true; clearTimeout(ur);
+      fejl(new Error('kunne ikke hentes: ' + url));
+    };
+    document.head.appendChild(s);
+  });
+}
 function hentXlsx(){
   if(window.XLSX) return Promise.resolve(window.XLSX);
   if(xlsxHentes) return xlsxHentes;
-  xlsxHentes = new Promise(function(klar, fejl){
-    var s = document.createElement('script');
-    s.src = XLSX_URL;
-    s.onload = function(){
-      if(window.XLSX) klar(window.XLSX);
-      else fejl(new Error('Biblioteket kom ikke med.'));
-    };
-    s.onerror = function(){
-      xlsxHentes = null;
-      fejl(new Error('Kunne ikke hente Excel-læseren. Er der net?'));
-    };
-    document.head.appendChild(s);
+  xlsxHentes = XLSX_KILDER.reduce(function(kaede, url){
+    return kaede.catch(function(){ return hentEtScript(url); });
+  }, Promise.reject()).catch(function(e){
+    xlsxHentes = null;                 // så man kan prøve igen senere
+    console.warn('Excel-læseren:', e && e.message);
+    throw new Error('Kunne ikke hente Excel-læseren. '
+      + 'Enten er der ikke net, eller også er den spærret på netværket her.');
   });
   return xlsxHentes;
 }
@@ -2783,19 +2818,33 @@ function laesRegneark(fil, oensketArk){
 }
 /* Fælles håndtering af "vælg fil": læs den, og giv teksten videre.
    Går det galt, skal brugeren få at vide hvad han selv kan gøre. */
+/* Status skrives IKKE i tekstfeltet. Gjorde den det, stod der "(læser …)"
+   tilbage, hvis noget gik galt – og så kunne man heller ikke bare sætte
+   arket ind i stedet, for læseren fandt den tekst i stedet for arket. */
+function filStatus(input, besked, fejl){
+  var id = input.id + 'Status';
+  var el = document.getElementById(id);
+  if(!el){
+    el = document.createElement('div');
+    el.id = id; el.className = 'fil-status';
+    (input.closest('.imp-knapper') || input.parentNode.parentNode).appendChild(el);
+  }
+  el.textContent = besked || '';
+  el.className = 'fil-status' + (fejl ? ' fejl' : '');
+}
 function filValgt(input, tekstFelt, brug, oensketArk){
   var f = input.files && input.files[0];
   if(!f) return;
-  var visNavn = function(t){ if(tekstFelt) tekstFelt.value = t; };
-  visNavn('(læser ' + f.name + ' …)');
+  filStatus(input, 'Læser ' + f.name + ' …');
   laesRegneark(f, oensketArk).then(function(tekst){
-    visNavn(erExcel(f) ? '(fil: ' + f.name + ')' : tekst);
+    if(!erExcel(f) && tekstFelt) tekstFelt.value = tekst;
+    filStatus(input, f.name + ' · ' + tekst.split('\n').length + ' rækker');
     brug(tekst, f);
   }).catch(function(e){
-    visNavn('');
+    filStatus(input, (e.message || 'Filen kunne ikke læses.'), true);
     alert((e.message || 'Filen kunne ikke læses.')
-      + '\n\nDu kan altid åbne arket i Excel, trykke Ctrl+A og Ctrl+C, '
-      + 'og sætte det ind i feltet i stedet.');
+      + '\n\nDu kan i stedet åbne arket i Excel, trykke Ctrl+A og Ctrl+C, '
+      + 'og sætte det ind i feltet. Det virker uden net.');
   });
   input.value = '';            // så den samme fil kan vælges igen
 }
@@ -2862,11 +2911,40 @@ function okPeriode(tekst){
   return null;
 }
 
+const OK_MDR = ['januar','februar','marts','april','maj','juni','juli',
+                'august','september','oktober','november','december'];
+/* Find måned og år i en tekst – virker på både "01-10-2026", "2026-10-01",
+   "oktober 2026", "okt-26" og filnavnet "10 okt 2026.xlsx". */
+function okFindMaaned(t){
+  t = (t || '').toString();
+  var m = t.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m) return {aar:+m[1], maaned:+m[2]};
+  m = t.match(/(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/);
+  if(m) return {aar:+m[3], maaned:+m[2]};
+  var lav = t.toLowerCase();
+  for(var i=0;i<12;i++){
+    if(lav.indexOf(OK_MDR[i].slice(0,3)) < 0) continue;
+    var aa = lav.match(/(20\d{2})/) || lav.match(/(\d{2})(?!\d)/);
+    if(aa) return {aar: (+aa[1] < 100 ? 2000 + +aa[1] : +aa[1]), maaned: i+1};
+  }
+  return null;
+}
+
+/* Månedsfeltet er en nødudgang, ikke en pligt: står måneden i arket eller i
+   filnavnet, udfylder vi det selv. Retter man det bagefter, vinder rettelsen. */
+let okAutoMaaned = '';
+let okFilNavn = '';
+
 function okLaes(tekst){
-  var rk = okDelTekst(tekst);
   var ud = document.getElementById('okResultat');
   OK_RAEKKER = [];
   document.getElementById('okOpret').style.display = 'none';
+  if(!(tekst||'').trim()){
+    ud.innerHTML = '<div class="imp-fejl">Der er ikke noget at læse endnu. '
+      + 'Vælg Excel-filen, eller sæt arket ind i feltet.</div>';
+    return;
+  }
+  var rk = okDelTekst(tekst);
 
   /* 1. Find hovedet: rækken med KAMP/EVENT, eller den der nævner flest vogne */
   var hoved = -1, bedst = 0;
@@ -2877,8 +2955,16 @@ function okLaes(tekst){
     if(traef > bedst){ bedst = traef; hoved = i; }
   }
   if(hoved < 0){
-    ud.innerHTML = '<div class="imp-fejl">Kunne ikke finde hovedet i arket. '
-      + 'Der skal være en række med <b>KAMP/EVENT</b> og vognenes navne.</div>';
+    /* Sig hvad der faktisk kom ind – ellers står man og gætter. */
+    var set = rk.slice(0,6).map(function(r){
+      return r.filter(function(c){ return c; }).slice(0,8).join(' | '); })
+      .filter(function(t){ return t; });
+    ud.innerHTML = '<div class="imp-fejl">Kunne ikke finde hovedet i arket.<br>'
+      + 'Der skal være en række med <b>KAMP/EVENT</b> og vognenes navne.<br><br>'
+      + 'Jeg læste <b>' + rk.length + ' rækker</b>. Sådan ser de første ud:<br>'
+      + (set.length ? '<code>' + set.map(escapeHtml).join('</code><br><code>') + '</code>'
+                    : '<i>(helt tomme)</i>')
+      + '</div>';
     return;
   }
 
@@ -2895,29 +2981,36 @@ function okLaes(tekst){
     else ukendte.push(navn);
   }
   if(!vognSojler.length){
-    ud.innerHTML = '<div class="imp-fejl">Ingen af søjlerne passer på en OB-vogn i systemet.<br>'
-      + 'Arket har: <b>' + ukendte.map(escapeHtml).join(', ') + '</b><br>'
-      + 'Systemet har: <b>' + OB_VOGNE.map(function(v){return escapeHtml(v.name);}).join(', ') + '</b></div>';
+    ud.innerHTML = '<div class="imp-fejl">Hovedet blev fundet i række ' + (hoved+1)
+      + ', men ingen af søjlerne passer på en OB-vogn i systemet.<br><br>'
+      + 'Arket har: <b>' + (ukendte.length ? ukendte.map(escapeHtml).join(', ') : '(ingen søjlenavne)') + '</b><br>'
+      + 'Systemet har: <b>'
+      + (OB_VOGNE.length ? OB_VOGNE.map(function(v){return escapeHtml(v.name);}).join(', ')
+                         : 'ingen vogne — kør SQL\'en for OB-vogne først') + '</b></div>';
     return;
   }
 
   /* 3. Måned og år – fra arkets første celle, ellers fra feltet i vinduet */
   var mFelt = document.getElementById('okMaaned').value;     // "2026-10"
-  var aar = null, maaned = null;
-  var m1 = (h[0]||'').toString();
-  var d1 = m1.match(/(\d{4})-(\d{1,2})-(\d{1,2})/) || null;
-  if(d1){ aar = +d1[1]; maaned = +d1[2]; }
-  else {
-    var d2 = m1.match(/(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/);
-    if(d2){ aar = +d2[3]; maaned = +d2[2]; }
+  /* Først arket selv, så filnavnet, og først derefter feltet. */
+  var fundet = null, hvorfra = '';
+  for(var hi=0; hi<h.length && !fundet; hi++) fundet = okFindMaaned(h[hi]);
+  if(fundet) hvorfra = 'arket';
+  if(!fundet && okFilNavn){ fundet = okFindMaaned(okFilNavn); if(fundet) hvorfra = 'filnavnet'; }
+  /* Har man selv rettet feltet, vinder rettelsen. */
+  if(mFelt && mFelt !== okAutoMaaned){
+    fundet = {aar:+mFelt.slice(0,4), maaned:+mFelt.slice(5,7)};
+    hvorfra = 'dit valg';
   }
-  if(mFelt){ aar = +mFelt.slice(0,4); maaned = +mFelt.slice(5,7); }
-  if(!aar || !maaned){
-    ud.innerHTML = '<div class="imp-fejl">Kunne ikke se hvilken måned arket dækker. '
-      + 'Vælg måned i feltet ovenfor og læs igen.</div>';
+  if(!fundet){
+    ud.innerHTML = '<div class="imp-fejl">Kunne ikke se hvilken måned arket dækker — '
+      + 'hverken i arket eller i filnavnet.<br>Vælg måned i feltet ovenfor og tryk '
+      + '<b>Læs arket</b> igen.</div>';
     return;
   }
-  document.getElementById('okMaaned').value = aar + '-' + okToCifre(maaned);
+  var aar = fundet.aar, maaned = fundet.maaned;
+  okAutoMaaned = aar + '-' + okToCifre(maaned);
+  document.getElementById('okMaaned').value = okAutoMaaned;
 
   /* 4. Gå rækkerne igennem og saml én linje pr. vogn pr. dag */
   var fundet = [];                 // {vognId, vognNavn, dag, slutDag, navn, note}
@@ -2986,7 +3079,9 @@ function okLaes(tekst){
   var pr = {};
   OK_RAEKKER.forEach(function(s){ pr[s.vognNavn] = (pr[s.vognNavn]||0)+1; });
   ud.innerHTML =
-    '<div class="imp-status"><b>' + OK_RAEKKER.length + '</b> bookinger klar · '
+    '<div class="imp-status">' + OK_MDR[maaned-1] + ' ' + aar
+      + (hvorfra ? ' <span class="imp-kilde">(fra ' + hvorfra + ')</span>' : '') + ' · '
+      + '<b>' + OK_RAEKKER.length + '</b> bookinger klar · '
       + (alleredeDer ? alleredeDer + ' findes allerede og springes over · ' : '')
       + Object.keys(pr).map(function(k){ return escapeHtml(k)+' '+pr[k]; }).join(' · ')
       + (ukendte.length ? '<div class="imp-note">Søjler uden en vogn i systemet: '
@@ -5005,7 +5100,13 @@ function renderGantt(containerEl){
     var lc=document.createElement('div');
     lc.style.cssText='padding:8px 10px;border-bottom:'+border+';display:flex;align-items:center;gap:7px;background:var(--panel);';
     var dot=document.createElement('span'); dot.style.cssText='width:9px;height:9px;border-radius:50%;background:'+vogn.color+';flex-shrink:0;box-shadow:0 0 5px '+vogn.color+'88;'; lc.appendChild(dot);
-    var nm=document.createElement('span'); nm.style.cssText='font-weight:700;font-size:12px;'; nm.textContent=vogn.name; lc.appendChild(nm);
+    var nm=document.createElement('span');
+    /* Navnet brækkede over to linjer i tidslinjen og skubbede rækkerne
+       skæve. Hellere lidt mindre skrift end to linjer. */
+    nm.style.cssText='font-weight:700;font-size:'+(vogn.name.length>7?'11px':'12px')
+      +';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    nm.title=vogn.name;
+    nm.textContent=vogn.name; lc.appendChild(nm);
     table.appendChild(lc);
 
     var vb=OB_BOOKINGER.filter(function(b){return b.ob_vogn_id===vogn.id;});
@@ -5070,7 +5171,9 @@ function renderObVogne(){
 
     var card=document.createElement('div'); card.className='ob-card';
     var head=document.createElement('div'); head.className='ob-head';
-    var badge=document.createElement('div'); badge.className='ob-badge'; badge.style.background=vogn.color||'#e8a33d'; badge.textContent=vogn.name; head.appendChild(badge);
+    var badge=document.createElement('div');
+    badge.className='ob-badge'+(vogn.name.length>5?' lang':'');
+    badge.style.background=vogn.color||'#e8a33d'; badge.textContent=vogn.name; head.appendChild(badge);
     var tw=document.createElement('div'); tw.style.flex='1';
     tw.innerHTML='<div style="font-weight:700;font-size:15px;">'+escapeHtml(vogn.name)+'</div>'
       +'<div style="font-size:11px;color:var(--muted);">'+(equip.length+pkgs.length)+' stk. udstyr/pakker'
@@ -6095,7 +6198,7 @@ function renderMobileOb(q){
 
     var card = document.createElement('div'); card.className='m-ob-card';
     var head = document.createElement('div'); head.className='m-ob-head';
-    head.innerHTML = '<div class="m-ob-badge" style="background:'+vogn.color+';">'+escapeHtml(vogn.name)+'</div>'
+    head.innerHTML = '<div class="m-ob-badge'+(vogn.name.length>5?' lang':'')+'" style="background:'+vogn.color+';">'+escapeHtml(vogn.name)+'</div>'
       +'<div style="flex:1;">'
       +'<div style="font-weight:700;font-size:15px;">'+escapeHtml(vogn.name)+'</div>'
       +'<div style="font-size:12px;color:'+(active.length?'var(--red)':upcoming.length?'var(--amber)':'var(--green)')+';">'+(active.length?'● Booket nu':upcoming.length?'● '+upcoming.length+' kommende booking(er)':'● Ledig')+'</div>'
@@ -7173,7 +7276,9 @@ async function startProgram(){
     document.getElementById('okTekst').value='';
     document.getElementById('okResultat').innerHTML='';
     document.getElementById('okOpret').style.display='none';
-    OK_RAEKKER=[];
+    document.getElementById('okMaaned').value='';
+    OK_RAEKKER=[]; okFilNavn=''; okAutoMaaned='';
+    var st=document.getElementById('okFilStatus'); if(st) st.textContent='';
     document.getElementById('okOverlay').classList.add('open');
     setTimeout(function(){ document.getElementById('okTekst').focus() },120);
   });
@@ -7185,7 +7290,10 @@ async function startProgram(){
   });
   document.getElementById('okOpret').addEventListener('click', okOpretBookinger);
   document.getElementById('okFil').addEventListener('change', function(){
-    filValgt(this, document.getElementById('okTekst'), function(tekst){ okLaes(tekst) });
+    filValgt(this, document.getElementById('okTekst'), function(tekst, f){
+      okFilNavn = f.name;            // "10 okt 2026.xlsx" fortæller også måneden
+      okLaes(tekst);
+    });
   });
   lukVedKlikUdenfor(document.getElementById('okOverlay'), function(){
     document.getElementById('okOverlay').classList.remove('open');
