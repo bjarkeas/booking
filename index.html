@@ -776,6 +776,25 @@ body.pak-visning #pakNavnOverlay.open{display:flex;position:fixed;inset:0;z-inde
 #impTekst{width:100%;box-sizing:border-box;background:var(--panel-2);border:1px solid var(--border);
  color:var(--text);border-radius:8px;padding:10px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;resize:vertical}
 .imp-knapper{display:flex;gap:8px;margin:10px 0 4px;align-items:center}
+/* ── Hentet fra SignalFlow ─────────────────────────────────────
+   Ét projekt pr. linje. Man skal kunne se hvad man får, og om noget af
+   det støder sammen med en booking vi allerede har, FØR man trykker. */
+.sf-rk{display:flex;gap:11px;align-items:flex-start;padding:11px 12px;border:1px solid var(--border);
+ border-radius:9px;background:var(--panel-2);margin-bottom:8px}
+.sf-rk.hentet{opacity:.55}
+.sf-rk input[type=checkbox]{margin-top:3px;width:17px;height:17px;flex-shrink:0}
+.sf-txt{flex:1;min-width:0}
+.sf-navn{font-weight:700;font-size:14px;margin-bottom:2px}
+.sf-dage{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-bottom:5px}
+.sf-ting{font-size:12.5px;line-height:1.75}
+.sf-ting b{font-weight:700}
+.sf-ting em{font-style:normal;color:var(--muted);font-family:var(--mono);font-size:11px}
+.sf-mrk{display:inline-block;font-size:10.5px;font-family:var(--mono);padding:1px 6px;
+ border-radius:5px;margin-left:6px;vertical-align:1px}
+.sf-mrk.fuld{background:rgba(255,111,111,.16);color:#ff8f8f}
+.sf-mrk.delt{background:rgba(255,182,72,.16);color:#ffbe5c}
+.sf-mrk.ok{background:rgba(63,217,156,.14);color:#4fe0a8}
+.sf-tom{padding:16px 2px;color:var(--muted);font-size:13px;line-height:1.7}
 .imp-status{font-size:12px;color:var(--muted);margin:12px 0 8px}
 .imp-fejl{font-size:12.5px;color:var(--red);background:#241a16;border:1px solid #5a2f28;
  border-radius:8px;padding:10px 12px;margin:12px 0;line-height:1.6}
@@ -986,6 +1005,7 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
       <div class="field" style="margin:0;"><label>til</label><input type="date" id="filterEnd" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;"></div>
       <button class="btn small secondary" id="filterResetBtn" style="margin-bottom:1px;" title="Nulstil filtrene og vis alle job">Nulstil</button>
       <button class="btn small secondary" id="jiAabnBtn" style="margin-bottom:1px;" title="Opret mange job på én gang fra det gamle regneark">⤒ Importér job</button>
+      <button class="btn small secondary" id="sfAabnBtn" style="margin-bottom:1px;" title="Hent det udstyr SignalFlow har valgt på tegningerne, og lav en booking ud af det">⇥ Hent fra SignalFlow</button>
 <button class="btn small secondary" id="ganttToggleBtn" style="margin-bottom:1px;" title="Skift mellem liste og tidslinje">📅 Vis tidslinje</button>
       <input type="text" id="jobSearch" placeholder="Søg job navn, initialer..." style="min-width:220px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;">
       <div id="filterCount" style="font-size:11px; color:var(--muted); font-family:var(--mono); align-self:center;"></div>
@@ -1353,6 +1373,21 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
     <div class="modal-actions">
       <button class="btn small secondary" id="okLukBtn">Annuller</button>
       <button class="btn small" id="okOpret" style="display:none">Opret bookinger</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hent udstyret fra SignalFlows tegninger -->
+<div class="overlay" id="sfOverlay">
+  <div class="modal" style="max-width:860px">
+    <h3 style="margin:0 0 4px">Hent fra SignalFlow</h3>
+    <div class="imp-hjaelp">Her står de projekter, hvor nogen har valgt udstyr på tegningerne
+      og skrevet jobbets dage på. Det samme stykke udstyr på to kameraer bliver til
+      <b>ét udstyr med antal 2</b>. <b>Intet oprettes, før du trykker nederst.</b></div>
+    <div id="sfResultat" class="loading">Henter …</div>
+    <div class="modal-actions">
+      <button class="btn small secondary" id="sfLukBtn">Annuller</button>
+      <button class="btn small" id="sfOpret" style="display:none">Opret bookingen</button>
     </div>
   </div>
 </div>
@@ -3338,6 +3373,154 @@ function okNoteRaekke(n){
   return {vognId:n.vognId, navn:navn, start:n.start, slut:n.slut, note:stykker.join(' · ')};
 }
 
+/* ══ Hent fra SignalFlow ═══════════════════════════════════════
+   SignalFlow tegner signalvejene og vælger undervejs udstyret til hvert
+   kamera: optik, kamerahus, stativ. Det lander i signalflow_bookinger med
+   projektets dage på. Her laver vi en rigtig booking ud af det.
+
+   Vi slår op på udstyrets NAVN – ikke på id – fordi det er navnet jobs.items
+   bruger, og det er navnet bookedQty tæller på. */
+var SF_PROJEKTER = [];
+
+function sfDag(x){ return String(x||'').slice(0,10) }
+
+async function sfAaben(){
+  document.getElementById('sfOverlay').classList.add('open');
+  document.getElementById('sfOpret').style.display = 'none';
+  var ud = document.getElementById('sfResultat');
+  ud.className = 'loading'; ud.textContent = 'Henter …';
+  try{
+    var sv = await supa.from('signalflow_bookinger').select('*');
+    if(sv.error) throw sv.error;
+    SF_PROJEKTER = sfSaml(sv.data || []);
+    sfTegn();
+  }catch(e){
+    ud.className = '';
+    ud.innerHTML = '<div class="sf-tom">Kunne ikke hente fra SignalFlow.<br>'
+      + '<b>' + escapeHtml(e.message || '') + '</b><br><br>'
+      + 'Mangler tabellen, skal SignalFlows SQL køres i Supabase først '
+      + '(signalflow_bookinger).</div>';
+  }
+}
+
+/* Ét projekt pr. linje, og det samme udstyr lagt sammen på tværs af kortene:
+   to kameraer med den samme optik er to stykker af den optik. */
+function sfSaml(raekker){
+  var m = {};
+  raekker.forEach(function(r){
+    if(!r.project_id || !r.equipment_name) return;
+    if(!r.job_start || !r.job_end) return;          // uden dage kan vi ikke booke
+    var p = m[r.project_id] || (m[r.project_id] = {
+      id: r.project_id, navn: r.project_name || 'Uden navn',
+      start: sfDag(r.job_start), slut: sfDag(r.job_end),
+      sted: r.job_sted || '', hentet: true, refs: [], ting: {} });
+    if((r.status || 'kladde') !== 'hentet') p.hentet = false;
+    p.refs.push(r.ref);
+    var t = p.ting[r.equipment_name] || (p.ting[r.equipment_name] = {antal:0, kort:[]});
+    t.antal += (parseInt(r.qty, 10) || 1);
+    if(r.dev_name && t.kort.indexOf(r.dev_name) < 0) t.kort.push(r.dev_name);
+  });
+  return Object.keys(m).map(function(k){ return m[k] })
+    .sort(function(a,b){ return (a.start || '').localeCompare(b.start || '') });
+}
+
+function sfTegn(){
+  var ud = document.getElementById('sfResultat');
+  ud.className = '';
+  if(!SF_PROJEKTER.length){
+    ud.innerHTML = '<div class="sf-tom">Ingen projekter at hente.<br><br>'
+      + 'I SignalFlow skal nogen have sat <b>jobbets dage</b> på projektet '
+      + 'og valgt udstyr på kortene – så dukker det op her.</div>';
+    document.getElementById('sfOpret').style.display = 'none';
+    return;
+  }
+  ud.innerHTML = SF_PROJEKTER.map(function(p, i){
+    var ting = Object.keys(p.ting).sort().map(function(n){
+      var t = p.ting[n];
+      /* Er der nok af det i vores egne dage? Vi spørger på præcis samme måde
+         som når man selv sætter et job sammen. */
+      var eq = EQUIPMENT.find(function(e){ return e.name === n });
+      var paaLager = eq ? (eq.qty || 0) : 0;
+      var bq = bookedQty(n, p.start, p.slut, null);
+      var fri = paaLager - bq.sum;
+      /* "kun -1 fri" siger ingenting. Er der intet tilbage, skriver vi det. */
+      var friVis = Math.max(0, fri);
+      var mrk = !eq ? '<span class="sf-mrk fuld">findes ikke på lageret</span>'
+        : (t.antal > fri ? '<span class="sf-mrk fuld">'
+             + (friVis ? 'kun ' + friVis + ' fri af ' + paaLager : 'ingen fri af ' + paaLager)
+             + '</span>'
+        : (bq.sum ? '<span class="sf-mrk delt">' + friVis + ' fri af ' + paaLager + '</span>'
+        : '<span class="sf-mrk ok">' + paaLager + ' på lager</span>'));
+      return '<div><b>' + t.antal + ' × ' + escapeHtml(n) + '</b> '
+        + '<em>' + escapeHtml(t.kort.join(', ')) + '</em> ' + mrk + '</div>';
+    }).join('');
+    return '<div class="sf-rk' + (p.hentet ? ' hentet' : '') + '">'
+      + '<input type="checkbox" data-sfi="' + i + '"' + (p.hentet ? '' : ' checked') + '>'
+      + '<div class="sf-txt">'
+      +   '<div class="sf-navn">' + escapeHtml(p.navn)
+      +     (p.hentet ? ' <span class="sf-mrk ok">hentet ind</span>' : '') + '</div>'
+      +   '<div class="sf-dage">' + p.start + ' → ' + p.slut
+      +     (p.sted ? ' · ' + escapeHtml(p.sted) : '') + '</div>'
+      +   '<div class="sf-ting">' + ting + '</div>'
+      + '</div></div>';
+  }).join('');
+  ud.querySelectorAll('[data-sfi]').forEach(function(c){ c.addEventListener('change', sfKnap) });
+  sfKnap();
+}
+
+function sfValgte(){
+  return Array.prototype.slice.call(document.querySelectorAll('#sfResultat [data-sfi]:checked'))
+    .map(function(c){ return SF_PROJEKTER[+c.dataset.sfi] }).filter(Boolean);
+}
+function sfKnap(){
+  var n = sfValgte().length;
+  var k = document.getElementById('sfOpret');
+  k.style.display = n ? '' : 'none';
+  k.textContent = n === 1 ? 'Opret bookingen' : 'Opret ' + n + ' bookinger';
+}
+
+async function sfOpretJob(){
+  var valgte = sfValgte();
+  if(!valgte.length) return;
+  var knap = document.getElementById('sfOpret');
+  knap.disabled = true; knap.textContent = 'Opretter …';
+  var hvem = mineInitialer() || '';
+  var lavet = 0;
+  try{
+    for(var i = 0; i < valgte.length; i++){
+      var p = valgte[i];
+      var items = Object.keys(p.ting).sort().map(function(n){
+        return {name: n, qty: p.ting[n].antal};
+      });
+      var rk = {name: p.navn, who: hvem, start_date: p.start, end_date: p.slut,
+                notes: 'Hentet fra SignalFlow' + (p.sted ? ' · ' + p.sted : ''),
+                items: items, status: 'ordre',
+                updated_by: hvem, updated_at: new Date().toISOString()};
+      var sv = await supa.from('jobs').insert(rk).select('id');
+      if(sv.error) throw sv.error;
+      var jobId = sv.data && sv.data[0] && sv.data[0].id;
+      if(jobId) skrivHistorik(jobId, p.navn, [], items);
+      /* Mærk linjerne som hentet, så de ikke bliver oprettet igen i morgen.
+         Lykkes det ikke, står jobbet der stadig – det er det vigtige. */
+      try{
+        await supa.from('signalflow_bookinger')
+          .update({status: 'hentet', hentet_job_id: jobId, hentet_at: new Date().toISOString()})
+          .eq('project_id', p.id);
+      }catch(e2){ console.warn('Kunne ikke mærke SignalFlow-linjerne:', e2) }
+      lavet++;
+    }
+    await loadJobs();
+    renderJobs();
+    document.getElementById('sfOverlay').classList.remove('open');
+    alert(lavet === 1 ? 'Bookingen er oprettet.' : 'Oprettede ' + lavet + ' bookinger.');
+  }catch(e){
+    sigFejl(e, 'oprette bookingen fra SignalFlow'
+      + (lavet ? ' (de første ' + lavet + ' kom med)' : ''));
+  }finally{
+    knap.disabled = false; sfKnap();
+  }
+}
+
 async function okOpretBookinger(){
   var knap = document.getElementById('okOpret');
   var valgteNoter = OK_NOTER.filter(function(n){ return n.med; }).map(okNoteRaekke);
@@ -4244,6 +4427,10 @@ function openCopy(id){
 }
 function closeModal(){ overlay.classList.remove('open'); }
 document.getElementById('newJobBtn').addEventListener('click', openNew);
+document.getElementById('sfAabnBtn').addEventListener('click', sfAaben);
+document.getElementById('sfLukBtn').addEventListener('click', function(){
+  document.getElementById('sfOverlay').classList.remove('open'); });
+document.getElementById('sfOpret').addEventListener('click', sfOpretJob);
 document.getElementById('cancelBtn').addEventListener('click', closeModal);
 lukVedKlikUdenfor(overlay, closeModal);
 
