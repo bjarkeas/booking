@@ -804,6 +804,24 @@ body.pak-visning #pakNavnOverlay.open{display:flex;position:fixed;inset:0;z-inde
  padding:4px 6px;border-radius:6px}
 .konflikt-linje:hover{background:rgba(255,255,255,.05)}
 .konflikt-pil{margin-left:auto;color:var(--muted)}
+/* ── Importér lager ───────────────────────────────────────────
+   Tallene først, så kategorierne: man skal kunne se omfanget på et blik,
+   før man trykker. */
+.li-tal{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 10px}
+.li-tal span{flex:1;min-width:120px;background:var(--panel-2);border:1px solid var(--border);
+ border-radius:9px;padding:10px 12px;font-size:11.5px;color:var(--muted);
+ display:flex;flex-direction:column;gap:1px}
+.li-tal b{font-size:21px;color:var(--text);font-weight:700;line-height:1.1}
+.li-tal em{font-style:normal;font-size:10.5px;color:var(--muted);font-family:var(--mono)}
+.li-tal .li-kendt{border-color:#4a3f2b}
+.li-tal .li-kendt b{color:#ffc46b}
+.li-kat{border-collapse:collapse;width:100%;font-size:12.5px;margin-bottom:4px}
+.li-kat th{text-align:left;font-weight:600;padding:5px 8px;border-bottom:1px solid var(--border)}
+.li-kat td{text-align:right;padding:5px 8px;border-bottom:1px solid var(--border);
+ font-family:var(--mono);color:var(--muted);width:60px}
+.li-ny{font-size:9.5px;font-family:var(--mono);color:#4fe0a8;
+ background:rgba(63,217,156,.14);border-radius:4px;padding:1px 5px;margin-left:5px}
+.li-note{font-size:11.5px;color:var(--muted);margin-top:9px;line-height:1.65}
 .obv-vaelger{display:flex;align-items:center;gap:10px;margin:0 0 12px}
 .obv-vaelger label{font-size:11px;font-family:var(--mono);letter-spacing:.08em;
  text-transform:uppercase;color:var(--muted)}
@@ -1100,6 +1118,8 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
           </select>
           <button class="btn small secondary" id="addPkgBtn" title="Opret en pakke, så flere stykker udstyr kan bookes samlet">+ Ny pakke</button>
           <button class="btn small secondary" id="lsAabnBtn" title="Sammenlign lageret med regnearkets UDSTYR-faneblad og opdatér det">⤒ Opdatér fra regneark</button>
+          <button class="btn small secondary" id="liAabnBtn" title="Læs et helt lager ind fra Farmers Wife – opretter udstyr, kategorier og pakker">⤓ Importér lager</button>
+          <button class="btn small secondary" id="leUdBtn" title="Skriv lageret ud i samme form som Farmers Wifes eksport">⤴ Eksportér lager</button>
           <button class="btn small" id="addEquipBtn">+ Tilføj udstyr</button>
           <button class="btn small secondary" onclick="openCatManager()">Kategorier</button>
           <button class="btn small secondary" id="showVaerkstedBtn">🔧 Værksted</button>
@@ -1418,6 +1438,33 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
     <div class="modal-actions">
       <button class="btn small secondary" id="okLukBtn">Annuller</button>
       <button class="btn small" id="okOpret" style="display:none">Opret bookinger</button>
+    </div>
+  </div>
+</div>
+
+<!-- Importér et helt lager fra Farmers Wife -->
+<div class="overlay" id="liOverlay">
+  <div class="modal" style="max-width:900px">
+    <h3 style="margin:0 0 4px">Importér lager fra Farmers Wife</h3>
+    <div class="imp-hjaelp">Vælg eksporten som <b>Excel-fil</b>, eller sæt den ind herunder.
+      Arket skal have søjlerne <b>NAVN</b>, <b>OBJEKT KLASSE</b>, <b>GRUPPE</b>,
+      <b>INVENTORY NR</b>, <b>PRODUCENT</b>, <b>MODEL</b>, <b>SERINUMMER</b> og <b>TV 2 NR.</b>
+      Hver linje bliver ét stykke udstyr, og en GRUPPE bliver en pakke.
+      Inventarnummeret huskes, så den samme fil kan læses ind igen uden at
+      fordoble noget. <b>Intet oprettes, før du har set resultatet.</b></div>
+    <textarea id="liTekst" rows="4" placeholder="Sæt hele arket ind her …"></textarea>
+    <div class="imp-knapper">
+      <button class="btn small" id="liLaesBtn" title="Læs arket og vis hvad der kommer ind">Læs arket</button>
+      <label class="btn small secondary" title="Vælg eksporten fra Farmers Wife">
+        Vælg fil <input type="file" id="liFil" accept=".xlsx,.xlsm,.xls,.csv,.txt,.tsv" hidden></label>
+      <label class="ji-valg" title="Sættes foran alle kategorier, så lyslageret kan kendes fra kameralageret">Kategori
+        <input type="text" id="liPrefix" value="LYS" maxlength="12"
+          style="width:70px;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:7px;font-size:12px;margin-left:6px;"></label>
+    </div>
+    <div id="liResultat"></div>
+    <div class="modal-actions">
+      <button class="btn small secondary" id="liLukBtn">Annuller</button>
+      <button class="btn small" id="liOpret" style="display:none">Opret i lageret</button>
     </div>
   </div>
 </div>
@@ -4870,6 +4917,372 @@ function obvTegn(){
     + (rk.length < 2 ? '<div class="obv-note">Ingen andre job bruger udstyret i de dage.</div>' : '');
 }
 
+/* ══ Importér et helt lager fra Farmers Wife ═══════════════════
+   Farmers Wife registrerer hvert stykke udstyr for sig: én linje, ét
+   inventarnummer. Her bliver hver linje til ét stykke udstyr med antal 1,
+   og en GRUPPE bliver til en pakke, som delene hænger under.
+
+   Inventarnummeret er nøglen. Navne bliver omdøbt og serienumre mangler på
+   halvdelen, men nummeret står fast — så den samme fil kan læses ind igen
+   uden at der kommer 297 nye rækker. */
+
+var LI_DATA = null;
+
+/* Objekt klasse → kategori. Lysklasserne er dem vi kender fra eksporten;
+   alt andet samles under DIVERSE, så intet forsvinder i stilhed. */
+var LI_KORT = {
+  'floodlight':'LAMPER', 'hmi':'LAMPER', 'ml wash':'LAMPER', 'ml spot':'LAMPER',
+  'par lampe':'LAMPER', 'fresnell lampe':'LAMPER', 'fresnel lampe':'LAMPER',
+  'boom lampe':'LAMPER',
+  'stativ':'STATIV OG GRIP', 'grip':'STATIV OG GRIP', 'boom arm':'STATIV OG GRIP',
+  'ballast':'STRØM', 'pdu':'STRØM', 'pdu acc.':'STRØM', 'batteri 12v':'STRØM',
+  'batteri lader 12v':'STRØM', 'adapter':'STRØM',
+  'cee kabel':'KABLER', 'multikabel':'KABLER', 'dmx kabel':'KABLER',
+  'lyspult':'DMX OG STYRING', 'dmx node':'DMX OG STYRING',
+  'dmx splitter':'DMX OG STYRING', 'dmx wireless':'DMX OG STYRING',
+  'netværk':'DMX OG STYRING', 'styring':'DMX OG STYRING'
+};
+/* Står der ingen klasse, gætter vi ud fra navn og model – det samme gæt
+   som blev godkendt på forhånd. Rammer vi ikke, ryger den i DIVERSE. */
+function liGaet(navn, prod, model){
+  var t = ((navn||'')+' '+(prod||'')+' '+(model||'')).toLowerCase();
+  if(t.indexOf('titan tube')>=0 || t.indexOf('nyx bulb')>=0
+     || t.indexOf('hydra panel')>=0) return 'Floodlight';
+  if(t.indexOf('fresnel')>=0) return 'Fresnell lampe';
+  if(t.indexOf('switch')>=0 || t.indexOf('wifi')>=0 || /\bap\b/.test(t)) return 'Netværk';
+  if(t.indexOf('asteraapp')>=0) return 'Styring';
+  if(t.indexOf('hazer')>=0 || t.indexOf('røgmaskin')>=0) return 'Røgmaskine';
+  return '';
+}
+function liKategori(klasse, prefix){
+  var k = (klasse||'').toLowerCase().trim();
+  var g = LI_KORT[k] || 'DIVERSE';
+  return (prefix ? prefix.toUpperCase()+' – ' : '') + g;
+}
+
+/* Søjlerne findes på deres overskrift, ikke på deres plads – så holder det,
+   selv om Farmers Wife bytter om på dem eller får en søjle mere. */
+function liSoejler(hoved){
+  var kort = {navn:['navn','name'], klasse:['objekt klasse','objektklasse','class'],
+    gruppe:['gruppe','group'], inv:['inventory nr','inventorynr','inventarnr','inventory no'],
+    prod:['producent','manufacturer'], model:['model'],
+    serie:['serinummer','serienummer','serial','serial number'],
+    tv2:['tv 2 nr.','tv2 nr.','tv 2 nr','tv2nr','tv 2 nummer']};
+  var ud = {};
+  hoved.forEach(function(h, i){
+    var t = (h||'').toString().toLowerCase().replace(/\s+/g,' ').trim();
+    Object.keys(kort).forEach(function(f){
+      if(ud[f]===undefined && kort[f].indexOf(t)>=0) ud[f]=i;
+    });
+  });
+  return ud;
+}
+
+function liLaes(){
+  var ud = document.getElementById('liResultat');
+  var prefix = (document.getElementById('liPrefix').value||'').trim();
+  var tekst = document.getElementById('liTekst').value;
+  document.getElementById('liOpret').style.display='none';
+  LI_DATA = null;
+  if(!tekst.trim()){ ud.innerHTML='<div class="sf-tom">Vælg en fil, eller sæt arket ind i feltet.</div>'; return; }
+
+  var linjer = tekst.replace(/\r/g,'').split('\n').filter(function(l){ return l.trim().length; });
+  var sep = (linjer[0].indexOf('\t')>=0) ? '\t' : ((linjer[0].split(';').length > linjer[0].split(',').length) ? ';' : ',');
+  var gitter = linjer.map(function(l){ return l.split(sep).map(function(c){
+    return c.replace(/^"|"$/g,'').trim(); }); });
+
+  /* Find overskriftsrækken: den der både har et navn og et inventarnummer */
+  var hi = -1, sp = null;
+  for(var i=0;i<Math.min(gitter.length,10);i++){
+    var p = liSoejler(gitter[i]);
+    if(p.navn!==undefined && p.inv!==undefined){ hi=i; sp=p; break; }
+  }
+  if(hi<0){
+    ud.innerHTML='<div class="sf-tom">Kunne ikke finde overskrifterne.<br>'
+      + 'Arket skal have mindst <b>NAVN</b> og <b>INVENTORY NR</b> i den øverste række.</div>';
+    return;
+  }
+
+  var felt=function(r,f){ return (sp[f]!==undefined && r[sp[f]]!==undefined) ? r[sp[f]] : ''; };
+  var rk=[];
+  for(var j=hi+1;j<gitter.length;j++){
+    var r=gitter[j];
+    if(!r.join('').trim()) continue;
+    var navn=felt(r,'navn'), inv=felt(r,'inv');
+    if(!navn && !inv) continue;
+    rk.push({navn:navn, klasse:felt(r,'klasse'), gruppe:felt(r,'gruppe'), inv:inv,
+             prod:felt(r,'prod'), model:felt(r,'model'), serie:felt(r,'serie'), tv2:felt(r,'tv2')});
+  }
+  if(!rk.length){ ud.innerHTML='<div class="sf-tom">Der var ingen linjer under overskriften.</div>'; return; }
+
+  /* Kits: en linje hvis NAVN også står som GRUPPE, er selve kassen */
+  var grupper={}; rk.forEach(function(x){ if(x.gruppe) grupper[x.gruppe]=true; });
+  var navneTael={};
+  rk.forEach(function(x){ navneTael[x.navn]=(navneTael[x.navn]||0)+1; });
+  var brugt={};
+  rk.forEach(function(x){
+    x.erKit = !!grupper[x.navn];
+    /* To rækker med samme navn ville kun kunne ses som én, fordi
+       ledigheden slår op på navnet. Derfor nummererer vi dem. */
+    if(navneTael[x.navn]>1){
+      brugt[x.navn]=(brugt[x.navn]||0)+1;
+      x.nytnavn = x.navn+' #'+brugt[x.navn];
+      x.omdoebt = true;
+    } else x.nytnavn = x.navn;
+    x.gaettet = x.klasse ? '' : liGaet(x.navn, x.prod, x.model);
+    x.kat = liKategori(x.klasse || x.gaettet, prefix);
+  });
+
+  var udstyr = rk.filter(function(x){ return !x.erKit; });
+  var kitrk  = rk.filter(function(x){ return x.erKit; });
+  var pakkeNavne = Object.keys(grupper).sort();
+
+  /* Hvad findes i forvejen? Inventarnummeret afgør det. */
+  var harInv = {};
+  EQUIPMENT.forEach(function(e){ if(e.inventory_nr) harInv[e.inventory_nr]=e; });
+  PACKAGES.forEach(function(p){ if(p.inventory_nr) harInv[p.inventory_nr]=p; });
+  var nye = udstyr.filter(function(x){ return !harInv[x.inv]; });
+  var kendte = udstyr.length - nye.length;
+
+  var katTael={};
+  udstyr.forEach(function(x){ katTael[x.kat]=(katTael[x.kat]||0)+1; });
+  var nyeKat = Object.keys(katTael).filter(function(k){
+    return !CATEGORIES.some(function(c){ return c.name===k; }); });
+
+  LI_DATA = {udstyr:udstyr, kit:kitrk, pakker:pakkeNavne, prefix:prefix,
+             nye:nye.length, kendte:kendte, nyeKat:nyeKat, katTael:katTael, harInv:harInv};
+
+  var omdoebt = rk.filter(function(x){ return x.omdoebt; });
+  var gaettet = rk.filter(function(x){ return !x.klasse; });
+  ud.innerHTML =
+    '<div class="li-tal">'
+    + '<span><b>' + udstyr.length + '</b>stykker udstyr</span>'
+    + '<span><b>' + pakkeNavne.length + '</b>pakker</span>'
+    + '<span><b>' + Object.keys(katTael).length + '</b>kategorier<em>' + nyeKat.length + ' nye</em></span>'
+    + (kendte ? '<span class="li-kendt"><b>' + kendte + '</b>kendes i forvejen<em>bliver opdateret</em></span>' : '')
+    + '</div>'
+    + '<table class="li-kat"><tbody>'
+    + Object.keys(katTael).sort().map(function(k){
+        return '<tr><th>' + escapeHtml(k) + (nyeKat.indexOf(k)>=0 ? ' <span class="li-ny">ny</span>' : '')
+             + '</th><td>' + katTael[k] + '</td></tr>'; }).join('')
+    + '</tbody></table>'
+    + (gaettet.length ? '<div class="li-note">' + gaettet.length
+        + ' linjer havde ingen objekt klasse. De er sat efter navn og model — '
+        + escapeHtml(gaettet.slice(0,3).map(function(x){ return x.navn+' → '+x.kat; }).join(', '))
+        + (gaettet.length>3 ? ' …' : '') + '</div>' : '')
+    + (omdoebt.length ? '<div class="li-note">' + omdoebt.length
+        + ' linjer havde samme navn som en anden og er nummereret: '
+        + escapeHtml(omdoebt.map(function(x){ return x.nytnavn; }).join(', '))
+        + '. Ellers ville kun den ene kunne ses.</div>' : '');
+  document.getElementById('liOpret').style.display='';
+  document.getElementById('liOpret').textContent =
+    kendte ? ('Opret ' + nye.length + ' og opdatér ' + kendte) : ('Opret ' + udstyr.length + ' i lageret');
+}
+
+async function liOpretAlt(){
+  if(!LI_DATA) return;
+  var knap = document.getElementById('liOpret');
+  knap.disabled = true; knap.textContent = 'Opretter …';
+  var ud = document.getElementById('liResultat');
+  try{
+    /* 1 ── kategorierne først, så udstyret har et sted at høre til */
+    var sort = 100;
+    for(var i=0;i<LI_DATA.nyeKat.length;i++){
+      var sv = await supa.from('categories').insert({name:LI_DATA.nyeKat[i], sort_order:sort+i*10});
+      if(sv.error) throw sv.error;
+    }
+    await loadCategories();
+
+    /* 2 ── pakkerne, så delene kan pege på dem */
+    var pakkeId = {};
+    PACKAGES.forEach(function(p){ if(p.inventory_nr) pakkeId[p.inventory_nr]=p.id;
+                                  pakkeId['navn:'+p.name]=p.id; });
+    for(var k=0;k<LI_DATA.pakker.length;k++){
+      var pn = LI_DATA.pakker[k];
+      if(pakkeId['navn:'+pn]) continue;                       // findes allerede
+      var kit = LI_DATA.kit.find(function(x){ return x.navn===pn; });
+      var prk = {name:pn, category:(kit?kit.kat:liKategori('', LI_DATA.prefix)), qty:1,
+                 notes:'Importeret fra Farmers Wife'};
+      if(kit){
+        prk.inventory_nr=kit.inv; prk.serial_number=kit.serie||null;
+        prk.tv2_number=kit.tv2||null;
+        /* Kassen har også en producent og en model i eksporten. Uden dem
+           kunne vi ikke skrive den samme fil ud igen. */
+        prk.custom_fields=[{label:'Producent',value:kit.prod||''},
+                           {label:'Model',value:kit.model||''},
+                           {label:'Objekt klasse',value:kit.klasse||kit.gaettet||''}]
+                          .filter(function(f){ return f.value; });
+      }
+      var sp = await supa.from('packages').insert(prk).select('id');
+      if(sp.error) throw sp.error;
+      if(sp.data && sp.data[0]) pakkeId['navn:'+pn] = sp.data[0].id;
+    }
+
+    /* 3 ── udstyret, i små portioner så et stort lager ikke bliver ét kald */
+    var nye=[], ret=[];
+    LI_DATA.udstyr.forEach(function(x){
+      var rk = {name:x.nytnavn, category:x.kat, qty:1,
+                inventory_nr:x.inv||null,
+                serial_number:x.serie||null, tv2_number:x.tv2||null,
+                package_id:(x.gruppe && pakkeId['navn:'+x.gruppe]) || null,
+                custom_fields:[{label:'Producent',value:x.prod||''},
+                               {label:'Model',value:x.model||''},
+                               {label:'Objekt klasse',value:x.klasse||x.gaettet||''}]
+                              .filter(function(f){ return f.value; })};
+      var har = x.inv && LI_DATA.harInv[x.inv];
+      if(har) ret.push({id:har.id, rk:rk}); else nye.push(rk);
+    });
+    for(var a=0;a<nye.length;a+=40){
+      var si = await supa.from('equipment').insert(nye.slice(a,a+40));
+      if(si.error) throw si.error;
+    }
+    for(var b2=0;b2<ret.length;b2++){
+      var su = await supa.from('equipment').update(ret[b2].rk).eq('id', ret[b2].id);
+      if(su.error) throw su.error;
+    }
+
+    await loadEquipment();
+    await loadPackages();
+    if(typeof renderLager==='function') renderLager();
+    document.getElementById('liOverlay').classList.remove('open');
+    alert('Lageret er læst ind.\n\n' + nye.length + ' oprettet · ' + ret.length
+      + ' opdateret · ' + LI_DATA.pakker.length + ' pakker.');
+  }catch(e){
+    sigFejl(e, 'læse lageret ind');
+    ud.insertAdjacentHTML('beforeend',
+      '<div class="li-note" style="color:#ff8f8f">Det gik galt: ' + escapeHtml(e.message||'')
+      + '<br>Er SQL\'en kørt? Importen skal bruge søjlen <b>inventory_nr</b>.</div>');
+  }finally{
+    knap.disabled = false; liLaes();
+  }
+}
+
+/* ══ Eksportér lageret i samme form ════════════════════════════
+   Den anden vej: en fil med de samme otte søjler, så lageret kan læses af
+   Farmers Wife – eller bare åbnes i Excel. */
+/* En xlsx er en zip med nogle få xml-filer. Vi pakker uden komprimering
+   (metode 0), så der ikke skal bruges noget bibliotek – kun en CRC32. */
+var LE_CRC = null;
+function leCrc32(b){
+  if(!LE_CRC){
+    LE_CRC=[];
+    for(var n=0;n<256;n++){ var c=n;
+      for(var k=0;k<8;k++) c = (c&1) ? (0xEDB88320 ^ (c>>>1)) : (c>>>1);
+      LE_CRC[n]=c>>>0; }
+  }
+  var r = 0xFFFFFFFF;
+  for(var i=0;i<b.length;i++) r = LE_CRC[(r ^ b[i]) & 0xFF] ^ (r>>>8);
+  return (r ^ 0xFFFFFFFF)>>>0;
+}
+function leZip(filer){
+  var enc=new TextEncoder(), dele=[], cent=[], off=0;
+  var u16=function(n){ return [n&255,(n>>8)&255] };
+  var u32=function(n){ return [n&255,(n>>8)&255,(n>>16)&255,(n>>>24)&255] };
+  filer.forEach(function(f){
+    var navn=enc.encode(f.navn), data=enc.encode(f.indhold), crc=leCrc32(data);
+    var lokal=[].concat([0x50,0x4b,0x03,0x04],u16(20),u16(0),u16(0),u16(0),u16(0),
+                        u32(crc),u32(data.length),u32(data.length),u16(navn.length),u16(0));
+    dele.push(new Uint8Array(lokal), navn, data);
+    cent.push({navn:navn,crc:crc,len:data.length,off:off});
+    off += lokal.length + navn.length + data.length;
+  });
+  var midte=off, cd=[];
+  cent.forEach(function(c){
+    var h=[].concat([0x50,0x4b,0x01,0x02],u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),
+                    u32(c.crc),u32(c.len),u32(c.len),u16(c.navn.length),
+                    u16(0),u16(0),u16(0),u16(0),u32(0),u32(c.off));
+    cd.push(new Uint8Array(h), c.navn);
+    off += h.length + c.navn.length;
+  });
+  var slut=new Uint8Array([].concat([0x50,0x4b,0x05,0x06],u16(0),u16(0),
+    u16(cent.length),u16(cent.length),u32(off-midte),u32(midte),u16(0)));
+  return new Blob(dele.concat(cd,[slut]),
+    {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+function leXmlTekst(v){
+  return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'');
+}
+function leSoejle(i){
+  var s=''; i++;
+  while(i>0){ var r=(i-1)%26; s=String.fromCharCode(65+r)+s; i=(i-r-1)/26; }
+  return s;
+}
+function leXlsx(hoved, raekker, arknavn){
+  var alle=[hoved].concat(raekker);
+  var rows=alle.map(function(r,ri){
+    /* Også de tomme celler skrives. Springer vi dem over, ender en række
+       der slutter tomt med færre søjler, og så flytter tingene sig for den
+       der læser filen bagefter. */
+    return '<row r="'+(ri+1)+'">' + r.map(function(v,ci){
+      var ref='<c r="'+leSoejle(ci)+(ri+1)+'"';
+      if(v==null || v==='') return ref+'/>';
+      return ref+' t="inlineStr"><is><t xml:space="preserve">'
+        + leXmlTekst(v) + '</t></is></c>';
+    }).join('') + '</row>';
+  }).join('');
+  var ark='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+    + '<cols><col min="1" max="1" width="30" customWidth="1"/>'
+    + '<col min="2" max="3" width="20" customWidth="1"/>'
+    + '<col min="4" max="4" width="14" customWidth="1"/>'
+    + '<col min="5" max="6" width="20" customWidth="1"/>'
+    + '<col min="7" max="7" width="22" customWidth="1"/>'
+    + '<col min="8" max="8" width="12" customWidth="1"/></cols>'
+    + '<sheetData>'+rows+'</sheetData></worksheet>';
+  return leZip([
+   {navn:'[Content_Types].xml', indhold:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    +'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+    +'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+    +'<Default Extension="xml" ContentType="application/xml"/>'
+    +'<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+    +'<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+    +'</Types>'},
+   {navn:'_rels/.rels', indhold:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    +'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    +'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+    +'</Relationships>'},
+   {navn:'xl/workbook.xml', indhold:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    +'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+    +'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+    +'<sheets><sheet name="'+leXmlTekst(arknavn||'Ark1')+'" sheetId="1" r:id="rId1"/></sheets></workbook>'},
+   {navn:'xl/_rels/workbook.xml.rels', indhold:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    +'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    +'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+    +'</Relationships>'},
+   {navn:'xl/worksheets/sheet1.xml', indhold:ark}
+  ]);
+}
+
+function leEksport(){
+  var H = ['NAVN','OBJEKT KLASSE','GRUPPE','INVENTORY NR','PRODUCENT','MODEL','SERINUMMER','TV 2 NR.'];
+  var cf = function(e, navn){
+    var f = (e.custom_fields||[]).find(function(x){
+      return (x.label||'').toLowerCase() === navn; });
+    return f ? (f.value||'') : '';
+  };
+  var pkgNavn = {};
+  PACKAGES.forEach(function(p){ pkgNavn[p.id] = p.name; });
+  var rk = [];
+  /* pakkerne først, så en kasse står før sine dele – som i eksporten */
+  PACKAGES.forEach(function(p){
+    rk.push([p.name, cf(p,'objekt klasse'), '', p.inventory_nr||'',
+             cf(p,'producent'), cf(p,'model'), p.serial_number||'', p.tv2_number||'']);
+  });
+  EQUIPMENT.forEach(function(e){
+    rk.push([e.name, cf(e,'objekt klasse'), pkgNavn[e.package_id]||'', e.inventory_nr||'',
+             cf(e,'producent'), cf(e,'model'), e.serial_number||'', e.tv2_number||'']);
+  });
+  if(!rk.length){ alert('Lageret er tomt – der er ikke noget at skrive ud.'); return; }
+  var blob = leXlsx(H, rk, 'Ark1');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Lager_' + todayStr() + '.xlsx';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 400);
+}
+
 function konfliktMaerke(kf, noegle){
   var b = document.createElement('button');
   b.type = 'button';
@@ -8012,6 +8425,28 @@ async function startProgram(){
 
   /* Import af udstyrsliste fra det gamle system */
   document.getElementById('impAabnBtn').addEventListener('click', openImportModal);
+  document.getElementById('liAabnBtn').addEventListener('click', function(){
+    document.getElementById('liOverlay').classList.add('open');
+    document.getElementById('liResultat').innerHTML='';
+    document.getElementById('liOpret').style.display='none';
+  });
+  document.getElementById('liLukBtn').addEventListener('click', function(){
+    document.getElementById('liOverlay').classList.remove('open'); });
+  document.getElementById('liLaesBtn').addEventListener('click', liLaes);
+  document.getElementById('liOpret').addEventListener('click', liOpretAlt);
+  document.getElementById('liFil').addEventListener('change', function(){
+    var f=this.files && this.files[0]; if(!f) return;
+    var r=document.getElementById('liResultat');
+    r.innerHTML='<div class="li-note">Læser '+escapeHtml(f.name)+' …</div>';
+    laesRegneark(f).then(function(t){
+      document.getElementById('liTekst').value=t; liLaes();
+    }).catch(function(e){
+      r.innerHTML='<div class="sf-tom">Kunne ikke læse filen: '+escapeHtml(e.message||'')
+        +'<br>Gem den som .csv og prøv igen.</div>';
+    });
+    this.value='';
+  });
+  document.getElementById('leUdBtn').addEventListener('click', leEksport);
   document.getElementById('impLukBtn').addEventListener('click', function(){
     document.getElementById('impOverlay').classList.remove('open');
   });
