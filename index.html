@@ -795,6 +795,51 @@ body.pak-visning #pakNavnOverlay.open{display:flex;position:fixed;inset:0;z-inde
 .sf-mrk.delt{background:rgba(255,182,72,.16);color:#ffbe5c}
 .sf-mrk.ok{background:rgba(63,217,156,.14);color:#4fe0a8}
 .sf-tom{padding:16px 2px;color:var(--muted);font-size:13px;line-height:1.7}
+/* ── Hvem har taget udstyret ───────────────────────────────────
+   Et regneark med job og dage. Den skal kunne skimmes: navnene står fast i
+   venstre side, dagene ruller, og kun det der er booket har farve. */
+/* Konfliktlinjerne er nu knapper – de skal se ud som noget man kan trykke på */
+.konflikt-linje{display:flex;align-items:center;gap:6px;width:100%;text-align:left;
+ background:none;border:none;color:inherit;font:inherit;cursor:pointer;
+ padding:4px 6px;border-radius:6px}
+.konflikt-linje:hover{background:rgba(255,255,255,.05)}
+.konflikt-pil{margin-left:auto;color:var(--muted)}
+.obv-vaelger{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.obv-vaelger label{font-size:11px;font-family:var(--mono);letter-spacing:.08em;
+ text-transform:uppercase;color:var(--muted)}
+.obv-vaelger select{flex:1;background:var(--panel-2);border:1px solid var(--border);
+ color:var(--text);padding:8px 10px;border-radius:7px;font-size:13px}
+.obv-top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 8px}
+.obv-top b{font-size:15px;font-weight:700}
+.obv-top span{font-size:12px;color:var(--muted)}
+.obv-rod{color:#ff8f8f;font-weight:700}
+.obv-rul{overflow-x:auto;border:1px solid var(--border);border-radius:9px}
+/* Bredden følger indholdet. Med width:100% blev navnesøjlen strakt, og
+   dagene endte ude i højre side med et tomt felt imellem. */
+.obv-tabel{border-collapse:separate;border-spacing:0;font-size:12px;width:auto}
+.obv-tabel th,.obv-tabel td{padding:6px 7px;text-align:center;white-space:nowrap;
+ border-bottom:1px solid var(--border)}
+.obv-tabel thead th{position:sticky;top:0;background:var(--panel-2);font-family:var(--mono);
+ font-size:11px;color:var(--muted);font-weight:600;min-width:26px}
+.obv-tabel thead th em{display:block;font-style:normal;font-size:9px;opacity:.6}
+.obv-navn{position:sticky;left:0;z-index:2;background:var(--panel);text-align:left!important;
+ width:200px;min-width:200px;max-width:200px;overflow:hidden;text-overflow:ellipsis;font-weight:600;
+ padding-right:12px}
+.obv-navn em{display:block;font-style:normal;font-size:10px;font-family:var(--mono);
+ color:var(--muted);font-weight:400}
+.obv-tabel thead .obv-navn{background:var(--panel-2);z-index:3}
+.obv-brugt{background:rgba(255,182,72,.14);font-weight:700;color:#ffc46b}
+.obv-brugt.tilbud{background:rgba(255,182,72,.07);color:#c8a068}
+.obv-brugt.mit{background:rgba(94,163,255,.18);color:#8fc0ff}
+.obv-mit .obv-navn{color:#8fc0ff}
+.obv-mrk{font-size:9.5px;font-family:var(--mono);color:var(--muted);
+ border:1px solid var(--border);border-radius:4px;padding:0 4px;margin-left:4px}
+.obv-sum th,.obv-sum td{border-top:2px solid var(--border);border-bottom:none;
+ font-weight:700;font-family:var(--mono)}
+.obv-sum td.fuld{color:#ffc46b}
+.obv-sum td.over{background:rgba(255,111,111,.2);color:#ff8f8f}
+.obv-note{font-size:11.5px;color:var(--muted);margin-top:9px;line-height:1.6}
+.obv-tom{padding:18px 2px;color:var(--muted);font-size:13px;line-height:1.7}
 .imp-status{font-size:12px;color:var(--muted);margin:12px 0 8px}
 .imp-fejl{font-size:12.5px;color:var(--red);background:#241a16;border:1px solid #5a2f28;
  border-radius:8px;padding:10px 12px;margin:12px 0;line-height:1.6}
@@ -1373,6 +1418,24 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
     <div class="modal-actions">
       <button class="btn small secondary" id="okLukBtn">Annuller</button>
       <button class="btn small" id="okOpret" style="display:none">Opret bookinger</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hvem har taget udstyret, og hvilke dage -->
+<div class="overlay" id="obvOverlay">
+  <div class="modal" style="max-width:1000px">
+    <h3 style="margin:0 0 4px">Hvem har taget udstyret?</h3>
+    <div class="imp-hjaelp">Job ned ad siden, datoer hen ad toppen. Tallet i feltet er
+      hvor mange det job har taget den dag. Nederst står det samlede antal mod
+      lageret — <b>rødt betyder at der er booket flere end der findes</b>.</div>
+    <div class="obv-vaelger">
+      <label>Udstyr</label>
+      <select id="obvVaelg"></select>
+    </div>
+    <div id="obvIndhold"></div>
+    <div class="modal-actions">
+      <button class="btn small secondary" id="obvLukBtn">Luk</button>
     </div>
   </div>
 </div>
@@ -4428,6 +4491,10 @@ function openCopy(id){
 function closeModal(){ overlay.classList.remove('open'); }
 document.getElementById('newJobBtn').addEventListener('click', openNew);
 document.getElementById('sfAabnBtn').addEventListener('click', sfAaben);
+document.getElementById('obvLukBtn').addEventListener('click', function(){
+  document.getElementById('obvOverlay').classList.remove('open'); });
+document.getElementById('obvVaelg').addEventListener('change', function(){
+  OB_NOEGLE=this.value; obvTegn(); });
 document.getElementById('sfLukBtn').addEventListener('click', function(){
   document.getElementById('sfOverlay').classList.remove('open'); });
 document.getElementById('sfOpret').addEventListener('click', sfOpretJob);
@@ -4528,15 +4595,27 @@ function renderEquipList(filter){
       ned.title='Ét mindre';
 
       const qi=document.createElement('input');
-      qi.type='number'; qi.className='qty-input'; qi.min='1'; qi.value=qty;
+      qi.type='number'; qi.className='qty-input'; qi.min='0'; qi.value=qty;
       qi.title='Hvor mange af dette skal med på jobbet?';
 
       const op=document.createElement('button');
       op.type='button'; op.className='qty-knap'; op.textContent='+';
       op.title='Ét mere';
 
+      /* Står der ét og man trykker minus, skal det sidste stykke udstyr væk
+         fra jobbet – ikke blive stående på ét. Så ryger hakket også. */
+      const fjern=function(){
+        delete selectedItems[key];
+        renderSelectedStrip(); renderConflicts();
+        renderEquipList(filter);
+      };
       const saet=function(n, tegnOm){
-        const v=Math.max(1, parseInt(n,10)||1);
+        const tal=parseInt(n,10);
+        if(tegnOm && !isNaN(tal) && tal<=0){ fjern(); return }
+        /* Midt i en indtastning retter vi ikke feltet. Skrev vi 0 om til 1
+           med det samme, kunne man aldrig taste sig ned til nul. */
+        if(!tegnOm && (String(n).trim()==='' || tal<=0)) return;
+        const v=Math.max(1, tal||1);
         selectedItems[key]=v;
         qi.value=v;
         renderSelectedStrip(); renderConflicts();
@@ -4676,15 +4755,131 @@ let kunKonflikter = false;
 
 /* Mærket på selve linjen. Musen over giver hele forklaringen; på en telefon
    findes der ingen mus, så et tryk viser den samme tekst. */
+/* ══ Hvem har taget det, og hvilke dage? ═══════════════════════
+   "Kun 1 ledig" fortæller at der er et problem, men ikke hvor det ligger.
+   Her er det samme opgjort dag for dag: job ned ad siden, datoer hen ad
+   toppen, og nederst hvad der er booket i alt mod hvad der står på lageret.
+   Så kan man se hvilken dag det brænder – og hvem man skal ringe til. */
+var OB_NOEGLE = null;
+
+function obDage(a, b){
+  var ud = [], d = a, n = 0;
+  while(d <= b && n < 400){ ud.push(d); d = flytDage(d, 1); n++; }
+  return ud;
+}
+function obNavnOgAntal(noegle){
+  if(noegle.indexOf('PKG:') === 0){
+    var pkg = PACKAGES.find(function(p){ return p.id === noegle.slice(4); });
+    return pkg ? {navn:pkg.name, iAlt:pkg.qty} : null;
+  }
+  return {navn:noegle, iAlt:totalQty(noegle)};
+}
+
+function openOverblik(noegle){
+  OB_NOEGLE = noegle || OB_NOEGLE;
+  document.getElementById('obvOverlay').classList.add('open');
+  obvTegn();
+}
+function obvTegn(){
+  var ud = document.getElementById('obvIndhold');
+  var vaelg = document.getElementById('obvVaelg');
+  var start = document.getElementById('jobStart').value;
+  var slut  = document.getElementById('jobEnd').value;
+
+  /* Vælgeren: alt det der er valgt på jobbet, så man kan hoppe mellem dem */
+  var noegler = Object.keys(selectedItems);
+  if(noegler.indexOf(OB_NOEGLE) < 0 && OB_NOEGLE) noegler = [OB_NOEGLE].concat(noegler);
+  vaelg.innerHTML = noegler.map(function(k){
+    var kf = (start && slut) ? konfliktFor(k, selectedItems[k]||1, start, slut, editingJobId)
+                             : {konflikt:false};
+    return '<option value="' + escapeHtml(k) + '"' + (k === OB_NOEGLE ? ' selected' : '') + '>'
+      + escapeHtml(konfliktNavn(k)) + (kf.konflikt ? '  ⚠ ' + escapeHtml(kf.kort) : '') + '</option>';
+  }).join('');
+
+  var info = obNavnOgAntal(OB_NOEGLE);
+  if(!info || info.iAlt === null){
+    ud.innerHTML = '<div class="obv-tom">"' + escapeHtml(konfliktNavn(OB_NOEGLE || ''))
+      + '" står ikke i lageret, så der er ikke noget at regne på.</div>';
+    return;
+  }
+  if(!start || !slut){
+    ud.innerHTML = '<div class="obv-tom">Sæt først jobbets start- og slutdato.</div>';
+    return;
+  }
+
+  /* Alle job der rører udstyret i vores dage – og hele deres eget forløb,
+     så man kan se om de slutter dagen før eller løber hele vejen. */
+  var rk = [];
+  jobs.forEach(function(j){
+    if(!j.start || !j.end) return;
+    if(j.id === editingJobId) return;
+    if(!datesOverlap(start, slut, j.start, j.end)) return;
+    var f = (j.items||[]).find(function(it){ return it.name === info.navn; });
+    if(!f) return;
+    rk.push({navn:j.name, hvem:j.who||'', antal:f.qty, start:j.start, slut:j.end,
+             tilbud:(j.status==='tilbud')});
+  });
+  /* og jobbet man selv sidder med */
+  rk.unshift({navn:(document.getElementById('jobName').value || 'Dette job'),
+              hvem:mineInitialer()||'', antal:selectedItems[OB_NOEGLE]||1,
+              start:start, slut:slut, mit:true});
+
+  /* Vinduet: hele forløbet, men højst 31 dage, så rækken kan læses */
+  var a = start, b = slut;
+  rk.forEach(function(r){ if(r.start < a) a = r.start; if(r.slut > b) b = r.slut; });
+  var dage = obDage(a, b), klippet = false;
+  if(dage.length > 31){ dage = obDage(flytDage(start,-2), flytDage(slut,2)); klippet = true; }
+
+  var UGE = ['s','m','t','o','t','f','l'];
+  var hoved = '<th class="obv-navn">Job</th>' + dage.map(function(d){
+    var dt = new Date(d + 'T00:00:00');
+    return '<th><em>' + UGE[dt.getDay()] + '</em>' + dt.getDate() + '</th>';
+  }).join('');
+
+  var ialt = dage.map(function(){ return 0 });
+  var kroppen = rk.map(function(r){
+    var celler = dage.map(function(d, i){
+      if(d < r.start || d > r.slut) return '<td></td>';
+      ialt[i] += r.antal;
+      return '<td class="obv-brugt' + (r.mit ? ' mit' : '') + (r.tilbud ? ' tilbud' : '') + '">'
+        + r.antal + '</td>';
+    }).join('');
+    return '<tr' + (r.mit ? ' class="obv-mit"' : '') + '>'
+      + '<th class="obv-navn">' + escapeHtml(r.navn)
+      + (r.tilbud ? ' <span class="obv-mrk">tilbud</span>' : '')
+      + (r.hvem ? '<em>' + escapeHtml(r.hvem) + '</em>' : '') + '</th>'
+      + celler + '</tr>';
+  }).join('');
+
+  var sumrk = '<tr class="obv-sum"><th class="obv-navn">I alt<em>af ' + info.iAlt + ' på lager</em></th>'
+    + ialt.map(function(n){
+        return '<td class="' + (n > info.iAlt ? 'over' : (n === info.iAlt ? 'fuld' : '')) + '">'
+          + (n || '') + '</td>';
+      }).join('') + '</tr>';
+
+  var vaerst = Math.max.apply(null, ialt.concat([0]));
+  ud.innerHTML =
+    '<div class="obv-top"><b>' + escapeHtml(info.navn) + '</b>'
+    + '<span>' + info.iAlt + ' på lageret · '
+    + (vaerst > info.iAlt ? ('<span class="obv-rod">' + vaerst + ' booket på det værste tidspunkt</span>')
+                          : 'ingen dage er overbooket') + '</span></div>'
+    + '<div class="obv-rul"><table class="obv-tabel"><thead><tr>' + hoved + '</tr></thead>'
+    + '<tbody>' + kroppen + sumrk + '</tbody></table></div>'
+    + (klippet ? '<div class="obv-note">Et af jobbene er længere end 31 dage – '
+        + 'her vises jobbets egne dage og to dage på hver side.</div>' : '')
+    + (rk.length < 2 ? '<div class="obv-note">Ingen andre job bruger udstyret i de dage.</div>' : '');
+}
+
 function konfliktMaerke(kf, noegle){
   var b = document.createElement('button');
   b.type = 'button';
   b.className = 'konflikt-maerke';
   b.textContent = 'konflikt · ' + kf.kort;
   b.title = kf.aarsager.join('\n');
+  b.title = kf.aarsager.join('\n') + '\n\nKlik for at se hvilke job og dage der er optaget.';
   b.addEventListener('click', function(ev){
     ev.preventDefault(); ev.stopPropagation();
-    alert(konfliktNavn(noegle) + '\n\n' + kf.aarsager.join('\n'));
+    openOverblik(noegle);
   });
   return b;
 }
@@ -4707,13 +4902,21 @@ function renderConflicts(){
     + '<div class="konflikt-top">'
     +   '<b>' + (noegler.length===1 ? '1 stykke udstyr er ikke ledigt'
                                     : noegler.length + ' ting er ikke ledige') + '</b>'
+    +   '<button type="button" class="konflikt-filter" '
+    +     'onclick="openOverblik(' + JSON.stringify(noegler[0]).replace(/"/g,'&quot;') + ')" '
+    +     'title="Se hvilke job og hvilke dage der er optaget">Hvem har taget det?</button>'
     +   '<button type="button" class="konflikt-filter' + (kunKonflikter?' paa':'') + '" '
     +     'onclick="saetKunKonflikter(!kunKonflikter)">'
     +     (kunKonflikter ? '← Vis alt udstyr' : 'Vis kun konflikter') + '</button>'
     + '</div>'
     + noegler.map(function(n){
-        return '<div class="konflikt-linje">⚠ ' + escapeHtml(konfliktNavn(n)) + ' — '
-             + escapeHtml(k[n].kort) + '</div>';
+        /* Hver linje er sin egen vej ind i oversigten – man klikker dér,
+           hvor man ser problemet. */
+        return '<button type="button" class="konflikt-linje" '
+             + 'onclick="openOverblik(' + JSON.stringify(n).replace(/"/g,'&quot;') + ')" '
+             + 'title="Se hvilke job og dage der er optaget">⚠ '
+             + escapeHtml(konfliktNavn(n)) + ' — ' + escapeHtml(k[n].kort)
+             + ' <span class="konflikt-pil">›</span></button>';
       }).join('')
     + '</div>';
 }
@@ -7103,15 +7306,30 @@ function makeQtyInput(key){
   var inp = document.createElement('input');
   inp.type = 'number';
   inp.value = mSelectedItems[key] || 1;
-  inp.min = '1';
+  inp.min = '0';
   inp.style.cssText = 'width:36px;text-align:center;background:var(--panel-2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px;font-size:14px;';
   var plusBtn = document.createElement('button');
   plusBtn.type = 'button';
   plusBtn.style.cssText = minBtn.style.cssText;
   plusBtn.textContent = '+';
   (function(k){
-    inp.addEventListener('change', function(){mSelectedItems[k]=parseInt(inp.value)||1;renderMSelectedEquip();});
-    minBtn.addEventListener('click', function(e){e.preventDefault();var v=Math.max(1,(parseInt(inp.value)||1)-1);inp.value=v;mSelectedItems[k]=v;renderMSelectedEquip();});
+    /* Det sidste stykke udstyr skal kunne tages af jobbet med minus – ikke
+       stå fast på ét. Her på telefonen tegnes listen om, så hakket følger med. */
+    var mFjern=function(){
+      delete mSelectedItems[k];
+      renderMSelectedEquip();
+      renderMEquipList(document.getElementById('mEquipSearch')
+        ? document.getElementById('mEquipSearch').value : '');
+    };
+    inp.addEventListener('change', function(){
+      var t=parseInt(inp.value,10);
+      if(!isNaN(t)&&t<=0){ mFjern(); return }
+      mSelectedItems[k]=t||1; inp.value=mSelectedItems[k]; renderMSelectedEquip();
+    });
+    minBtn.addEventListener('click', function(e){e.preventDefault();
+      var v=(parseInt(inp.value,10)||1)-1;
+      if(v<=0){ mFjern(); return }
+      inp.value=v;mSelectedItems[k]=v;renderMSelectedEquip();});
     plusBtn.addEventListener('click', function(e){e.preventDefault();var v=(parseInt(inp.value)||1)+1;inp.value=v;mSelectedItems[k]=v;renderMSelectedEquip();});
   })(key);
   wrap.appendChild(minBtn);
