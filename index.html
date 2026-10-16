@@ -728,6 +728,31 @@ body.pak-visning #pakNavnOverlay.open{display:flex;position:fixed;inset:0;z-inde
 .pak-af,.pak-ekstra{display:block;font:10.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
  font-style:normal;color:var(--muted);text-decoration:none;margin-top:2px}
 .pak-ekstra{color:var(--amber,#e0a33e)}
+/* Det indlejede: samme blå som inde i programmet, så det er den samme
+   oplysning man genkender – ikke en advarsel. */
+.pak-indlej{display:block;font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+ color:#7fc9e8;margin-top:3px;font-weight:700}
+.pak-linje.har-indleje{border-left:3px solid #2b5b70;padding-left:9px;
+ margin-left:-12px;border-radius:0 8px 8px 0}
+#pakIndlejBoks{display:none}
+#pakIndlejBoks.on{display:block;border:1px solid #2b5b70;border-radius:12px;
+ margin:14px 0 4px;overflow:hidden}
+.pi-top{background:#17313d;color:#7fc9e8;padding:11px 13px;font-size:12px;
+ font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:700;
+ text-transform:uppercase;letter-spacing:.04em}
+.pi-linje{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;
+ border-top:1px solid #23414e;font-size:15px}
+.pi-antal{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#7fc9e8;
+ font-weight:700;flex:none;min-width:30px}
+.pi-navn{flex:1;min-width:0;line-height:1.35}
+.pi-navn em{display:block;font:10.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+ color:var(--muted);font-style:normal;margin-top:2px}
+.pi-lev{flex:none;max-width:38%;text-align:right;font-size:12.5px;font-weight:600;
+ color:var(--text);line-height:1.3;overflow-wrap:anywhere}
+.pi-lev em{display:block;font:10px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;
+ color:var(--amber,#e0a33e);font-style:normal;margin-top:2px}
+.pi-bund{padding:10px 13px;border-top:1px solid #23414e;font-size:12px;
+ color:var(--muted);line-height:1.5}
 .pak-tom{color:var(--muted);font-size:13px;padding:24px 4px;text-align:center;line-height:1.6}
 .pak-tilfoej{width:100%;margin-top:14px;background:var(--panel-2);border:1px dashed var(--border);
  color:var(--text);border-radius:10px;padding:14px;font-size:15px;cursor:pointer}
@@ -1038,6 +1063,7 @@ tr.imp-ingen td:first-child{border-left:2px solid #7a3b3b;padding-left:8px;color
   </div>
   <div class="pak-tael-linje"><span id="pakTael"></span></div>
   <div id="pakListe"></div>
+  <div id="pakIndlejBoks"></div>
   <button class="pak-tilfoej" id="pakTilfoejBtn">+ Tilføj udstyr</button>
   <div class="pak-fod">Alt du hakker af gemmes med det samme og kan ses i jobbet.</div>
 
@@ -2158,6 +2184,24 @@ async function pakHent(){
   return r;
 }
 
+/* Gæsten er ikke logget ind og kender ikke jobbets id – han har kun sit
+   token. Derfor sin egen lille funktion i databasen. Findes den ikke (SQL'en
+   er ikke kørt), så er listen tom, og pakkelisten virker som før. */
+async function pakIndlejHent(){
+  try{
+    const {data, error} = await supa.rpc('ep_pack_indleje', {tok: PAK.tok});
+    if(error){ console.warn('ep_pack_indleje:', error.message); return []; }
+    return data || [];
+  }catch(e){ console.warn(e); return []; }
+}
+function pakIndlejFor(navn){
+  var l=(PAK&&PAK.indleje||[]).filter(function(x){ return x.equipment_name===navn; });
+  if(!l.length) return null;
+  var antal=l.reduce(function(a,x){ return a+(x.qty||1); }, 0);
+  var lev={}; l.forEach(function(x){ lev[(x.leverandoer||'').trim()||'ukendt sted']=1; });
+  return {antal:antal, lev:Object.keys(lev)};
+}
+
 async function pakGem(){
   clearTimeout(pakGemTimer);
   pakGemTimer = setTimeout(async function(){
@@ -2198,12 +2242,20 @@ function pakStatus(t, fejl){
 }
 
 /* Hent kun, når der faktisk er sket noget – ellers bruger vi data uden grund. */
+var pakIndlejTael = 0;
 async function pakPoll(){
   if(!PAK) return;
   if(document.getElementById('pakTilfoejBoks').classList.contains('open')) return;
   try{
     const r = await pakHent();
     pakHentetFoerst = true;
+    /* Indlejen skifter sjældent, mens der pakkes – men den skal ikke stå
+       forkert hele dagen, hvis kontoret retter den. Derfor hver tiende
+       runde og ikke hver gang. */
+    if((++pakIndlejTael % 10) === 1){
+      const ny = await pakIndlejHent();
+      if(JSON.stringify(ny) !== JSON.stringify(PAK.indleje||[])){ PAK.indleje = ny; pakTegn(); }
+    }
     if(r.updated_at === PAK.updated_at) return;
     /* Flet: en linje man selv er i gang med, må ikke overskrives. */
     const mine = {};
@@ -2263,12 +2315,50 @@ function pakTegn(){
       ? '<em class="pak-ekstra">tilføjet af ' + escapeHtml(it.tilfoejetAf) + '</em>' : '';
     const af = it.pakket && it.pakketAf
       ? '<em class="pak-af">' + escapeHtml(it.pakketAf) + ' · ' + pakTid(it.pakketKl) + '</em>' : '';
-    return '<label class="pak-linje' + (it.pakket ? ' er-pakket' : '') + '">'
+    /* Noten står ved udstyret: er to af de seks lejet ind, skal man ikke
+       lede efter dem på hylden – de kommer med bilen. */
+    const ind = pakIndlejFor(it.name);
+    const indNote = ind
+      ? '<em class="pak-indlej">🚚 ' + ind.antal + ' indlejet hos '
+        + escapeHtml(ind.lev.join(', '))
+        + (ind.antal >= (it.qty||1) ? ' — hele linjen' : ' — ' + ((it.qty||1)-ind.antal) + ' fra lageret')
+        + '</em>'
+      : '';
+    return '<label class="pak-linje' + (it.pakket ? ' er-pakket' : '')
+      + (ind ? ' har-indleje' : '') + '">'
       + '<input type="checkbox" data-pak="' + i + '"' + (it.pakket ? ' checked' : '') + '>'
       + '<span class="pak-antal">' + (it.qty||1) + '×</span>'
-      + '<span class="pak-navn">' + (it.isPkg ? '📦 ' : '') + escapeHtml(it.name) + ekstra + af + '</span>'
+      + '<span class="pak-navn">' + (it.isPkg ? '📦 ' : '') + escapeHtml(it.name)
+      + indNote + ekstra + af + '</span>'
       + '</label>';
   }).join('') || '<div class="pak-tom">Der er ikke noget udstyr på jobbet endnu.</div>';
+
+  /* Feltet med alt det indlejede. Det kan ikke hakkes af som resten: det
+     ligger ikke på jobbets liste, og der er ingen plads at gemme hakket i.
+     Det er til at vide, hvad der kommer udefra – og hvem man ringer til. */
+  const indBoks = document.getElementById('pakIndlejBoks');
+  if(indBoks){
+    const ind = (PAK && PAK.indleje) || [];
+    if(!ind.length){ indBoks.innerHTML=''; indBoks.classList.remove('on'); }
+    else{
+      const stk = ind.reduce(function(a,x){ return a+(x.qty||1); }, 0);
+      const lev = {}; ind.forEach(function(x){ lev[(x.leverandoer||'').trim()||'ukendt sted']=1; });
+      indBoks.classList.add('on');
+      indBoks.innerHTML = '<div class="pi-top">🚚 Indlejet udstyr · ' + stk + ' stk. fra '
+        + Object.keys(lev).length + ' leverandør' + (Object.keys(lev).length===1?'':'er') + '</div>'
+        + ind.map(function(x){
+            return '<div class="pi-linje"><span class="pi-antal">' + (x.qty||1) + '×</span>'
+              + '<span class="pi-navn">' + escapeHtml(x.equipment_name)
+              + (x.paa_listen ? '' : '<em>har vi ikke selv — kun lejet</em>')
+              + (x.note ? '<em>' + escapeHtml(x.note) + '</em>' : '')
+              + '</span>'
+              + '<span class="pi-lev">' + escapeHtml((x.leverandoer||'').trim()||'ukendt sted')
+              + (x.bestilt ? '' : '<em>ikke bestilt endnu</em>') + '</span></div>';
+          }).join('')
+        + '<div class="pi-bund">Det her ligger ikke på lageret — det kommer fra '
+        + 'leverandøren. Mangler der noget, så ring til kontoret.</div>';
+    }
+  }
 
   liste.querySelectorAll('[data-pak]').forEach(function(cb){
     cb.addEventListener('change', function(){
@@ -2399,6 +2489,7 @@ async function pakStart(tok){
       return Object.assign({pakket:false, pakketAf:'', pakketKl:'', tilfoejetAf:''}, i);
     });
     PAK.updated_at = r.updated_at;
+    PAK.indleje = await pakIndlejHent();
     pakTegn();
     pakStatus('klar');
   }catch(e){
@@ -2958,7 +3049,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_blZoSR5idK-yHYwPJTzvxg_Ea6Mbrvq';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.16-b';
+const EP_VERSION = '2026.10.16-c';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -6861,9 +6952,18 @@ function printPackList(id){
   var catHtml=cats.map(function(cat){
     var rows=grouped[cat].map(function(it,idx){
       var eq=it.eq||{};
-      return '<tr class="'+(idx%2===0?'even':'odd')+'">'
+      /* Er noget af linjen indlejet, skal det stå HER – ved udstyret. Den
+         der pakker, leder ellers efter noget på hylden, der kommer med
+         bilen fra udlejeren. */
+      var ind=indlejNoteFor(j.id, it.name);
+      var indNote = ind
+        ? '<div class="indnote">🚚 '+ind.antal+' indlejet hos '+esc(ind.lev.join(', '))
+          + (ind.antal>=(it.qty||1) ? ' — hele linjen' : ' — '+((it.qty||1)-ind.antal)+' fra lageret')
+          + '</div>'
+        : '';
+      return '<tr class="'+(idx%2===0?'even':'odd')+(ind?' erindlejet':'')+'">'
         +'<td class="check"><span class="checkbox"></span></td>'
-        +'<td class="itemname">'+(it.isPkg?'📦 ':'')+esc(it.name)+'</td>'
+        +'<td class="itemname">'+(it.isPkg?'📦 ':'')+esc(it.name)+indNote+'</td>'
         +'<td class="qty">'+it.qty+'</td>'
         +(harSerie?'<td class="serial">'+esc(eq.serial_number||'')+'</td>':'')
         +(harTv2  ?'<td class="tv2">'+esc(eq.tv2_number||'')+'</td>':'')
@@ -6900,6 +7000,19 @@ function printPackList(id){
     +'td.qty{text-align:center;font-weight:700;}td.check{text-align:center;}'
     +'td.serial,td.tv2{color:#555;font-size:8.5pt;word-break:break-all;}'
     +'.checkbox{display:inline-block;width:13px;height:13px;border:1.5px solid #aaa;border-radius:2px;}'
+    /* Det indlejede skal kunne ses med et blik – også på en fotokopi, så
+       det er en streg i siden og ikke en farve. */
+    +'.indnote{font-size:8pt;color:#444;margin-top:2px;font-weight:600;}'
+    +'tr.erindlejet td.itemname{border-left:3px solid #666;padding-left:6px;}'
+    +'.indafsnit{margin-top:20px;border:1px solid #1a1a1a;border-radius:4px;overflow:hidden;page-break-inside:avoid;}'
+    +'.indafsnit h3{background:#1a1a1a;color:#fff;font-size:8.5pt;text-transform:uppercase;'
+    +'letter-spacing:.08em;padding:7px 10px;font-weight:800;}'
+    +'.indafsnit table{font-size:9pt;}'
+    +'.indafsnit .lev{font-weight:700;}'
+    +'.indafsnit .hvor{font-size:8.5pt;color:#555;}'
+    +'.indafsnit .ikkelager{font-size:8pt;color:#000;font-weight:700;}'
+    +'.indafsnit .forespurgt{font-size:8pt;color:#666;}'
+    +'.indafsnit .bund{padding:7px 10px;font-size:8.5pt;color:#555;border-top:1px solid #ddd;}'
     +'.sig-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:24px;padding-top:14px;border-top:1px solid #ddd;}'
     +'.sig-box{border-bottom:1px solid #999;padding-bottom:28px;font-size:8pt;color:#888;}'
     +'.no-print{text-align:center;margin-top:24px;}@media print{.no-print{display:none;}}'
@@ -6920,6 +7033,7 @@ function printPackList(id){
     +'<th>Bemærkninger</th></tr></thead>'
     +catHtml+'</table>'
     +'<div style="display:flex;justify-content:flex-end;margin-top:14px;"><div style="border:1px solid #ddd;border-radius:4px;padding:8px 14px;font-size:9pt;">Total: <strong>'+total+'</strong> stk.</div></div>'
+    +indlejAfsnitHTML(j, esc)
     +'<div class="sig-row"><div class="sig-box">Pakket af / Dato</div><div class="sig-box">Modtaget af / Dato</div><div class="sig-box">Returneret af / Dato</div></div>'
     +'<div class="no-print"><button onclick="window.print()" style="background:#1a1a1a;color:#fff;border:none;padding:12px 28px;font-size:13px;font-weight:700;border-radius:7px;cursor:pointer;">Udskriv / Gem som PDF</button></div>'
     +'</div></body></html>';
@@ -7258,6 +7372,64 @@ async function indlejSlet(){
     if(k && !k.value.trim()) k.value = kontaktForLev(lv.value);
   });
 })();
+
+/* Hvad er indlejet af netop det her? Bruges på pakkelisterne: den der
+   pakker, skal vide at to af de seks kommer udefra – de står ikke på hylden,
+   og han skal ikke lede efter dem. */
+function indlejNoteFor(jobId, navn){
+  var linjer=indlejForJob(jobId).filter(function(l){ return l.equipment_name===navn; });
+  if(!linjer.length) return null;
+  var antal=linjer.reduce(function(a,l){ return a+(l.qty||1); }, 0);
+  var lev={}; linjer.forEach(function(l){ lev[levNavn(l)]=1; });
+  return {antal:antal, lev:Object.keys(lev), linjer:linjer};
+}
+/* Feltet på pakkelisten: alt det indlejede samlet, så man kan se hvad der
+   kommer udefra og fra hvem – og krydse af, når det er modtaget. Det er en
+   anden slags afkrydsning end resten af listen: det skal ikke hentes på
+   hylden, det skal tages imod. */
+function indlejAfsnitHTML(j, esc){
+  var raekker=indlejPakkeliste(j.id);
+  if(!raekker.length) return '';
+  var stk=raekker.reduce(function(a,r){ return a+r.antal; }, 0);
+  var levAntal={};
+  raekker.forEach(function(r){ levAntal[r.lev]=1; });
+  var krop=raekker.map(function(r,i){
+    return '<tr class="'+(i%2===0?'even':'odd')+'">'
+      +'<td class="check"><span class="checkbox"></span></td>'
+      +'<td class="itemname">'+esc(r.navn)
+      +(r.paaListen?'':'<div class="ikkelager">har vi ikke selv — kun lejet</div>')
+      +(r.note?'<div class="hvor">'+esc(r.note)+'</div>':'')
+      +'</td>'
+      +'<td class="qty">'+r.antal+'</td>'
+      +'<td class="lev">'+esc(r.lev)
+      +(r.bestilt?'':'<div class="forespurgt">ikke bestilt endnu</div>')+'</td>'
+      +'</tr>';
+  }).join('');
+  return '<div class="indafsnit">'
+    +'<h3>🚚 Indlejet udstyr — '+stk+' stk. fra '+Object.keys(levAntal).length
+    +' leverandør'+(Object.keys(levAntal).length===1?'':'er')+'</h3>'
+    +'<table><colgroup><col style="width:22px"><col><col style="width:46px"><col style="width:34%"></colgroup>'
+    +'<thead><tr><th class="check">✓</th><th>Udstyr</th><th class="qty">Antal</th>'
+    +'<th>Lejet hos</th></tr></thead><tbody>'+krop+'</tbody></table>'
+    +'<div class="bund">Det her står ikke på lageret — det kommer fra '
+    +'leverandøren. Hak af når det er modtaget, ikke når det er hentet.</div>'
+    +'</div>';
+}
+
+/* Alt det indlejede på jobbet, som pakkelisten skal vise det: hvad kommer
+   udefra, hvor mange, hos hvem – og om det også står på udstyrslisten eller
+   er noget, vi slet ikke har. */
+function indlejPakkeliste(jobId){
+  var j=jobs.find(function(x){ return x.id===jobId; });
+  var paaListen={};
+  if(j) (j.items||[]).forEach(function(it){ paaListen[it.name]=true; });
+  return indlejForJob(jobId).map(function(l){
+    return {navn:l.equipment_name, antal:l.qty||1, lev:levNavn(l),
+            note:l.note||'', bestilt:!!l.bestilt,
+            paaListen:!!paaListen[l.equipment_name]};
+  }).sort(function(a,b){
+    return a.lev.localeCompare(b.lev,'da') || a.navn.localeCompare(b.navn,'da'); });
+}
 
 /* ── Printet ──────────────────────────────────────────────────
    Én side pr. leverandør, for det er dét, der skal i en mail til dem.
