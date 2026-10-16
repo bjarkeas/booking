@@ -665,8 +665,12 @@ body.show-mobile .m-job-head{min-height:52px}
 .item-row{display:flex;align-items:flex-start;gap:10px}
 .jp-hak{width:17px;height:17px;flex:none;margin-top:2px;accent-color:#3fd99c;cursor:pointer}
 .item-qty{display:flex;align-items:center;gap:5px;margin-left:auto}
+/* Knapperne stod på opacity:0 og dukkede først op, når musen var over
+   linjen. Folder man et job ud for at rette i det, skal man kunne se med
+   det samme, at der er noget at trykke på. */
 .jq-knap{width:24px;height:24px;background:var(--panel-2);border:1px solid var(--border);
- color:var(--text);border-radius:6px;font-size:14px;line-height:1;cursor:pointer;padding:0;opacity:0}
+ color:var(--text);border-radius:6px;font-size:14px;line-height:1;cursor:pointer;padding:0;
+ opacity:.7;transition:opacity .1s}
 .item-row:hover .jq-knap{opacity:1}
 .jq-knap:hover{border-color:var(--amber);color:var(--amber)}
 .jq-tal{min-width:30px;text-align:right}
@@ -4424,9 +4428,15 @@ async function jobAntal(jobId, navn, retning){
   if(!j) return;
   const linje = (j.items||[]).find(function(i){ return i.name===navn; });
   if(!linje) return;
-  const nyt = Math.max(1, (linje.qty||1) + retning);
+  const nyt = (linje.qty||1) + retning;
   if(nyt === linje.qty) return;
-  linje.qty = nyt;
+  /* Står der ét og man trykker minus, skal udstyret af jobbet – ikke blive
+     stående på ét. Det er det samme som inde i redigeringsvinduet. */
+  const fjern = nyt <= 0;
+  if(fjern){
+    if(!confirm('Tag "' + navn + '" helt af jobbet?')) return;
+    j.items = (j.items||[]).filter(function(i){ return i.name !== navn; });
+  } else linje.qty = nyt;
   renderJobs();
   const b = document.getElementById('body-'+jobId);
   if(b) b.classList.add('open');            // hold jobbet åbent
@@ -4436,9 +4446,14 @@ async function jobAntal(jobId, navn, retning){
     const job = await hentJob(jobId);
     const friskeItems = job.items || [];
     const foerAntal = JSON.parse(JSON.stringify(friskeItems));
-    const fl = friskeItems.find(function(i){ return i.name===navn; });
-    if(fl) fl.qty = nyt;
-    await gemJob(jobId, {items:friskeItems}, foerAntal);
+    var nye = friskeItems;
+    if(fjern){
+      nye = friskeItems.filter(function(i){ return i.name!==navn; });
+    } else {
+      const fl = friskeItems.find(function(i){ return i.name===navn; });
+      if(fl) fl.qty = nyt;
+    }
+    await gemJob(jobId, {items:nye}, foerAntal);
     await loadJobs(); renderJobs();
     const b2=document.getElementById('body-'+jobId); if(b2) b2.classList.add('open');
   }catch(e){
@@ -4773,13 +4788,14 @@ function jobNoegle(it){
 }
 
 /* Tryk på konfliktmærket ude på et jobkort. */
+/* Fra joblisten: samme oversigt som inde i redigeringsvinduet, så man kan
+   se hvem der har taget udstyret uden først at åbne jobbet. */
 function visJobKonflikt(jobId, navn){
   var j = jobs.find(function(x){ return x.id === jobId; });
   if(!j) return;
   var it = (j.items||[]).find(function(x){ return x.name === navn; });
   if(!it) return;
-  var k = konfliktFor(jobNoegle(it), it.qty, j.start, j.end, j.id);
-  alert(navn + '\n\n' + (k.aarsager.length ? k.aarsager.join('\n') : 'Ingen konflikt lige nu.'));
+  openOverblik(jobNoegle(it), obvFraJob(j));
 }
 
 /* Vis kun de linjer, der er noget galt med – på ét jobkort. */
@@ -4808,6 +4824,25 @@ let kunKonflikter = false;
    toppen, og nederst hvad der er booket i alt mod hvad der står på lageret.
    Så kan man se hvilken dag det brænder – og hvem man skal ringe til. */
 var OB_NOEGLE = null;
+/* Oversigten åbnes to steder fra: inde i redigeringsvinduet, og ude på
+   joblisten når man folder et job ud. Begge steder giver den de samme fire
+   ting, så tegningen ikke skal vide hvor den blev kaldt fra. */
+var OB_KTX = null;
+function obvFraDialog(){
+  /* 'live' betyder: hent det hele forfra hver gang skemaet tegnes. Retter man
+     antallet i vinduet bagved, skal skemaet følge med – og så er det
+     ligegyldigt, om selectedItems imens er blevet udskiftet med et nyt. */
+  return {live:true, titel:(document.getElementById('jobName').value||'Dette job'),
+          start:document.getElementById('jobStart').value,
+          slut:document.getElementById('jobEnd').value,
+          items:selectedItems, jobId:editingJobId};
+}
+function obvFraJob(j){
+  var it = {};
+  (j.items||[]).forEach(function(x){ it[jobNoegle(x)] = x.qty||1; });
+  return {titel:j.name||'Dette job', start:j.start, slut:j.end,
+          items:it, jobId:j.id};
+}
 
 function obDage(a, b){
   var ud = [], d = a, n = 0;
@@ -4822,22 +4857,24 @@ function obNavnOgAntal(noegle){
   return {navn:noegle, iAlt:totalQty(noegle)};
 }
 
-function openOverblik(noegle){
+function openOverblik(noegle, ktx){
   OB_NOEGLE = noegle || OB_NOEGLE;
+  if(ktx) OB_KTX = ktx;
+  if(!OB_KTX) OB_KTX = obvFraDialog();
   document.getElementById('obvOverlay').classList.add('open');
   obvTegn();
 }
 function obvTegn(){
   var ud = document.getElementById('obvIndhold');
   var vaelg = document.getElementById('obvVaelg');
-  var start = document.getElementById('jobStart').value;
-  var slut  = document.getElementById('jobEnd').value;
+  var K = (OB_KTX && !OB_KTX.live) ? OB_KTX : obvFraDialog();
+  var start = K.start, slut = K.slut;
 
   /* Vælgeren: alt det der er valgt på jobbet, så man kan hoppe mellem dem */
-  var noegler = Object.keys(selectedItems);
+  var noegler = Object.keys(K.items);
   if(noegler.indexOf(OB_NOEGLE) < 0 && OB_NOEGLE) noegler = [OB_NOEGLE].concat(noegler);
   vaelg.innerHTML = noegler.map(function(k){
-    var kf = (start && slut) ? konfliktFor(k, selectedItems[k]||1, start, slut, editingJobId)
+    var kf = (start && slut) ? konfliktFor(k, K.items[k]||1, start, slut, K.jobId)
                              : {konflikt:false};
     return '<option value="' + escapeHtml(k) + '"' + (k === OB_NOEGLE ? ' selected' : '') + '>'
       + escapeHtml(konfliktNavn(k)) + (kf.konflikt ? '  ⚠ ' + escapeHtml(kf.kort) : '') + '</option>';
@@ -4859,7 +4896,7 @@ function obvTegn(){
   var rk = [];
   jobs.forEach(function(j){
     if(!j.start || !j.end) return;
-    if(j.id === editingJobId) return;
+    if(K.jobId && j.id === K.jobId) return;
     if(!datesOverlap(start, slut, j.start, j.end)) return;
     var f = (j.items||[]).find(function(it){ return it.name === info.navn; });
     if(!f) return;
@@ -4867,8 +4904,8 @@ function obvTegn(){
              tilbud:(j.status==='tilbud')});
   });
   /* og jobbet man selv sidder med */
-  rk.unshift({navn:(document.getElementById('jobName').value || 'Dette job'),
-              hvem:mineInitialer()||'', antal:selectedItems[OB_NOEGLE]||1,
+  rk.unshift({navn:(K.titel || 'Dette job'),
+              hvem:mineInitialer()||'', antal:K.items[OB_NOEGLE]||1,
               start:start, slut:slut, mit:true});
 
   /* Vinduet: hele forløbet, men højst 31 dage, så rækken kan læses */
@@ -5292,7 +5329,7 @@ function konfliktMaerke(kf, noegle){
   b.title = kf.aarsager.join('\n') + '\n\nKlik for at se hvilke job og dage der er optaget.';
   b.addEventListener('click', function(ev){
     ev.preventDefault(); ev.stopPropagation();
-    openOverblik(noegle);
+    openOverblik(noegle, obvFraDialog());
   });
   return b;
 }
