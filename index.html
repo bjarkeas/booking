@@ -803,6 +803,28 @@ body.pak-visning #pakNavnOverlay.open{display:flex;position:fixed;inset:0;z-inde
    Et regneark med job og dage. Den skal kunne skimmes: navnene står fast i
    venstre side, dagene ruller, og kun det der er booket har farve. */
 /* Konfliktlinjerne er nu knapper – de skal se ud som noget man kan trykke på */
+/* ── Jobbet bundet til en OB-vogn ─────────────────────────────
+   Vognens farve er dens kendetegn alle andre steder i programmet, så den
+   skal også være det her: man genkender OB3 på farven, ikke på teksten. */
+.vognchips{display:flex;flex-wrap:wrap;gap:7px;padding:4px 0}
+.vognchip{display:flex;align-items:center;gap:7px;background:var(--panel-2);
+ border:1px solid var(--border);border-radius:999px;padding:6px 13px;
+ font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;min-height:32px}
+.vognchip:hover{border-color:var(--muted);color:var(--text)}
+.vognchip .vprik{width:9px;height:9px;border-radius:50%;flex:none}
+.vognchip.paa{color:var(--text);border-color:currentColor}
+.vognmaerke{display:inline-flex;align-items:center;gap:6px;border-radius:5px;
+ padding:2px 8px;font-size:10.5px;font-family:var(--mono);font-weight:700;
+ white-space:nowrap;flex:none;border:1px solid transparent;cursor:pointer;min-height:24px}
+.vognmaerke .vprik{width:7px;height:7px;border-radius:50%;flex:none}
+.job-vogne{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 2px}
+.job-vogne .tom{font-size:11.5px;color:var(--muted)}
+.fravogn-maerke{background:#1d2b1f;color:#8fd0a0;border:1px solid #2f5438;
+ border-radius:5px;padding:2px 7px;font-size:10.5px;font-family:var(--mono);
+ font-weight:700;white-space:nowrap;flex:none;min-height:24px;cursor:default}
+body.show-mobile .vognmaerke,body.show-mobile .fravogn-maerke{min-height:30px}
+body.show-mobile .fravogn-maerke{display:block;text-align:left;margin:3px 0 1px}
+
 /* ── Indleje ──────────────────────────────────────────────────
    Mærket må ikke se ud som en konflikt – underskuddet ER dækket. Men det
    skal heller ikke se ud som ingenting, for det koster penge. Derfor
@@ -1276,6 +1298,20 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
   </div>
 </div>
 
+<div class="overlay" id="jobVognOverlay">
+  <div class="modal" style="max-width:480px;">
+    <h2>Bind jobbet til en OB-vogn</h2>
+    <input type="hidden" id="jvJobId">
+    <div id="jvJobLinje" class="indlej-joblinje"></div>
+    <div class="field"><label>OB-vogne på produktionen</label>
+      <div id="jvValg" class="vognchips"></div>
+      <div class="indlej-hint">Udstyr der bor i vognen, regnes som jobbets —
+        og er optaget for andre job i perioden, for vognen kører væk med det.</div>
+    </div>
+    <div class="modal-actions"><button class="btn secondary" id="jvLukBtn">Luk</button></div>
+  </div>
+</div>
+
 <div class="overlay" id="indlejOverlay">
   <div class="modal" style="max-width:560px;">
     <h2 id="indlejTitel">Indlej udstyr</h2>
@@ -1432,6 +1468,12 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
         <label>Slut dato</label>
         <input type="date" id="jobEnd">
       </div>
+    </div>
+    <div class="field">
+      <label>OB-vogn på produktionen</label>
+      <div id="jobVognValg" class="vognchips"></div>
+      <div class="indlej-hint">Vognens udstyr regnes som jobbets — og vognens
+        egen booking er så ikke en konflikt her.</div>
     </div>
     <div class="field">
       <label>Noter</label>
@@ -1740,6 +1782,9 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div class="m-field"><label>Start</label><input type="date" id="mJobStart"></div>
         <div class="m-field"><label>Slut</label><input type="date" id="mJobEnd"></div>
+      </div>
+      <div class="m-field"><label>OB-vogn</label>
+        <div id="mJobVognValg" class="vognchips"></div>
       </div>
       <div class="m-field"><label>Status</label>
         <div class="m-status-toggle">
@@ -2913,7 +2958,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_blZoSR5idK-yHYwPJTzvxg_Ea6Mbrvq';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.16-a';
+const EP_VERSION = '2026.10.16-b';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -4049,7 +4094,10 @@ async function loadJobs(){
     jobs = data.map(function(j){ return {id:j.id,name:j.name,who:j.who,start:j.start_date,end:j.end_date,
       notes:j.notes,items:j.items||[],status:j.status||'ordre',
       /* delenøglen skal med, ellers kan vi ikke vise at listen er delt */
-      share_token:j.share_token||null, updated_by:j.updated_by||'', updated_at:j.updated_at||null}; });
+      share_token:j.share_token||null, updated_by:j.updated_by||'', updated_at:j.updated_at||null,
+      /* Vognene jobbet er bundet til. Gamle rækker har ingen – og så er
+         listen tom, ikke manglende. */
+      ob_vogne:Array.isArray(j.ob_vogne)?j.ob_vogne.filter(Boolean):[]}; });
   }catch(e){ console.error(e); jobs=[]; }
 }
 
@@ -4108,18 +4156,62 @@ function obBookingConflict(obVognId,start,end,excludeId){
     return b.start_date<=end && b.end_date>=start;
   })||null;
 }
+/* ── Jobbet og OB-vognene ──────────────────────────────────────
+   En produktion kører med en eller to vogne, og det udstyr der bor i
+   vognen, kører med den. Binder man jobbet til vognen, ved programmet to
+   ting: vognens booking er ikke en konflikt for jobbet – den ER jobbets –
+   og vognens indhold er ude af huset og kan ikke også stå på et andet job. */
+function jobVogne(j){
+  var v = j && j.ob_vogne;
+  return Array.isArray(v) ? v.filter(Boolean) : [];
+}
+/* Redigeringsvinduet har sin egen liste, så mærkerne i vinduet følger det,
+   man vælger lige nu – ikke det, der sidst blev gemt. */
+var REDIGER_VOGNE = null;
+function vogneForJobId(jobId){
+  if(REDIGER_VOGNE && REDIGER_VOGNE.jobId===(jobId||null)) return REDIGER_VOGNE.vogne||[];
+  var j=jobs.find(function(x){ return x.id===jobId; });
+  return jobVogne(j);
+}
+/* Hvor mange af det her står der i de vogne? Udstyret kan være fordelt –
+   tre tromler i én vogn, fire i en anden, resten i puljen – så det er
+   summen af dét, der står i netop de vogne. Pakker bor i én vogn ad gangen. */
+function iVogneFor(vogne, navn){
+  if(!vogne||!vogne.length||!navn) return 0;
+  var eq=EQUIPMENT.find(function(e){ return e.name===navn; });
+  if(eq) return placeringer(eq).reduce(function(s,p){
+    return s + (vogne.indexOf(p.vogn)>=0 ? p.antal : 0); }, 0);
+  var pk=PACKAGES.find(function(p){ return p.name===navn; });
+  if(pk && pk.ob_vogn_id && vogne.indexOf(pk.ob_vogn_id)>=0) return pk.qty||1;
+  return 0;
+}
+/* Hvor meget tager ÉT job af et stykke udstyr? Det højeste af to ting:
+   hvad der står på jobbets liste, og hvad der står i de vogne, jobbet er
+   bundet til. Vognen kører væk med sit indhold, uanset om nogen har skrevet
+   det på listen – og har man skrevet mere end vognen har, er resten taget
+   fra puljen. Derfor det højeste, ikke summen: ellers blev vognens to
+   tromler talt to gange, når de også stod på listen. */
+function jobTager(j, name){
+  var f=(j.items||[]).find(function(it){ return it.name===name; });
+  var paaListen = f ? (f.qty||0) : 0;
+  var iVogn = iVogneFor(vogneForJobId(j.id), name);
+  return {antal: Math.max(paaListen, iVogn), paaListen:paaListen, iVogn:iVogn};
+}
 function bookedQty(name,start,end,excludeJobId){
   let sum=0; const users=[]; const job=[];
   jobs.forEach(function(j){
     if(j.id===excludeJobId||!j.start||!j.end) return;
     if(!datesOverlap(start,end,j.start,j.end)) return;
-    const f=(j.items||[]).find(function(it){return it.name===name;});
-    if(f){
-      sum+=f.qty;
-      users.push(j.name+' ('+f.qty+')');
+    const t=jobTager(j, name);
+    if(t.antal>0){
+      sum+=t.antal;
+      users.push(j.name+' ('+t.antal+')');
       /* Hvem har taget det, hvor meget, og hvornår – det er dét, man skal
-         bruge for at kunne ringe og flytte en booking. */
-      job.push({id:j.id, navn:j.name, antal:f.qty, start:j.start, slut:j.end, hvem:j.who||''});
+         bruge for at kunne ringe og flytte en booking. Står det kun der,
+         fordi vognen kører med det, skal det siges: der er ikke noget at
+         slette på listen, vognen skal flyttes. */
+      job.push({id:j.id, navn:j.name, antal:t.antal, start:j.start, slut:j.end,
+                hvem:j.who||'', iVogn:t.iVogn, kunVogn:(t.paaListen===0)});
     }
   });
   return {sum,users,job};
@@ -4296,7 +4388,7 @@ function renderJobs(){
       /* Også linjer, der er dækket af en indleje, gemmes – mærket skal
          kunne fortælle hvorfor underskuddet er i orden. Men de tælles
          ikke med som konflikter, for det er de ikke længere. */
-      if(k.konflikt || k.daekket || k.indlejet) jKonf[it.name]=k;
+      if(k.konflikt || k.daekket || k.indlejet || k.fraVogn) jKonf[it.name]=k;
     });
     const conflictCount=Object.keys(jKonf).filter(function(n){return jKonf[n].konflikt;}).length;
 
@@ -4324,6 +4416,12 @@ function renderJobs(){
          en oplysning og ikke en advarsel. Et tryk retter linjen. Mangler der
          stadig noget, får man begge: det røde mærke og en knap til at leje
          resten ind. */
+      /* Kommer udstyret fra en vogn, jobbet er bundet til, skal det stå –
+         ellers kan man ikke se hvorfor der ikke er nogen konflikt. */
+      const fraV = (k && k.fraVogn)
+        ? '<span class="fravogn-maerke" title="'+escapeHtml((k.fraVognNavne||[]).join(', '))
+          +' kører med det">🚐 '+k.fraVogn+' fra vognen</span>'
+        : '';
       const indl = (k && k.indlejet)
         ? '<button class="indlej-maerke" title="'+escapeHtml(k.aarsager.join('\n'))
           +'\nTryk for at rette indlejen" onclick="event.stopPropagation();'
@@ -4345,7 +4443,7 @@ function renderJobs(){
         +'</div>'
         /* Mærket står ude til højre på samme linje – der er plads, og en
            linje mere pr. stykke udstyr gør kortet dobbelt så langt. */
-        +kon+indl+lej
+        +kon+fraV+indl+lej
         +'<div class="item-qty">'
         +'<button class="jq-knap" title="Ét mindre" onclick="event.stopPropagation();jobAntal(\''+j.id+'\',\''+escapeHtml(it.name).replace(/'/g,"&#39;")+'\',-1)">−</button>'
         +'<span class="jq-tal">×'+it.qty+'</span>'
@@ -4374,6 +4472,7 @@ function renderJobs(){
       +'</div>'
       +'<div class="job-body'+(aabneJob.has(j.id)?' open':'')+'" id="body-'+j.id+'">'
       +(j.notes?'<div class="notes">'+escapeHtml(j.notes)+'</div>':'')
+      +jobVogneHTML(j)
       +itemsHtml
       +indlejBlokHTML(j)
       +'<div class="job-actions">'
@@ -4701,6 +4800,7 @@ function openNew(){
   document.getElementById('jobStatusOrdre').checked=true;
   document.getElementById('jobStatusTilbud').checked=false;
   updateStatusStyle();
+  saetRedigerVogne(null);
   renderEquipList(''); renderSelectedStrip(); renderConflicts();
   overlay.classList.add('open');
 }
@@ -4725,6 +4825,7 @@ async function openEdit(id){
   document.getElementById('jobNotes').value=j.notes||'';
   var jst=j.status||'ordre'; document.getElementById('jobStatusOrdre').checked=jst==='ordre'; document.getElementById('jobStatusTilbud').checked=jst==='tilbud'; updateStatusStyle();
   document.getElementById('equipSearch').value='';
+  saetRedigerVogne(id);
   renderEquipList(''); renderSelectedStrip(); renderConflicts();
   overlay.classList.add('open');
   }catch(e){console.error('openEdit fejl:',e);alert('Fejl i openEdit: '+e.message);}
@@ -4746,10 +4847,18 @@ function openCopy(id){
   document.getElementById('jobEnd').value = flytDage(start, dageMellem(j.start, j.end));
   document.getElementById('jobNotes').value=j.notes||'';
   document.getElementById('equipSearch').value='';
+  /* En kopi kører som regel med den samme vogn – det er dét, man kopierer
+     jobbet for. Dagene er nye, men vognen er den samme. */
+  saetRedigerVogne(null, j);
   renderEquipList(''); renderSelectedStrip(); renderConflicts();
   overlay.classList.add('open'); updateStatusStyle();
 }
-function closeModal(){ overlay.classList.remove('open'); }
+function closeModal(){
+  overlay.classList.remove('open');
+  /* Vinduets eget valg af vogne må ikke blive liggende: fortryder man,
+     skal forsiden regne med det, der står i databasen. */
+  REDIGER_VOGNE = null;
+}
 document.getElementById('newJobBtn').addEventListener('click', openNew);
 document.getElementById('sfAabnBtn').addEventListener('click', sfAaben);
 document.getElementById('obvLukBtn').addEventListener('click', function(){
@@ -4959,7 +5068,10 @@ function konfliktFor(noegle, antal, start, end, undtagJob){
     if(indlejet) svar.aarsager.push('Der mangler ' + mangler + ' endnu.');
     bq.job.forEach(function(j){
       svar.job.push(j);
-      svar.aarsager.push('· ' + j.navn + ' (' + j.antal + ' stk., ' + j.start + ' → ' + j.slut + ')');
+      /* Står det kun der, fordi vognen kører med det, er der ikke noget at
+         slette på den andens liste – vognen skal flyttes. Det skal stå. */
+      svar.aarsager.push('· ' + j.navn + ' (' + j.antal + ' stk., ' + j.start + ' → ' + j.slut + ')'
+        + (j.kunVogn ? ' — kører med OB-vognen' : (j.iVogn ? ' — heraf ' + j.iVogn + ' i OB-vognen' : '')));
     });
   }else if(indlejet > 0 && antal > ledige){
     /* Dækket, men kun fordi vi lejer. Det er ikke en konflikt, og det er
@@ -4969,14 +5081,27 @@ function konfliktFor(noegle, antal, start, end, undtagJob){
     svar.aarsager.push('Du har bedt om ' + antal + ' — vi har ' + Math.max(ledige,0)
       + ' ledig' + (ledige === 1 ? '' : 'e') + ' og lejer ' + indlejet + ' ind.');
   }
-  if(obId){
+  /* ── Er vognen jobbets egen? ──────────────────────────────────
+     Står udstyret i en vogn, som dette job er bundet til, så er vognens
+     booking ikke en konflikt – den er jobbets egen produktion. Før lyste
+     hver enkelt linje rødt med "OB-vognen er booket til Superligaen", selv
+     når jobbet OG bookingen var den samme Superligaen. */
+  var mineVogne = vogneForJobId(undtagJob);
+  var fraVogn = iVogneFor(mineVogne, navn);
+  if(fraVogn){
+    svar.fraVogn = fraVogn;
+    svar.fraVognNavne = mineVogne.map(function(id){
+      var v=obVognById(id); return v?v.name:null; }).filter(Boolean);
+  }
+  if(obId && mineVogne.indexOf(obId) < 0){
     var obC = obBookingConflict(obId, start, end, null);
     if(obC){
       var ov = obVognById(obId);
       svar.konflikt = true;
       if(!svar.kort) svar.kort = 'OB-vognen er booket';
       svar.aarsager.push('Står på OB-vogn ' + (ov ? ov.name : '?')
-        + ', som er booket til "' + obC.name + '" i perioden.');
+        + ', som er booket til "' + obC.name + '" i perioden.'
+        + ' Hører bookingen til dette job, så bind jobbet til vognen.');
     }
   }
   return svar;
@@ -5622,7 +5747,10 @@ document.getElementById('saveJobBtn').addEventListener('click', async function()
     var sv2=document.querySelector('input[name="jobStatus"]:checked');
     let gemItems = items;
     if(editingJobId) gemItems = await flettetItems(editingJobId, items, window.__redigerStart);
-    const row={name,who,start_date:start,end_date:end,notes,items:gemItems,status:sv2?sv2.value:'ordre'};
+    const row={name,who,start_date:start,end_date:end,notes,items:gemItems,status:sv2?sv2.value:'ordre',
+      /* Vognene gemmes sammen med resten af jobbet – de hører til jobbet,
+         ikke til udstyrslisten. */
+      ob_vogne:(REDIGER_VOGNE?REDIGER_VOGNE.vogne:[])};
     if(editingJobId){ await gemJob(editingJobId, row, sidsteFletFoer); }
     else {
       const sv=await supa.from('jobs').insert(row).select('id');
@@ -6800,6 +6928,123 @@ function printPackList(id){
 }
 
 // ═══════════════════════════════════════════════════════════
+// JOB BUNDET TIL OB-VOGN
+// ═══════════════════════════════════════════════════════════
+
+/* Chipsene til at vælge vogne. Den samme tegning bruges i jobvinduet og i
+   vælgeren fra forsiden – ellers kunne de to komme til at opføre sig
+   forskelligt, og så ved man ikke hvad man har valgt hvor. */
+function tegnVognChips(el, valgte, slaaTil){
+  if(!el) return;
+  el.innerHTML='';
+  if(!OB_VOGNE.length){
+    el.innerHTML='<div class="indlej-hint">Der er ingen OB-vogne oprettet endnu.</div>';
+    return;
+  }
+  OB_VOGNE.forEach(function(v){
+    var paa = valgte.indexOf(v.id)>=0;
+    var b=document.createElement('button');
+    b.type='button';
+    b.className='vognchip'+(paa?' paa':'');
+    if(paa){ b.style.background=obFarve(v.color,.18); b.style.color=v.color||'#5fb88a'; }
+    b.innerHTML='<span class="vprik" style="background:'+(v.color||'#5fb88a')+'"></span>'
+      +escapeHtml(v.name)+(paa?' ✓':'');
+    b.addEventListener('click', function(e){ e.stopPropagation(); slaaTil(v.id); });
+    el.appendChild(b);
+  });
+}
+function vognMaerkeHTML(id, klik){
+  var v=obVognById(id); if(!v) return '';
+  return '<button class="vognmaerke" style="background:'+obFarve(v.color,.18)
+    +';color:'+(v.color||'#5fb88a')+';border-color:'+obFarve(v.color,.5)+'"'
+    +' title="Jobbet er bundet til '+escapeHtml(v.name)
+    +' — vognens udstyr regnes som jobbets"'
+    +(klik?' onclick="event.stopPropagation();'+klik+'"':'')+'>'
+    +'<span class="vprik" style="background:'+(v.color||'#5fb88a')+'"></span>🚐 '
+    +escapeHtml(v.name)+'</button>';
+}
+/* Linjen på jobkortet: hvilke vogne jobbet kører med, og en knap til at
+   rette det – uden at man først skal trykke Rediger. */
+function jobVogneHTML(j){
+  var valgte=jobVogne(j);
+  return '<div class="job-vogne">'
+    + (valgte.length
+        ? valgte.map(function(id){ return vognMaerkeHTML(id, "openJobVogne('"+j.id+"')"); }).join('')
+        : '<span class="tom">Ingen OB-vogn bundet til jobbet</span>')
+    + '<button class="btn small secondary" style="min-height:26px;padding:3px 10px;font-size:11px;"'
+    + ' title="Bind jobbet til den eller de vogne, produktionen kører med"'
+    + ' onclick="event.stopPropagation();openJobVogne(\''+j.id+'\')">🚐 Vogne</button>'
+    + '</div>';
+}
+function openJobVogne(jobId){
+  var j=jobs.find(function(x){return x.id===jobId;}); if(!j) return;
+  document.getElementById('jvJobId').value=jobId;
+  document.getElementById('jvJobLinje').innerHTML=
+    '<b>'+escapeHtml(j.name||'(uden navn)')+'</b> · '+fmtDate(j.start)+' → '+fmtDate(j.end);
+  jvTegn();
+  document.getElementById('jobVognOverlay').classList.add('open');
+}
+function jvTegn(){
+  var jobId=document.getElementById('jvJobId').value;
+  var j=jobs.find(function(x){return x.id===jobId;});
+  tegnVognChips(document.getElementById('jvValg'), jobVogne(j), jvSlaaTil);
+}
+/* Gemmes med det samme: vælgeren er åbnet fra forsiden, og der er ikke
+   nogen Gem-knap at trykke på bagefter. */
+async function jvSlaaTil(vognId){
+  var jobId=document.getElementById('jvJobId').value;
+  var j=jobs.find(function(x){return x.id===jobId;}); if(!j) return;
+  var nu=jobVogne(j).slice();
+  var i=nu.indexOf(vognId);
+  if(i>=0) nu.splice(i,1); else nu.push(vognId);
+  try{
+    await gemJob(jobId, {ob_vogne:nu});
+    await loadJobs();
+    jvTegn(); renderJobs();
+    if(document.body.classList.contains('show-mobile') && typeof renderMobileTab==='function') renderMobileTab();
+  }catch(e){ await jobFejl(e, 'binde jobbet til vognen'); }
+}
+(function(){
+  var o=document.getElementById('jobVognOverlay'); if(!o) return;
+  var luk=function(){ o.classList.remove('open'); };
+  document.getElementById('jvLukBtn').addEventListener('click', luk);
+  lukVedKlikUdenfor(o, luk);
+})();
+
+/* I jobvinduet skrives valget i REDIGER_VOGNE, så konfliktmærkerne i
+   vinduet følger det man vælger – og gemmes sammen med resten af jobbet. */
+function tegnRedigerVogne(){
+  if(!REDIGER_VOGNE) return;
+  var slaa = function(id){
+    var i=REDIGER_VOGNE.vogne.indexOf(id);
+    if(i>=0) REDIGER_VOGNE.vogne.splice(i,1); else REDIGER_VOGNE.vogne.push(id);
+    tegnRedigerVogne();
+    /* Mærkerne i vinduet skal skifte med det samme – vælger man vognen,
+       er konflikten på dens udstyr væk, og det skal man kunne se. */
+    if(typeof renderConflicts==='function') renderConflicts();
+    if(typeof renderEquipList==='function'){
+      var sf=document.getElementById('equipSearch');
+      if(sf) renderEquipList(sf.value||'');
+    }
+    if(document.getElementById('mJobOverlay') &&
+       document.getElementById('mJobOverlay').classList.contains('open')){
+      if(typeof renderMEquipList==='function')
+        renderMEquipList((document.getElementById('mEquipSearch')||{}).value||'');
+      if(typeof renderMSelectedEquip==='function') renderMSelectedEquip();
+    }
+  };
+  tegnVognChips(document.getElementById('jobVognValg'), REDIGER_VOGNE.vogne, slaa);
+  tegnVognChips(document.getElementById('mJobVognValg'), REDIGER_VOGNE.vogne, slaa);
+}
+/* Kaldes når et jobvindue åbnes: listen starter med jobbets egne vogne, og
+   et nyt eller kopieret job starter med ingen. */
+function saetRedigerVogne(jobId, fraJob){
+  var kilde = fraJob || jobs.find(function(x){ return x.id===jobId; });
+  REDIGER_VOGNE = {jobId: jobId||null, vogne: jobVogne(kilde).slice()};
+  tegnRedigerVogne();
+}
+
+// ═══════════════════════════════════════════════════════════
 // INDLEJE — dialogen, blokken på jobkortet og printet
 // ═══════════════════════════════════════════════════════════
 
@@ -7867,6 +8112,7 @@ function renderMobileJobs(q){
         : '';
       /* Samme to mærker som på computeren: hvad der er lejet ind, og en
          knap til at leje resten, hvis der stadig mangler noget. */
+      if(k.fraVogn) kon += '<span class="fravogn-maerke">🚐 '+k.fraVogn+' fra vognen</span>';
       if(k.indlejet) kon += '<button class="indlej-maerke" onclick="event.stopPropagation();'
         +'indlejRetFor(\''+j.id+'\',\''+nvn+'\')">🚚 '+k.indlejet+' lejet ind</button>';
       if(k.konflikt) kon += '<button class="indlej-knap" onclick="event.stopPropagation();'
@@ -7879,7 +8125,7 @@ function renderMobileJobs(q){
         +'<div class="m-item-navn"><span>'+(it.isPkg?'📦 ':'')+escapeHtml(it.name)+'</span>'+kon+spor+'</div>'
         +'<span class="m-item-antal">x'+it.qty+'</span></div>';
     }).join('') || '<div style="color:var(--muted);font-size:13px;padding:6px 0;">Intet udstyr</div>';
-    body.innerHTML = itemsHtml + indlejBlokHTML(j);
+    body.innerHTML = jobVogneHTML(j) + itemsHtml + indlejBlokHTML(j);
 
     var acts = document.createElement('div');
     acts.className = 'm-job-actions';
@@ -8165,6 +8411,7 @@ function openMJobModal(id, copyFrom){
   document.getElementById('mJobStatusOrdre').checked = !j||j.status!=='tilbud';
   document.getElementById('mJobStatusTilbud').checked = !!(j&&j.status==='tilbud');
   updateMJobStatusStyle();
+  saetRedigerVogne(id||null, copyFrom||null);
   renderMEquipList('');
   renderMSelectedEquip();
   document.getElementById('mJobOverlay').classList.add('open');
@@ -8172,6 +8419,7 @@ function openMJobModal(id, copyFrom){
 
 function closeMJobModal(){
   document.getElementById('mJobOverlay').classList.remove('open');
+  REDIGER_VOGNE = null;
 }
 
 function updateMJobStatusStyle(){
@@ -8408,7 +8656,8 @@ document.getElementById('mSaveJobBtn').addEventListener('click', async function(
   try{
     var gemItems = items;
     if(mEditingJobId) gemItems = await flettetItems(mEditingJobId, items, window.__mRedigerStart);
-    var row={name,who,start_date:start,end_date:end,items:gemItems,status};
+    var row={name,who,start_date:start,end_date:end,items:gemItems,status,
+      ob_vogne:(REDIGER_VOGNE?REDIGER_VOGNE.vogne:[])};
     if(mEditingJobId){ await gemJob(mEditingJobId, row, sidsteFletFoer); }
     else{
       var sv=await supa.from('jobs').insert(row).select('id');
