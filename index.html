@@ -828,6 +828,69 @@ body.pak-visning #pakNavnOverlay.open{display:flex;position:fixed;inset:0;z-inde
    Et regneark med job og dage. Den skal kunne skimmes: navnene står fast i
    venstre side, dagene ruller, og kun det der er booket har farve. */
 /* Konfliktlinjerne er nu knapper – de skal se ud som noget man kan trykke på */
+/* ── Byt eller lej, når der mangler noget ─────────────────────
+   De to veje ud står ved siden af hinanden, for det er det valg man står i:
+   skaffe det udefra, eller tage noget andet vi selv har. */
+.bytproblem{background:#241a16;border:1px solid #5c3a30;border-radius:8px;
+ padding:10px 12px;font-size:12.5px;line-height:1.6;margin-bottom:14px}
+.bytproblem b{color:var(--red)}
+.bytvej{border:1px solid var(--border);border-radius:9px;padding:11px 12px;margin-bottom:12px}
+.bytvej-h{font-size:12px;font-family:var(--mono);font-weight:700;text-transform:uppercase;
+ letter-spacing:.05em;color:var(--text);margin-bottom:5px}
+.bytvej-t{font-size:12px;color:var(--muted);line-height:1.55;margin-bottom:9px}
+.bytvej-t b{color:var(--text)}
+.bytomfang{display:flex;gap:0;border:1px solid var(--border);border-radius:8px;
+ overflow:hidden;width:fit-content;margin-bottom:10px}
+.bytomfang button{background:transparent;border:none;color:var(--muted);
+ padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;min-height:32px}
+.bytomfang button+button{border-left:1px solid var(--border)}
+.bytomfang button.paa{background:var(--panel-2);color:var(--text)}
+.bytrad{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+ background:transparent;border:none;border-bottom:1px solid var(--border);
+ color:var(--text);padding:9px 8px;font-size:13px;cursor:pointer}
+.bytrad:hover{background:rgba(255,255,255,.05)}
+.bytrad .br-navn{flex:1;min-width:0;line-height:1.35}
+.bytrad .br-kat{display:block;font-size:10.5px;color:var(--muted);font-family:var(--mono);
+ text-transform:uppercase;margin-top:2px}
+.bytrad .br-ledig{flex:none;font-family:var(--mono);font-size:12px;color:var(--green,#5fb88a);
+ font-weight:700;white-space:nowrap}
+.bytrad .br-samme{flex:none;font-size:10px;font-family:var(--mono);color:var(--amber,#e0a33e);
+ white-space:nowrap}
+/* Listen skal RULLE. Den stod før med en højde og ingen rulning, og så var
+   forslagene nedenfor klippet af og umulige at nå. */
+.bytliste{max-height:260px;overflow-y:auto;overflow-x:hidden;
+ border:1px solid var(--border);border-radius:8px;
+ -webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.bytliste .bytrad:last-child{border-bottom:none}
+body.show-mobile .bytliste{max-height:42vh}
+.byttom{padding:14px 8px;font-size:12.5px;color:var(--muted);line-height:1.6}
+body.show-mobile .bytrad{padding:12px 8px}
+
+/* ── Opret og ret en OB-vogn ──────────────────────────────────
+   Farven er vognens navn i øjet: prikken i oversigten, bjælken i
+   tidslinjen, mærket på jobkortet. Derfor vælges den som farve og ikke
+   som en hex-kode i et tekstfelt – og man ser den, før man gemmer. */
+.vognfarver{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0}
+.vognfarve{width:30px;height:30px;border-radius:50%;border:2px solid transparent;
+ cursor:pointer;padding:0;position:relative}
+.vognfarve:hover{border-color:var(--muted)}
+.vognfarve.valgt{border-color:#fff}
+.vognfarve.brugt::after{content:'';position:absolute;inset:auto 0 -9px 0;height:3px;
+ border-radius:2px;background:var(--muted)}
+.vognfarve-vaelg{width:46px;height:32px;padding:0;background:none;border:1px solid var(--border);
+ border-radius:7px;cursor:pointer}
+.vognfarve-kode{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.vognproeve{display:flex;align-items:center;gap:10px;background:var(--panel-2);
+ border-radius:8px;padding:10px 12px}
+.vognproeve .vp-badge{border-radius:7px;padding:5px 11px;font-size:12px;font-weight:800;
+ color:#0c0c0c;font-family:var(--mono)}
+.vognproeve .vp-bjaelke{flex:1;height:14px;border-radius:4px;min-width:40px}
+.vognbrug{background:var(--panel-2);border-radius:8px;padding:10px 12px;font-size:12px;
+ color:var(--muted);line-height:1.6;margin-bottom:12px;display:none}
+.vognbrug.on{display:block}
+.vognbrug b{color:var(--text)}
+.vognbrug .spaerret{color:var(--amber,#e0a33e)}
+
 /* ── Jobbet bundet til en OB-vogn ─────────────────────────────
    Vognens farve er dens kendetegn alle andre steder i programmet, så den
    skal også være det her: man genkender OB3 på farven, ikke på teksten. */
@@ -1272,6 +1335,7 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
   <div id="tab-obvogne" style="display:none;">
     <div style="margin-bottom:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
       <input type="text" id="obSearch" placeholder="Søg OB vogn navn eller booking..." style="flex:1; min-width:240px; max-width:400px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 12px; border-radius:8px; font-size:13px;">
+      <button class="btn small" id="nyVognBtn" title="Opret en OB-vogn">+ Ny vogn</button>
       <button class="btn small secondary" id="okAabnBtn" title="Læs et månedsark fra OB-kalenderen og lav bookingerne">⇧ Importér OB-kalender</button>
     </div>
     <div id="obvogneContent"></div>
@@ -1320,6 +1384,61 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
     <div class="modal-actions">
       <button class="btn secondary" id="repairCancelBtn">Annuller</button>
       <button class="btn" id="repairSaveBtn" style="background:var(--red);">Fejlmeld</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="bytOverlay">
+  <div class="modal" style="max-width:620px;">
+    <h2 id="bytTitel">Løs konflikten</h2>
+    <input type="hidden" id="bytJobId">
+    <input type="hidden" id="bytNavn">
+    <div id="bytProblem" class="bytproblem"></div>
+
+    <div class="bytvej">
+      <div class="bytvej-h">🚚 Lej det manglende ind</div>
+      <div class="bytvej-t" id="bytLejeTekst"></div>
+      <button class="btn small" id="bytLejeBtn">Opret indleje</button>
+    </div>
+
+    <div class="bytvej">
+      <div class="bytvej-h">⇄ Tag noget andet fra lageret</div>
+      <div class="bytvej-t">Her står kun det, der <b>er ledigt</b> i jobbets dage.
+        Udstyr i samme kategori står først.</div>
+      <div class="bytomfang" id="bytOmfang"></div>
+      <div class="mf"><input type="text" id="bytSoeg" placeholder="Søg i lageret …"></div>
+      <div id="bytListe" class="bytliste"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn secondary" id="bytLukBtn">Luk</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="vognOverlay">
+  <div class="modal" style="max-width:470px;">
+    <h2 id="vognTitel">Ny OB-vogn</h2>
+    <input type="hidden" id="vognId">
+    <div class="field"><label>Navn</label>
+      <input type="text" id="vognNavn" placeholder="f.eks. Remote 3" autocomplete="off">
+      <div id="vognNavnHint" class="indlej-hint"></div></div>
+    <div class="field"><label>Farve</label>
+      <div class="vognfarver" id="vognFarver"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+        <input type="color" id="vognFarve" value="#8b7fe8" class="vognfarve-vaelg">
+        <span id="vognFarveKode" class="vognfarve-kode"></span>
+      </div>
+      <div id="vognFarveHint" class="indlej-hint"></div></div>
+    <div class="field"><label>Sådan ser den ud</label>
+      <div id="vognProeve" class="vognproeve"></div></div>
+    <div id="vognBrug" class="vognbrug"></div>
+    <div class="modal-actions" style="justify-content:space-between;">
+      <button class="btn small danger" id="vognSletBtn" style="visibility:hidden;">Slet vognen</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn secondary" id="vognAnnullerBtn">Annuller</button>
+        <button class="btn" id="vognGemBtn">Gem</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1650,7 +1769,8 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
       <select id="obvVaelg"></select>
     </div>
     <div id="obvIndhold"></div>
-    <div class="modal-actions">
+    <div class="modal-actions" style="justify-content:space-between;">
+      <button class="btn small" id="obvBytBtn" style="display:none;">⇄ Byt eller lej</button>
       <button class="btn small secondary" id="obvLukBtn">Luk</button>
     </div>
   </div>
@@ -3049,7 +3169,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_blZoSR5idK-yHYwPJTzvxg_Ea6Mbrvq';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.16-c';
+const EP_VERSION = '2026.10.17-b';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -4518,9 +4638,13 @@ function renderJobs(){
           +'\nTryk for at rette indlejen" onclick="event.stopPropagation();'
           +'indlejRetFor(\''+j.id+'\',\''+nvn+'\')">🚚 '+k.indlejet+' lejet ind</button>'
         : '';
+      /* Én knap ud af konflikten. Den fører til begge veje – lej det
+         manglende, eller tag noget andet, der er ledigt – for det er det
+         valg man står i, og man skulle før selv regne ud, hvad der kunne
+         bruges i stedet. */
       const lej = harKonf
-        ? '<button class="indlej-knap" title="Lej det manglende ind"'
-          +' onclick="event.stopPropagation();openIndlej(\''+j.id+'\',\''+nvn+'\')">+ indlej</button>'
+        ? '<button class="indlej-knap" title="Lej det manglende ind, eller byt til noget der er ledigt"'
+          +' onclick="event.stopPropagation();openByt(\''+j.id+'\',\''+nvn+'\')">⇄ løs</button>'
         : '';
       return '<div class="item-row'+(it.pakket?' er-pakket':'')+(harKonf?' har-konflikt':'')
         +((k&&k.indlejet&&!harKonf)?' er-indlejet':'')+'"'
@@ -5259,6 +5383,16 @@ var OB_NOEGLE = null;
    joblisten når man folder et job ud. Begge steder giver den de samme fire
    ting, så tegningen ikke skal vide hvor den blev kaldt fra. */
 var OB_KTX = null;
+/* Nøglen kan være et navn eller 'PKG:<id>'. Skemaet og byttevinduet skal
+   bruge navnet, for det er det, jobs.items står med. */
+function obvNavnAf(noegle){
+  if(!noegle) return '';
+  if(String(noegle).indexOf('PKG:')===0){
+    var p=PACKAGES.find(function(x){ return x.id===String(noegle).slice(4); });
+    return p?p.name:'';
+  }
+  return noegle;
+}
 function obvFraDialog(){
   /* 'live' betyder: hent det hele forfra hver gang skemaet tegnes. Retter man
      antallet i vinduet bagved, skal skemaet følge med – og så er det
@@ -5300,6 +5434,20 @@ function obvTegn(){
   var vaelg = document.getElementById('obvVaelg');
   var K = (OB_KTX && !OB_KTX.live) ? OB_KTX : obvFraDialog();
   var start = K.start, slut = K.slut;
+  /* Skemaet viser hvem der har taget udstyret. Det næste spørgsmål er altid
+     "hvad gør jeg så?" – derfor en vej ud herfra, når vi står på et job, der
+     findes, og på en linje, der er på det. */
+  (function(){
+    var bb=document.getElementById('obvBytBtn'); if(!bb) return;
+    var j = K.jobId ? jobs.find(function(x){ return x.id===K.jobId; }) : null;
+    var navn = obvNavnAf(OB_NOEGLE);
+    var paa = j && navn && (j.items||[]).some(function(i){ return i.name===navn; });
+    bb.style.display = paa ? '' : 'none';
+    if(paa) bb.onclick=function(){
+      document.getElementById('obvOverlay').classList.remove('open');
+      openByt(j.id, navn);
+    };
+  })();
 
   /* Vælgeren: alt det der er valgt på jobbet, så man kan hoppe mellem dem */
   var noegler = Object.keys(K.items);
@@ -6778,7 +6926,14 @@ function renderObVogne(){
   var container=document.getElementById('obvogneContent'); if(!container) return;
   container.innerHTML='';
   if(!OB_VOGNE.length){
-    container.innerHTML='<div class="empty"><div class="big">🚐</div>Ingen OB-vogne. Kør supabase_ob_vogne.sql.</div>'; return;
+    /* Før stod der "kør supabase_ob_vogne.sql" – nu kan vognen laves her. */
+    container.innerHTML='<div class="empty"><div class="big">🚐</div>'
+      +'Ingen OB-vogne endnu.<div style="margin-top:12px;">'
+      +'<button class="btn small" id="nyVognTomBtn">+ Opret den første vogn</button>'
+      +'</div></div>';
+    var tb=document.getElementById('nyVognTomBtn');
+    if(tb) tb.addEventListener('click', function(){ openVogn(null); });
+    return;
   }
   try{ renderGantt(container); } catch(e){ console.error("renderGantt fejl:",e); }
   var sh=document.createElement('div');
@@ -6809,6 +6964,15 @@ function renderObVogne(){
     var bb=document.createElement('button'); bb.className='btn small'; bb.textContent='+ Book '+vogn.name;
     (function(v){ bb.addEventListener('click',function(e){e.stopPropagation();openObModal(v.id,null);}); })(vogn);
     head.appendChild(bb);
+
+    /* Ret navn og farve på vognen selv. Den står her, hvor vognen er – ikke
+       inde i en indstillingsside, man skal lede efter. */
+    var rv=document.createElement('button');
+    rv.className='btn small secondary'; rv.textContent='✎';
+    rv.title='Ret vognens navn og farve';
+    rv.style.cssText='font-size:12px;padding:5px 10px;min-height:28px;';
+    (function(v){ rv.addEventListener('click',function(e){e.stopPropagation();openVogn(v.id);}); })(vogn);
+    head.appendChild(rv);
 
     var obChev=document.createElement('span');
     obChev.id='ob-chev-'+vogn.id;
@@ -7042,6 +7206,394 @@ function printPackList(id){
 }
 
 // ═══════════════════════════════════════════════════════════
+// BYT ELLER LEJ — vejen ud af en konflikt
+// ═══════════════════════════════════════════════════════════
+
+/* Hvor mange er der tilbage af det her i perioden? Samme regnestykke som
+   konfliktmærket, bare som et tal: det er dét, man skal se for at vide, om
+   noget andet kan bruges i stedet. */
+function ledigeAf(noegle, start, slut, undtagJob){
+  var navn, iAlt;
+  if(String(noegle).indexOf('PKG:')===0){
+    var pkg=PACKAGES.find(function(p){ return p.id===String(noegle).slice(4); });
+    if(!pkg) return null;
+    navn=pkg.name; iAlt=pkg.qty;
+  }else{
+    navn=noegle; iAlt=totalQty(noegle);
+    if(iAlt===null) return null;
+  }
+  var bq=bookedQty(navn, start, slut, undtagJob);
+  return iAlt - bq.sum + indlejetPaa(undtagJob, navn);
+}
+
+var BYT = null;     // {jobId, navn, noegle, mangler, ledige, omfang}
+
+/* Alt det, der KAN bruges i stedet: nok ledige i hele perioden, og ikke
+   det samme som det, der mangler. Samme kategori først – en optik erstattes
+   af en optik, ikke af en kabeltromle. */
+function bytKandidater(q){
+  if(!BYT) return [];
+  var j=jobs.find(function(x){ return x.id===BYT.jobId; });
+  if(!j) return [];
+  var skalHave = BYT.omfang==='hele' ? BYT.oensket : BYT.mangler;
+  var egenKat = (function(){
+    var e=EQUIPMENT.find(function(x){ return x.name===BYT.navn; });
+    return e ? e.category : '';
+  })();
+  var paaJobbet={}; (j.items||[]).forEach(function(it){ paaJobbet[it.name]=true; });
+  var soeg=(q||'').trim().toLowerCase();
+  var ud=[];
+  var tag=function(navn, noegle, kat, erPakke){
+    if(navn===BYT.navn) return;
+    if(soeg && navn.toLowerCase().indexOf(soeg)<0 && (kat||'').toLowerCase().indexOf(soeg)<0) return;
+    var l=ledigeAf(noegle, j.start, j.end, j.id);
+    if(l===null || l < skalHave) return;
+    /* Står det allerede på jobbet, lægges antallet oveni den linje – men så
+       skal der være plads til BÅDE det, der står, og det vi flytter over. */
+    /* Står det allerede på jobbet, lægges antallet oveni den linje. Det er
+       stadig et gyldigt bytte – man tager bare to mere af noget, man har. */
+    var staar=(j.items||[]).find(function(it){ return it.name===navn; });
+    ud.push({navn:navn, noegle:noegle, kat:kat, ledige:l, erPakke:erPakke,
+             staarAlt:(staar?(staar.qty||0):0)});
+  };
+  PACKAGES.forEach(function(p){ tag(p.name, 'PKG:'+p.id, 'Pakke', true); });
+  EQUIPMENT.forEach(function(e){ tag(e.name, e.name, e.category||'', false); });
+  ud.sort(function(a,b){
+    var as=(a.kat===egenKat)?0:1, bs=(b.kat===egenKat)?0:1;
+    if(as!==bs) return as-bs;
+    if(b.ledige!==a.ledige) return b.ledige-a.ledige;
+    return a.navn.localeCompare(b.navn,'da');
+  });
+  return ud.slice(0, 60);
+}
+
+function openByt(jobId, navn){
+  var j=jobs.find(function(x){ return x.id===jobId; }); if(!j) return;
+  var it=(j.items||[]).find(function(x){ return x.name===navn; }); if(!it) return;
+  var noegle=jobNoegle(it);
+  var ledige=ledigeAf(noegle, j.start, j.end, j.id);
+  var oensket=it.qty||1;
+  /* Kender vi ikke lageret (omdøbt eller slettet), er der ikke noget at
+     regne på – så er hele linjen det, der skal skaffes. */
+  var ledigeTal = (ledige===null) ? 0 : Math.max(0, ledige);
+  var mangler = Math.max(1, oensket - ledigeTal);
+  BYT = {jobId:jobId, navn:navn, noegle:noegle, oensket:oensket,
+         ledige:ledigeTal, mangler:mangler, omfang:'mangler'};
+
+  document.getElementById('bytJobId').value=jobId;
+  document.getElementById('bytNavn').value=navn;
+  document.getElementById('bytTitel').textContent='Løs konflikten på '+navn;
+  document.getElementById('bytProblem').innerHTML=
+    'Du har bedt om <b>'+oensket+'</b> · der er <b>'+ledigeTal+'</b> ledige i '
+    + fmtDate(j.start)+' → '+fmtDate(j.end)+'.'
+    + '<br>Der mangler <b>'+mangler+'</b>.'
+    + (ledige===null ? '<br>"'+escapeHtml(navn)+'" står ikke i lageret længere, '
+        + 'så antallet kan ikke regnes ud.' : '');
+  document.getElementById('bytLejeTekst').innerHTML=
+    'Opretter en indleje på <b>'+mangler+' stk. '+escapeHtml(navn)+'</b>, som du '
+    + 'skriver leverandør og pris på. Så er underskuddet dækket, og det står '
+    + 'på pakkelisten.';
+  bytTegnOmfang(); bytTegnListe();
+  document.getElementById('bytSoeg').value='';
+  document.getElementById('bytOverlay').classList.add('open');
+}
+function lukByt(){ document.getElementById('bytOverlay').classList.remove('open'); BYT=null; }
+
+/* Byt kun det der mangler, eller hele linjen? Det første er det normale:
+   fire af dem er ledige, og dem skal man ikke flytte. */
+function bytTegnOmfang(){
+  if(!BYT) return;
+  var el=document.getElementById('bytOmfang'); if(!el) return;
+  var valg=[{k:'mangler', t:'Byt kun de '+BYT.mangler+', der mangler'},
+            {k:'hele',    t:'Byt hele linjen ('+BYT.oensket+')'}];
+  el.innerHTML='';
+  valg.forEach(function(v){
+    var b=document.createElement('button');
+    b.type='button'; b.textContent=v.t;
+    b.className=(BYT.omfang===v.k?'paa':'');
+    b.addEventListener('click', function(){
+      BYT.omfang=v.k; bytTegnOmfang(); bytTegnListe();
+    });
+    el.appendChild(b);
+  });
+}
+function bytTegnListe(){
+  var el=document.getElementById('bytListe'); if(!el||!BYT) return;
+  var q=document.getElementById('bytSoeg').value;
+  var k=bytKandidater(q);
+  var skal = BYT.omfang==='hele' ? BYT.oensket : BYT.mangler;
+  if(!k.length){
+    el.innerHTML='<div class="byttom">Der er ikke noget i lageret, hvor der er '
+      + skal+' ledige i hele perioden'+(q?' og som passer på søgningen':'')+'.<br>'
+      + 'Så er indleje vejen — eller flyt en af de andre bookinger.</div>';
+    return;
+  }
+  var egenKat=(function(){
+    var e=EQUIPMENT.find(function(x){ return x.name===BYT.navn; });
+    return e?e.category:''; })();
+  el.innerHTML=k.map(function(c,i){
+    return '<button class="bytrad" data-byt="'+i+'">'
+      +'<span class="br-navn">'+(c.erPakke?'📦 ':'')+escapeHtml(c.navn)
+      +(c.staarAlt?'<span class="br-kat">står allerede på jobbet med '+c.staarAlt+'</span>'
+                  :'<span class="br-kat">'+escapeHtml(c.kat||'uden kategori')+'</span>')
+      +'</span>'
+      +(c.kat===egenKat&&egenKat?'<span class="br-samme">samme kategori</span>':'')
+      +'<span class="br-ledig">'+c.ledige+' ledige</span>'
+      +'</button>';
+  }).join('');
+  el.querySelectorAll('[data-byt]').forEach(function(b){
+    b.addEventListener('click', function(){ bytUdfoer(k[+b.dataset.byt]); });
+  });
+}
+
+/* Byttet: det der mangler flyttes over på det nye udstyr. Linjen med det
+   oprindelige bliver stående med det, der ER ledigt – det er jo stadig
+   dét, vi tager med. Skal hele linjen byttes, forsvinder den. */
+async function bytUdfoer(valgt){
+  if(!BYT||!valgt) return;
+  var jobId=BYT.jobId, gammel=BYT.navn;
+  var flyt = BYT.omfang==='hele' ? BYT.oensket : BYT.mangler;
+  var bliverTilbage = BYT.omfang==='hele' ? 0 : Math.max(0, BYT.oensket - flyt);
+  if(!confirm('Byt '+flyt+' × '+gammel+' til '+flyt+' × '+valgt.navn+'?\n\n'
+    + (bliverTilbage
+        ? gammel+' bliver stående med '+bliverTilbage+'.'
+        : gammel+' går helt af jobbet.'))) return;
+  try{
+    /* Samme fremgangsmåde som antalsknapperne: hent jobbet forfra og ret i
+       den friske udgave, så en chaufførs hak ikke bliver skrevet over. */
+    var job=await hentJob(jobId);
+    var friske=job.items||[];
+    var foer=JSON.parse(JSON.stringify(friske));
+    var nye=[];
+    friske.forEach(function(i){
+      if(i.name===gammel){
+        if(bliverTilbage>0){ i.qty=bliverTilbage; nye.push(i); }
+        return;                                  // ellers ryger linjen ud
+      }
+      nye.push(i);
+    });
+    var findes=nye.find(function(i){ return i.name===valgt.navn; });
+    if(findes) findes.qty=(findes.qty||0)+flyt;
+    else nye.push(valgt.erPakke
+      ? {name:valgt.navn, qty:flyt, isPkg:true}
+      : {name:valgt.navn, qty:flyt});
+    await gemJob(jobId, {items:nye}, foer);
+    await loadJobs();
+    lukByt(); renderJobs();
+    if(document.body.classList.contains('show-mobile') && typeof renderMobileTab==='function') renderMobileTab();
+    var b=document.getElementById('body-'+jobId); if(b) b.classList.add('open');
+    aabneJob.add(jobId);
+  }catch(e){ await jobFejl(e, 'bytte udstyret'); }
+}
+
+(function(){
+  var o=document.getElementById('bytOverlay'); if(!o) return;
+  document.getElementById('bytLukBtn').addEventListener('click', lukByt);
+  lukVedKlikUdenfor(o, lukByt);
+  document.getElementById('bytSoeg').addEventListener('input', bytTegnListe);
+  document.getElementById('bytLejeBtn').addEventListener('click', function(){
+    if(!BYT) return;
+    var jobId=BYT.jobId, navn=BYT.navn, antal=BYT.mangler;
+    lukByt();
+    /* Indlejen åbner med præcis det antal, der mangler – det er det, man
+       skal ringe efter. */
+    openIndlej(jobId, navn, null, antal);
+  });
+})();
+
+// ═══════════════════════════════════════════════════════════
+// OPRET OG RET EN OB-VOGN
+// ═══════════════════════════════════════════════════════════
+
+/* Farver der kan skelnes på en mørk skærm – og fra hinanden. To vogne i
+   samme nuance er det samme som ingen farve: hele pointen er, at man kan
+   se på en prik, hvilken vogn det er. */
+var VOGN_FARVER = ['#5fb88a','#e8a33d','#8b7fe8','#5aa9e6','#e2685f',
+                   '#4fc3b0','#d97fb8','#9bc24a','#e8803d','#7a8fa6'];
+
+/* Hvad hænger der i vognen? Det afgør, om den må slettes. Udstyr og pakker
+   peger på vognens id, og jobbene gør det nu også – sletter man vognen,
+   står de tilbage med et id, der ikke findes, og så kan ingen se hvor
+   tingene bor. Derfor tælles det op, før der slettes. */
+function vognBrug(vognId){
+  var udstyr = EQUIPMENT.filter(function(e){ return antalPaaVogn(e, vognId) > 0; }).length;
+  var pakker = PACKAGES.filter(function(p){ return p.ob_vogn_id === vognId; }).length;
+  var bookinger = OB_BOOKINGER.filter(function(b){ return b.ob_vogn_id === vognId; }).length;
+  var bundne = jobs.filter(function(j){ return jobVogne(j).indexOf(vognId) >= 0; }).length;
+  return {udstyr:udstyr, pakker:pakker, bookinger:bookinger, job:bundne,
+          ialt: udstyr+pakker+bookinger+bundne};
+}
+function vognBrugTekst(b){
+  var d=[];
+  if(b.udstyr)    d.push(b.udstyr+' stykke'+(b.udstyr===1?'':'r')+' udstyr');
+  if(b.pakker)    d.push(b.pakker+' pakke'+(b.pakker===1?'':'r'));
+  if(b.bookinger) d.push(b.bookinger+' booking'+(b.bookinger===1?'':'er'));
+  if(b.job)       d.push(b.job+' job bundet til den');
+  return d.join(', ');
+}
+
+function openVogn(vognId){
+  var v = vognId ? obVognById(vognId) : null;
+  document.getElementById('vognId').value = v ? v.id : '';
+  document.getElementById('vognTitel').textContent = v ? ('Ret '+v.name) : 'Ny OB-vogn';
+  document.getElementById('vognNavn').value = v ? (v.name||'') : '';
+  /* En ny vogn får en farve, der ikke er brugt endnu – så slipper man for
+     selv at holde styr på, hvilke der er taget. */
+  var brugte = OB_VOGNE.filter(function(x){ return !v || x.id!==v.id; })
+                       .map(function(x){ return (x.color||'').toLowerCase(); });
+  var start = v ? (v.color||VOGN_FARVER[0])
+                : (VOGN_FARVER.find(function(f){ return brugte.indexOf(f)<0; }) || VOGN_FARVER[0]);
+  document.getElementById('vognFarve').value = start;
+
+  var brugBoks=document.getElementById('vognBrug');
+  if(v){
+    var b=vognBrug(v.id);
+    var t=vognBrugTekst(b);
+    brugBoks.classList.add('on');
+    brugBoks.innerHTML = t
+      ? 'I vognen: <b>'+escapeHtml(t)+'</b>.<br>'
+        + '<span class="spaerret">Den kan ikke slettes, så længe der er noget i den '
+        + '— udstyr og job ville stå med en vogn, der ikke findes.</span> '
+        + 'Navn og farve kan du godt rette; alt peger på vognens id, ikke på navnet.'
+      : 'Der er ingenting i vognen endnu, så den kan slettes.';
+  }else{
+    brugBoks.classList.remove('on'); brugBoks.innerHTML='';
+  }
+  document.getElementById('vognSletBtn').style.visibility = v ? 'visible' : 'hidden';
+
+  vognTegnFarver(); vognTjekNavn(); vognTegnProeve();
+  document.getElementById('vognOverlay').classList.add('open');
+  setTimeout(function(){ document.getElementById('vognNavn').focus(); }, 80);
+}
+function lukVogn(){ document.getElementById('vognOverlay').classList.remove('open'); }
+
+function vognTegnFarver(){
+  var el=document.getElementById('vognFarver'); if(!el) return;
+  var mig=document.getElementById('vognId').value;
+  var valgt=(document.getElementById('vognFarve').value||'').toLowerCase();
+  var brugte={};
+  OB_VOGNE.forEach(function(v){ if(v.id!==mig) brugte[(v.color||'').toLowerCase()]=v.name; });
+  el.innerHTML='';
+  VOGN_FARVER.forEach(function(f){
+    var b=document.createElement('button');
+    b.type='button';
+    b.className='vognfarve'+(f===valgt?' valgt':'')+(brugte[f]?' brugt':'');
+    b.style.background=f;
+    b.title=brugte[f] ? ('Bruges af '+brugte[f]) : f;
+    b.addEventListener('click', function(){
+      document.getElementById('vognFarve').value=f;
+      vognTegnFarver(); vognTegnProeve();
+    });
+    el.appendChild(b);
+  });
+}
+/* Prøven viser farven, som den faktisk bruges: som mærke og som bjælke i
+   tidslinjen. En lille firkant i en farvevælger siger ikke, om man kan
+   læse vognens navn oven på den. */
+function vognTegnProeve(){
+  var f=document.getElementById('vognFarve').value||'#5fb88a';
+  var n=(document.getElementById('vognNavn').value||'').trim()||'Ny vogn';
+  document.getElementById('vognFarveKode').textContent=f;
+  document.getElementById('vognProeve').innerHTML=
+    '<span class="vp-badge" style="background:'+f+'">'+escapeHtml(n)+'</span>'
+    +'<span class="vp-bjaelke" style="background:'+obFarve(f,.45)+';border-left:3px solid '+f+'"></span>'
+    +'<span class="vognmaerke" style="background:'+obFarve(f,.18)+';color:'+f
+    +';border-color:'+obFarve(f,.5)+'"><span class="vprik" style="background:'+f
+    +'"></span>🚐 '+escapeHtml(n)+'</span>';
+  var mig=document.getElementById('vognId').value;
+  var klash=OB_VOGNE.find(function(v){
+    return v.id!==mig && (v.color||'').toLowerCase()===f.toLowerCase(); });
+  var h=document.getElementById('vognFarveHint');
+  h.textContent = klash ? ('Samme farve som '+klash.name+' — de bliver svære at skelne.') : '';
+  h.className = 'indlej-hint'+(klash?' ikke-lager':'');
+}
+/* To vogne med det samme navn er umulige at skelne i vælgeren på jobbet,
+   og pakkelisten ville heller ikke kunne sige hvilken. Derfor fra på navnet
+   og ikke først, når den er gemt. */
+function vognNavnLedig(navn, migId){
+  var n=(navn||'').trim().toLowerCase();
+  if(!n) return true;
+  return !OB_VOGNE.some(function(v){
+    return v.id!==migId && (v.name||'').trim().toLowerCase()===n; });
+}
+function vognTjekNavn(){
+  var n=(document.getElementById('vognNavn').value||'').trim();
+  var mig=document.getElementById('vognId').value;
+  var h=document.getElementById('vognNavnHint');
+  if(!n){ h.textContent=''; h.className='indlej-hint'; return; }
+  if(vognNavnLedig(n, mig)){ h.textContent=''; h.className='indlej-hint'; }
+  else { h.textContent='Der er allerede en vogn, der hedder '+n+'.';
+         h.className='indlej-hint ikke-lager'; }
+}
+
+async function vognGem(){
+  var id=document.getElementById('vognId').value;
+  var navn=(document.getElementById('vognNavn').value||'').trim();
+  var farve=document.getElementById('vognFarve').value||'#5fb88a';
+  if(!navn){ alert('Skriv et navn til vognen.'); return; }
+  if(!vognNavnLedig(navn, id)){
+    alert('Der er allerede en vogn, der hedder "'+navn+'".\n\n'
+      + 'To vogne med det samme navn kan ikke skelnes, når du binder et job '
+      + 'til en vogn. Vælg et andet navn.');
+    return;
+  }
+  var btn=document.getElementById('vognGemBtn');
+  btn.disabled=true; btn.textContent='Gemmer...';
+  try{
+    if(id){
+      var r1=await supa.from('ob_vogne').update({name:navn, color:farve}).eq('id', id);
+      if(r1.error) throw r1.error;
+    }else{
+      var r2=await supa.from('ob_vogne').insert({name:navn, color:farve});
+      if(r2.error) throw r2.error;
+    }
+    await loadObVogne();
+    lukVogn();
+    renderObVogne();
+    /* Vognens navn og farve står også på jobkortene og i jobvinduet. */
+    renderJobs();
+    if(document.body.classList.contains('show-mobile') && typeof renderMobileTab==='function') renderMobileTab();
+    if(typeof tegnRedigerVogne==='function') tegnRedigerVogne();
+  }catch(e){ sigFejl(e, 'gemme vognen'); }
+  finally{ btn.disabled=false; btn.textContent='Gem'; }
+}
+
+async function vognSlet(){
+  var id=document.getElementById('vognId').value; if(!id) return;
+  var v=obVognById(id); if(!v) return;
+  var b=vognBrug(id);
+  if(b.ialt){
+    alert('"'+v.name+'" kan ikke slettes.\n\n'
+      + 'Der er stadig '+vognBrugTekst(b)+'.\n\n'
+      + 'Flyt udstyret ud af vognen, slet dens bookinger og bind jobbene fri '
+      + 'først. Ellers ville de stå med en vogn, der ikke findes.');
+    return;
+  }
+  if(!confirm('Slet "'+v.name+'"?\n\nDer er ingenting i den, så der går ikke noget tabt.')) return;
+  try{
+    var r=await supa.from('ob_vogne').delete().eq('id', id);
+    if(r.error) throw r.error;
+    await loadObVogne();
+    lukVogn(); renderObVogne(); renderJobs();
+    if(document.body.classList.contains('show-mobile') && typeof renderMobileTab==='function') renderMobileTab();
+  }catch(e){ sigFejl(e, 'slette vognen'); }
+}
+
+(function(){
+  var o=document.getElementById('vognOverlay'); if(!o) return;
+  document.getElementById('vognAnnullerBtn').addEventListener('click', lukVogn);
+  document.getElementById('vognGemBtn').addEventListener('click', vognGem);
+  document.getElementById('vognSletBtn').addEventListener('click', vognSlet);
+  lukVedKlikUdenfor(o, lukVogn);
+  var n=document.getElementById('vognNavn');
+  if(n) n.addEventListener('input', function(){ vognTjekNavn(); vognTegnProeve(); });
+  var f=document.getElementById('vognFarve');
+  if(f) f.addEventListener('input', function(){ vognTegnFarver(); vognTegnProeve(); });
+  var ny=document.getElementById('nyVognBtn');
+  if(ny) ny.addEventListener('click', function(){ openVogn(null); });
+})();
+
+// ═══════════════════════════════════════════════════════════
 // JOB BUNDET TIL OB-VOGN
 // ═══════════════════════════════════════════════════════════
 
@@ -7238,7 +7790,7 @@ function indlejTjekNavn(){
     h.className='indlej-hint ikke-lager';
   }
 }
-function openIndlej(jobId, navn, lineId){
+function openIndlej(jobId, navn, lineId, antal){
   var j=jobs.find(function(x){return x.id===jobId;}); if(!j) return;
   var l = lineId ? INDLEJE.find(function(x){return x.id===lineId;}) : null;
 
@@ -7259,7 +7811,8 @@ function openIndlej(jobId, navn, lineId){
       return '<option value="'+escapeHtml(n)+'"></option>'; }).join('');
 
   document.getElementById('indlejNavn').value = l ? l.equipment_name : (navn||'');
-  document.getElementById('indlejQty').value  = l ? (l.qty||1) : 1;
+  /* Kommer vi fra "løs konflikten", er antallet præcis det, der mangler. */
+  document.getElementById('indlejQty').value  = l ? (l.qty||1) : (antal||1);
   document.getElementById('indlejLev').value  = l ? (l.leverandoer||'') : '';
   document.getElementById('indlejKontakt').value = l ? (l.kontakt||'') : '';
   document.getElementById('indlejDagspris').value = l && l.dagspris!=null ? l.dagspris : '';
@@ -8288,7 +8841,7 @@ function renderMobileJobs(q){
       if(k.indlejet) kon += '<button class="indlej-maerke" onclick="event.stopPropagation();'
         +'indlejRetFor(\''+j.id+'\',\''+nvn+'\')">🚚 '+k.indlejet+' lejet ind</button>';
       if(k.konflikt) kon += '<button class="indlej-knap" onclick="event.stopPropagation();'
-        +'openIndlej(\''+j.id+'\',\''+nvn+'\')">+ indlej</button>';
+        +'openByt(\''+j.id+'\',\''+nvn+'\')">⇄ løs</button>';
       return '<div class="m-item'+(it.pakket?' er-pakket':'')+(k.konflikt?' har-konflikt':'')
         +((k.indlejet&&!k.konflikt)?' er-indlejet':'')+'"'
         +(k.konflikt?' data-konflikt="1"':'')+'>'
