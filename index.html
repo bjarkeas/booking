@@ -1407,6 +1407,7 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
         Udstyr i samme kategori står først.</div>
       <div class="bytomfang" id="bytOmfang"></div>
       <div class="mf"><input type="text" id="bytSoeg" placeholder="Søg i lageret …"></div>
+      <div id="bytHint" class="bytvej-t" style="display:none;margin:-4px 0 8px;"></div>
       <div id="bytListe" class="bytliste"></div>
     </div>
 
@@ -3169,7 +3170,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_blZoSR5idK-yHYwPJTzvxg_Ea6Mbrvq';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.17-b';
+const EP_VERSION = '2026.10.17-c';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -7231,7 +7232,7 @@ var BYT = null;     // {jobId, navn, noegle, mangler, ledige, omfang}
 /* Alt det, der KAN bruges i stedet: nok ledige i hele perioden, og ikke
    det samme som det, der mangler. Samme kategori først – en optik erstattes
    af en optik, ikke af en kabeltromle. */
-function bytKandidater(q){
+function bytKandidater(){
   if(!BYT) return [];
   var j=jobs.find(function(x){ return x.id===BYT.jobId; });
   if(!j) return [];
@@ -7240,12 +7241,9 @@ function bytKandidater(q){
     var e=EQUIPMENT.find(function(x){ return x.name===BYT.navn; });
     return e ? e.category : '';
   })();
-  var paaJobbet={}; (j.items||[]).forEach(function(it){ paaJobbet[it.name]=true; });
-  var soeg=(q||'').trim().toLowerCase();
   var ud=[];
   var tag=function(navn, noegle, kat, erPakke){
     if(navn===BYT.navn) return;
-    if(soeg && navn.toLowerCase().indexOf(soeg)<0 && (kat||'').toLowerCase().indexOf(soeg)<0) return;
     var l=ledigeAf(noegle, j.start, j.end, j.id);
     if(l===null || l < skalHave) return;
     /* Står det allerede på jobbet, lægges antallet oveni den linje – men så
@@ -7257,14 +7255,52 @@ function bytKandidater(q){
              staarAlt:(staar?(staar.qty||0):0)});
   };
   PACKAGES.forEach(function(p){ tag(p.name, 'PKG:'+p.id, 'Pakke', true); });
-  EQUIPMENT.forEach(function(e){ tag(e.name, e.name, e.category||'', false); });
+  /* Dele, der ligger i en pakke, skal ikke stå for sig selv. Man bytter ikke
+     en antenne til ét beltpack ud af en kasse med fem – kassen er det, der
+     køres med, og delen følger den. Løst puljeudstyr bliver. */
+  BYT.iPakke = 0;
+  EQUIPMENT.forEach(function(e){
+    if(e.package_id){ BYT.iPakke++; return; }
+    tag(e.name, e.name, e.category||'', false);
+  });
   ud.sort(function(a,b){
     var as=(a.kat===egenKat)?0:1, bs=(b.kat===egenKat)?0:1;
     if(as!==bs) return as-bs;
     if(b.ledige!==a.ledige) return b.ledige-a.ledige;
     return a.navn.localeCompare(b.navn,'da');
   });
-  return ud.slice(0, 60);
+  return ud;
+}
+/* Søgningen går på navn og kategori. Den filtrerer en liste, der allerede er
+   regnet ud – ledigheden koster et opslag pr. stykke udstyr mod alle job, og
+   det skal ikke laves om for hvert tastetryk. */
+function bytFiltrer(q){
+  var liste=(BYT&&BYT.alle)||[];
+  var soeg=(q||'').trim().toLowerCase();
+  if(!soeg) return liste.slice(0,60);
+  return liste.filter(function(c){
+    return c.navn.toLowerCase().indexOf(soeg)>=0
+        || (c.kat||'').toLowerCase().indexOf(soeg)>=0;
+  }).slice(0,60);
+}
+/* Hvad skal der stå i søgefeltet, når vinduet åbner? Det længste stykke af
+   navnets begyndelse, der stadig giver noget brugbart.
+
+   "Bolero Pulje Antenna # OB 4 SLAVE" bliver til "Bolero Pulje Antenna" –
+   altså de andre antenner, ikke alle femten Bolero-ting. Giver det ikke
+   noget, prøves et ord mindre, og til sidst står feltet tomt og hele lageret
+   er fremme. Der er ingen grund til at fylde feltet med noget, der viser
+   en tom liste. */
+function bytStartSoeg(){
+  if(!BYT) return '';
+  var ord=String(BYT.navn||'').split(/\s+/).filter(Boolean);
+  for(var n=ord.length-1; n>=1; n--){
+    /* Et skilletegn til sidst — "Bolero Pujle Antenna #" — ser ud som om
+       man er midt i at skrive. Det skæres af, så feltet står med hele ord. */
+    var p=ord.slice(0,n).join(' ').replace(/[^0-9A-Za-zÆØÅæøå)\]]+$/,'').trim();
+    if(p && bytFiltrer(p).length) return p;
+  }
+  return '';
 }
 
 function openByt(jobId, navn){
@@ -7284,7 +7320,8 @@ function openByt(jobId, navn){
   document.getElementById('bytNavn').value=navn;
   document.getElementById('bytTitel').textContent='Løs konflikten på '+navn;
   document.getElementById('bytProblem').innerHTML=
-    'Du har bedt om <b>'+oensket+'</b> · der er <b>'+ledigeTal+'</b> ledige i '
+    'Du har bedt om <b>'+oensket+'</b> · der er <b>'+ledigeTal+'</b> '
+    + (ledigeTal===1?'ledig':'ledige')+' i '
     + fmtDate(j.start)+' → '+fmtDate(j.end)+'.'
     + '<br>Der mangler <b>'+mangler+'</b>.'
     + (ledige===null ? '<br>"'+escapeHtml(navn)+'" står ikke i lageret længere, '
@@ -7293,8 +7330,11 @@ function openByt(jobId, navn){
     'Opretter en indleje på <b>'+mangler+' stk. '+escapeHtml(navn)+'</b>, som du '
     + 'skriver leverandør og pris på. Så er underskuddet dækket, og det står '
     + 'på pakkelisten.';
+  BYT.alle = bytKandidater();
+  /* Søgefeltet fyldes selv ud med begyndelsen af navnet, så det der minder
+     om det manglende, står der med det samme – uden at skrive noget. */
+  document.getElementById('bytSoeg').value = bytStartSoeg();
   bytTegnOmfang(); bytTegnListe();
-  document.getElementById('bytSoeg').value='';
   document.getElementById('bytOverlay').classList.add('open');
 }
 function lukByt(){ document.getElementById('bytOverlay').classList.remove('open'); BYT=null; }
@@ -7304,7 +7344,8 @@ function lukByt(){ document.getElementById('bytOverlay').classList.remove('open'
 function bytTegnOmfang(){
   if(!BYT) return;
   var el=document.getElementById('bytOmfang'); if(!el) return;
-  var valg=[{k:'mangler', t:'Byt kun de '+BYT.mangler+', der mangler'},
+  var valg=[{k:'mangler', t:(BYT.mangler===1 ? 'Byt den ene, der mangler'
+                                             : 'Byt kun de '+BYT.mangler+', der mangler')},
             {k:'hele',    t:'Byt hele linjen ('+BYT.oensket+')'}];
   el.innerHTML='';
   valg.forEach(function(v){
@@ -7312,7 +7353,10 @@ function bytTegnOmfang(){
     b.type='button'; b.textContent=v.t;
     b.className=(BYT.omfang===v.k?'paa':'');
     b.addEventListener('click', function(){
-      BYT.omfang=v.k; bytTegnOmfang(); bytTegnListe();
+      /* Skifter omfanget, skifter kravet til hvor mange der skal være
+         ledige – så listen skal regnes forfra, ikke bare filtreres. */
+      BYT.omfang=v.k; BYT.alle=bytKandidater();
+      bytTegnOmfang(); bytTegnListe();
     });
     el.appendChild(b);
   });
@@ -7320,8 +7364,20 @@ function bytTegnOmfang(){
 function bytTegnListe(){
   var el=document.getElementById('bytListe'); if(!el||!BYT) return;
   var q=document.getElementById('bytSoeg').value;
-  var k=bytKandidater(q);
+  var k=bytFiltrer(q);
   var skal = BYT.omfang==='hele' ? BYT.oensket : BYT.mangler;
+  /* Står der noget i feltet, skal man kunne se at listen ER filtreret –
+     ellers tror man, at det er alt hvad der findes. */
+  var hint=document.getElementById('bytHint');
+  if(hint){
+    var d=[];
+    if((q||'').trim()) d.push('Viser lageret filtreret på <b>'+escapeHtml(q.trim())
+      +'</b> — ryd feltet for at se det hele.');
+    if(BYT.iPakke) d.push(BYT.iPakke+' '+(BYT.iPakke===1?'stykke udstyr, der ligger':'stykker udstyr, der ligger')
+      +' i en pakke, er ikke med — de følger deres kasse.');
+    hint.innerHTML=d.join('<br>');
+    hint.style.display = d.length ? '' : 'none';
+  }
   if(!k.length){
     el.innerHTML='<div class="byttom">Der er ikke noget i lageret, hvor der er '
       + skal+' ledige i hele perioden'+(q?' og som passer på søgningen':'')+'.<br>'
@@ -7338,7 +7394,7 @@ function bytTegnListe(){
                   :'<span class="br-kat">'+escapeHtml(c.kat||'uden kategori')+'</span>')
       +'</span>'
       +(c.kat===egenKat&&egenKat?'<span class="br-samme">samme kategori</span>':'')
-      +'<span class="br-ledig">'+c.ledige+' ledige</span>'
+      +'<span class="br-ledig">'+c.ledige+(c.ledige===1?' ledig':' ledige')+'</span>'
       +'</button>';
   }).join('');
   el.querySelectorAll('[data-byt]').forEach(function(b){
