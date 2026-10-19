@@ -3247,7 +3247,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_blZoSR5idK-yHYwPJTzvxg_Ea6Mbrvq';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.19-c';
+const EP_VERSION = '2026.10.19-d';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -4031,6 +4031,7 @@ async function sfOpretJob(){
   knap.disabled = true; knap.textContent = 'Opretter …';
   var hvem = mineInitialer() || '';
   var lavet = 0;
+  var umaerkede = [];
   try{
     for(var i = 0; i < valgte.length; i++){
       var p = valgte[i];
@@ -4047,17 +4048,30 @@ async function sfOpretJob(){
       if(jobId) skrivHistorik(jobId, p.navn, [], items);
       /* Mærk linjerne som hentet, så de ikke bliver oprettet igen i morgen.
          Lykkes det ikke, står jobbet der stadig – det er det vigtige. */
+      /* supa.update() KASTER ikke – den returnerer {error}. Den gamle
+         try/catch her fangede derfor aldrig noget, og slog adgangsreglerne
+         opdateringen fra, skete der ingenting, uden at nogen fik det at
+         vide. Det er ikke en lille ting: uden stemplet kan SignalFlow ikke
+         kende sit eget job igen og melder sit eget udstyr overbooket. */
       try{
-        await supa.from('signalflow_bookinger')
+        var mk = await supa.from('signalflow_bookinger')
           .update({status: 'hentet', hentet_job_id: jobId, hentet_at: new Date().toISOString()})
           .eq('project_id', p.id);
-      }catch(e2){ console.warn('Kunne ikke mærke SignalFlow-linjerne:', e2) }
+        if(mk.error) umaerkede.push({navn:p.navn, grund:mk.error.message||''});
+      }catch(e2){ umaerkede.push({navn:p.navn, grund:(e2&&e2.message)||''}) }
       lavet++;
     }
     await loadJobs();
     renderJobs();
     document.getElementById('sfOverlay').classList.remove('open');
-    alert(lavet === 1 ? 'Bookingen er oprettet.' : 'Oprettede ' + lavet + ' bookinger.');
+    alert((lavet === 1 ? 'Bookingen er oprettet.' : 'Oprettede ' + lavet + ' bookinger.')
+      + (umaerkede.length
+          ? '\n\nMEN: linjerne i SignalFlow kunne ikke mærkes som hentet'
+            + ' (' + umaerkede.map(function(u){ return u.navn }).join(', ') + ').'
+            + '\n\nSignalFlow kan så ikke kende sit eget job igen og vil'
+            + ' vise udstyret som overbooket. Grund: '
+            + (umaerkede[0].grund || 'ukendt')
+          : ''));
   }catch(e){
     sigFejl(e, 'oprette bookingen fra SignalFlow'
       + (lavet ? ' (de første ' + lavet + ' kom med)' : ''));
