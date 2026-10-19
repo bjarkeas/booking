@@ -634,7 +634,13 @@ body.show-desktop #mobileApp { display: none !important; }
 body.show-desktop .app { display: block !important; }
 
 
-  .repair-badge{ background:#3a1a18; color:var(--red); font-size:9px; font-family:var(--mono); font-weight:700; padding:2px 7px; border-radius:10px; border:1px solid var(--red); }
+  .repair-maerker{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 12px}
+.rm{background:var(--panel-2);border:1px solid var(--border);border-radius:5px;
+ padding:2px 8px;font-size:10.5px;font-family:var(--mono);color:var(--muted);
+ white-space:nowrap}
+.rm-snow{border-color:#2b5b70;color:#7fc9e8}
+.rm-mangler{border-color:#5c4521;color:var(--amber,#e0a33e)}
+.repair-badge{ background:#3a1a18; color:var(--red); font-size:9px; font-family:var(--mono); font-weight:700; padding:2px 7px; border-radius:10px; border:1px solid var(--red); }
   .repair-card{ background:var(--panel); border:1px solid var(--border); border-radius:10px; margin-bottom:10px; overflow:hidden; }
   .repair-card.active{ border-left:3px solid var(--red); }
   .repair-head{ padding:12px 16px; display:flex; align-items:center; gap:10px; }
@@ -1065,6 +1071,25 @@ body.show-mobile .indlej-maerke{display:block;text-align:left;margin:3px 0 1px;m
 .ok-tabel tr.ok-findes td{color:var(--muted);opacity:.55}
 .ok-tabel tr:hover td{background:var(--panel-2)}
 .imp-ok{color:#3fd99c}
+/* Filterrækken på lageret. Den står for sig selv under knapperne – knap-
+   rækken er allerede lang, og det her er noget man bliver i, mens man leder. */
+.lagerfiltre{display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+ background:var(--panel-2);border:1px solid var(--border);border-radius:8px;
+ padding:9px 11px;margin-bottom:12px}
+.lagerfiltre .lf-mrk{font-size:10.5px;font-family:var(--mono);text-transform:uppercase;
+ letter-spacing:.06em;color:var(--muted);flex:none}
+.lagerfiltre select{background:var(--panel);border:1px solid var(--border);
+ color:var(--text);padding:7px 9px;border-radius:7px;font-size:12.5px;max-width:230px}
+.lagerfiltre select.paa{border-color:var(--amber,#e0a33e);color:var(--amber,#e0a33e)}
+.lagerfiltre .lf-hak{display:flex;align-items:center;gap:6px;font-size:12.5px;
+ color:var(--muted);cursor:pointer;white-space:nowrap}
+.lagerfiltre .lf-hak input{width:auto;margin:0;accent-color:var(--amber)}
+.lagerfiltre .lf-hak.paa{color:var(--amber,#e0a33e)}
+.lagerfiltre .lf-svar{font-size:11.5px;font-family:var(--mono);color:var(--muted);
+ margin-left:auto;white-space:nowrap}
+.lagerfiltre .lf-svar.tom{color:var(--amber,#e0a33e)}
+body.show-mobile .lagerfiltre select{max-width:100%;flex:1 1 140px}
+body.show-mobile .lagerfiltre .lf-svar{margin-left:0;width:100%}
 .imp-mangler{color:var(--amber,#e0a33e)}
 .imp-tom{font-size:12.5px;color:var(--muted);padding:14px 2px;line-height:1.6}
 .imp-tabel{width:100%;border-collapse:collapse;font-size:12.5px;max-height:320px;display:block;overflow-y:auto}
@@ -1293,7 +1318,8 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
           </select>
           <button class="btn small secondary" id="addPkgBtn" title="Opret en pakke, så flere stykker udstyr kan bookes samlet">+ Ny pakke</button>
           <button class="btn small secondary" id="lsAabnBtn" title="Sammenlign lageret med regnearkets UDSTYR-faneblad og opdatér det">⤒ Opdatér fra regneark</button>
-          <button class="btn small secondary" id="liAabnBtn" title="Læs et helt lager ind fra Farmers Wife – opretter udstyr, kategorier og pakker">⤓ Importér lager</button>
+          <button class="btn small secondary" id="liArkBtn" title="Hent et regneark med rullelister til kategori, pakke og OB-vogn – til at taste nyt udstyr ind i">⤵ Lav indtastningsark</button>
+          <button class="btn small secondary" id="liAabnBtn" title="Læs et helt lager ind fra Farmers Wife, eller et udfyldt indtastningsark">⤓ Importér lager</button>
           <button class="btn small secondary" id="leUdBtn" title="Skriv lageret ud i samme form som Farmers Wifes eksport">⤴ Eksportér lager</button>
           <button class="btn small" id="addEquipBtn">+ Tilføj udstyr</button>
           <button class="btn small secondary" onclick="openCatManager()">Kategorier</button>
@@ -1301,6 +1327,23 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
           <button class="btn small secondary" id="multiModeBtn" onclick="toggleMultiMode()">☑ Vælg flere</button>
           <button class="btn small secondary" id="showStatsBtn">Statistik</button>
         </div>
+      </div>
+      <div class="lagerfiltre" id="lagerFiltre">
+        <span class="lf-mrk">Filtrér</span>
+        <select id="lagerKat" title="Vis kun én kategori"><option value="">Alle kategorier</option></select>
+        <select id="lagerHvor" title="Hvor udstyret står">
+          <option value="">Vogn og pulje</option>
+          <option value="pulje">Kun puljen</option>
+          <option value="vogn">Kun i en OB-vogn</option>
+        </select>
+        <select id="lagerType" title="Pakker eller løst udstyr">
+          <option value="">Pakker og udstyr</option>
+          <option value="pkg">Kun pakker</option>
+          <option value="equip">Kun løst udstyr</option>
+        </select>
+        <label class="lf-hak" title="Udstyr der er meldt i stykker"><input type="checkbox" id="lagerFejl"> Kun fejlmeldte</label>
+        <button class="btn small secondary" id="lagerRydBtn" style="display:none;">Ryd filtre</button>
+        <span class="lf-svar" id="lagerFilterSvar"></span>
       </div>
       <div id="lagerNewRow" style="display:none; margin-bottom:14px;"></div>
       <div id="bulkBar" style="display:none; background:var(--panel-2); border:1px solid var(--amber); border-radius:8px; padding:10px 14px; margin-bottom:12px; gap:10px; align-items:center; flex-wrap:wrap;">
@@ -1391,8 +1434,24 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
       <div class="field"><label>Dato</label><input type="date" id="repairDate"></div>
       <div class="field"><label>Indmeldt af</label><input type="text" id="repairBy" placeholder="Initialer"></div>
     </div>
+    <div class="field" id="repairAntalRaekke" style="display:none;">
+      <label>Hvor mange er i stykker?</label>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="number" id="repairQty" min="1" step="1" value="1" style="max-width:110px;">
+        <span id="repairAfTekst" class="indlej-hint" style="margin:0;"></span>
+      </div>
+    </div>
+    <div class="field"><label>Serienummer på det, der er i stykker</label>
+      <input type="text" id="repairSerie" placeholder="Nummeret på netop den enhed">
+      <div id="repairSerieHint" class="indlej-hint"></div></div>
     <div class="field"><label>Hvad fejler det?</label><textarea id="repairDesc" placeholder="Beskriv fejlen..." style="min-height:80px;"></textarea></div>
     <div class="field"><label>Hvad skal ske? (valgfrit)</label><textarea id="repairAction" placeholder="f.eks. Sendes til værksted, udskiftes..." style="min-height:60px;"></textarea></div>
+    <div class="field"><label class="indlej-hak"><input type="checkbox" id="repairSnow">
+      Fejlmeldt i ServiceNow <span>— serviceafdelingens system</span></label></div>
+    <div class="field" id="repairIncRaekke" style="display:none;"><label>INC-nummer</label>
+      <input type="text" id="repairInc" placeholder="f.eks. INC0481234">
+      <div class="indlej-hint">Så kan sagen findes igen uden at lede to steder.
+        Har du ikke nummeret endnu, så lad feltet stå tomt.</div></div>
     <div class="modal-actions">
       <button class="btn secondary" id="repairCancelBtn">Annuller</button>
       <button class="btn" id="repairSaveBtn" style="background:var(--red);">Fejlmeld</button>
@@ -3188,7 +3247,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_blZoSR5idK-yHYwPJTzvxg_Ea6Mbrvq';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.17-e';
+const EP_VERSION = '2026.10.19-b';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -4533,6 +4592,11 @@ function populateCategoryDropdowns(){
     const el=document.getElementById(id); if(!el) return;
     const cur=el.value; el.innerHTML=opts; if(cur) el.value=cur;
   });
+  /* Lagerets kategorifilter skal følge med, når der kommer en kategori til
+     eller en bliver omdøbt – ellers filtrerer man på noget, der ikke findes. */
+  const lk=document.getElementById('lagerKat');
+  if(lk){ const cur=lk.value; lk.innerHTML='<option value="">Alle kategorier</option>'+opts;
+          if(cur) lk.value=cur; }
   const sc=document.getElementById('statsCat');
   if(sc){ const cur=sc.value; sc.innerHTML='<option value="">Alle kategorier</option>'+opts; if(cur) sc.value=cur; }
 }
@@ -5611,10 +5675,17 @@ function liKategori(klasse, prefix){
    selv om Farmers Wife bytter om på dem eller får en søjle mere. */
 function liSoejler(hoved){
   var kort = {navn:['navn','name'], klasse:['objekt klasse','objektklasse','class'],
-    gruppe:['gruppe','group'], inv:['inventory nr','inventorynr','inventarnr','inventory no'],
+    gruppe:['gruppe','group'], pakke:['pakke','kasse'], inv:['inventory nr','inventorynr','inventarnr','inventory no'],
     prod:['producent','manufacturer'], model:['model'],
     serie:['serinummer','serienummer','serial','serial number'],
-    tv2:['tv 2 nr.','tv2 nr.','tv 2 nr','tv2nr','tv 2 nummer']};
+    tv2:['tv 2 nr.','tv2 nr.','tv 2 nr','tv2nr','tv 2 nummer'],
+    /* Indtastningsarkets egne søjler. Farmers Wife-eksporten har dem ikke,
+       og så falder alt tilbage til den gamle vej — begge ark læses af den
+       samme import. */
+    kategori:['kategori','category'],
+    antal:['antal','stk','stk.','qty','quantity'],
+    vogn:['ob vogn','ob-vogn','obvogn','vogn'],
+    bem:['bemærkning','bemaerkning','note','noter','bemærkninger']};
   var ud = {};
   hoved.forEach(function(h, i){
     var t = (h||'').toString().toLowerCase().replace(/\s+/g,' ').trim();
@@ -5642,11 +5713,16 @@ function liLaes(){
   var hi = -1, sp = null;
   for(var i=0;i<Math.min(gitter.length,10);i++){
     var p = liSoejler(gitter[i]);
-    if(p.navn!==undefined && p.inv!==undefined){ hi=i; sp=p; break; }
+    /* Farmers Wife-arket kendes på NAVN + INVENTORY NR. Vores eget
+       indtastningsark har ikke noget inventarnummer – nyt udstyr har ikke
+       et – men det har en KATEGORI. Én af delene er nok. */
+    if(p.navn!==undefined && (p.inv!==undefined || p.kategori!==undefined)){ hi=i; sp=p; break; }
   }
   if(hi<0){
     ud.innerHTML='<div class="sf-tom">Kunne ikke finde overskrifterne.<br>'
-      + 'Arket skal have mindst <b>NAVN</b> og <b>INVENTORY NR</b> i den øverste række.</div>';
+      + 'Arket skal have <b>NAVN</b> og enten <b>KATEGORI</b> '
+      + '(indtastningsarket) eller <b>INVENTORY NR</b> (Farmers Wife) '
+      + 'i den øverste række.</div>';
     return;
   }
 
@@ -5657,8 +5733,14 @@ function liLaes(){
     if(!r.join('').trim()) continue;
     var navn=felt(r,'navn'), inv=felt(r,'inv');
     if(!navn && !inv) continue;
-    rk.push({navn:navn, klasse:felt(r,'klasse'), gruppe:felt(r,'gruppe'), inv:inv,
-             prod:felt(r,'prod'), model:felt(r,'model'), serie:felt(r,'serie'), tv2:felt(r,'tv2')});
+    /* PAKKE og GRUPPE er det samme felt under to navne: kassen linjen
+       hører til. Indtastningsarket kalder den PAKKE. */
+    rk.push({navn:navn, klasse:felt(r,'klasse'),
+             gruppe:felt(r,'gruppe') || felt(r,'pakke') || '',
+             inv:inv,
+             prod:felt(r,'prod'), model:felt(r,'model'), serie:felt(r,'serie'), tv2:felt(r,'tv2'),
+             katRaa:felt(r,'kategori'), vognNavn:felt(r,'vogn'), bem:felt(r,'bem'),
+             antal:Math.max(1, parseInt(felt(r,'antal'),10)||1)});
   }
   if(!rk.length){ ud.innerHTML='<div class="sf-tom">Der var ingen linjer under overskriften.</div>'; return; }
 
@@ -5676,8 +5758,22 @@ function liLaes(){
       x.nytnavn = x.navn+' #'+brugt[x.navn];
       x.omdoebt = true;
     } else x.nytnavn = x.navn;
-    x.gaettet = x.klasse ? '' : liGaet(x.navn, x.prod, x.model);
-    x.kat = liKategori(x.klasse || x.gaettet, prefix);
+    /* Har arket en kategori skrevet ind, er det den. Den kommer fra en
+       rulleliste fyldt med lagerets egne kategorier, så der er intet at
+       gætte eller oversætte – og intet præfiks at sætte på. */
+    if((x.katRaa||'').trim()){
+      x.kat = x.katRaa.trim();
+      x.gaettet = '';
+    }else{
+      x.gaettet = x.klasse ? '' : liGaet(x.navn, x.prod, x.model);
+      x.kat = liKategori(x.klasse || x.gaettet, prefix);
+    }
+    /* OB-vognen slås op på navnet – også den kommer fra en rulleliste. */
+    var vn=(x.vognNavn||'').trim().toLowerCase();
+    var vv=vn ? OB_VOGNE.find(function(v){
+      return (v.name||'').trim().toLowerCase()===vn; }) : null;
+    x.vognId = vv ? vv.id : null;
+    x.vognUkendt = !!(vn && !vv);
   });
 
   var udstyr = rk.filter(function(x){ return !x.erKit; });
@@ -5717,6 +5813,21 @@ function liLaes(){
         + ' linjer havde ingen objekt klasse. De er sat efter navn og model — '
         + escapeHtml(gaettet.slice(0,3).map(function(x){ return x.navn+' → '+x.kat; }).join(', '))
         + (gaettet.length>3 ? ' …' : '') + '</div>' : '')
+    + (function(){
+        /* En vogn, der ikke findes, er en tastefejl – og den ville ellers
+           bare blive tavst ignoreret ved oprettelsen. */
+        var uk = rk.filter(function(x){ return x.vognUkendt; });
+        if(!uk.length) return '';
+        var navne={}; uk.forEach(function(x){ navne[x.vognNavn]=1; });
+        return '<div class="li-note imp-mangler">' + uk.length
+          + ' linjer peger på en OB-vogn, der ikke findes: '
+          + escapeHtml(Object.keys(navne).join(', '))
+          + '. De bliver oprettet uden vogn — ret arket, eller opret vognen først.</div>';
+      })()
+    + (function(){
+        var mv = rk.filter(function(x){ return x.vognId; }).length;
+        return mv ? '<div class="li-note">' + mv + ' linjer får en OB-vogn med.</div>' : '';
+      })()
     + (omdoebt.length ? '<div class="li-note">' + omdoebt.length
         + ' linjer havde samme navn som en anden og er nummereret: '
         + escapeHtml(omdoebt.map(function(x){ return x.nytnavn; }).join(', '))
@@ -5768,7 +5879,16 @@ async function liOpretAlt(){
     /* 3 ── udstyret, i små portioner så et stort lager ikke bliver ét kald */
     var nye=[], ret=[];
     LI_DATA.udstyr.forEach(function(x){
-      var rk = {name:x.nytnavn, category:x.kat, qty:1,
+      var rk = {name:x.nytnavn, category:x.kat,
+                /* Antallet kommer fra arket. Farmers Wife-eksporten har én
+                   række pr. ting, og så er det ét. */
+                qty:x.antal||1,
+                /* Står der en vogn, bor hele linjen der. placering er den
+                   nye vej, ob_vogn_id den gamle – lageret skriver begge,
+                   så alt det, der læser dem, får det samme svar. */
+                ob_vogn_id:x.vognId||null,
+                placering:x.vognId?[{vogn:x.vognId, antal:x.antal||1}]:null,
+                notes:(x.bem||'')||null,
                 inventory_nr:x.inv||null,
                 serial_number:x.serie||null, tv2_number:x.tv2||null,
                 package_id:(x.gruppe && pakkeId['navn:'+x.gruppe]) || null,
@@ -5901,6 +6021,148 @@ function leXlsx(hoved, raekker, arknavn){
    {navn:'xl/worksheets/sheet1.xml', indhold:ark}
   ]);
 }
+
+/* ── Indtastningsarket ─────────────────────────────────────────
+   Skal der oprettes tre hundrede stykker udstyr, er lagerets egne felter
+   for langsomme. Men et tomt regneark er værre: skriver man "Trådløst lyd"
+   i stedet for "TRÅDLØST LYD", får man en ny kategori, og det opdager man
+   først ved importen.
+
+   Derfor et ark med RULLELISTER på netop de tre felter, der skal ramme
+   præcist — kategori, pakke og OB-vogn — fyldt med det, lageret indeholder
+   i det sekund man trykker. Resten er fri tekst.
+
+   Listerne bor på et skjult faneblad, for det er sådan regneark gør det:
+   en rulleliste peger på celler, ikke på en liste inde i filen. */
+function liArkXlsx(hoved, lister, validering, raekker){
+  var MAKS = 800;                       // så mange rækker er der plads til
+
+  function arkXml(alle, ekstra, bredder){
+    var rows=alle.map(function(r,ri){
+      return '<row r="'+(ri+1)+'">' + r.map(function(v,ci){
+        var ref='<c r="'+leSoejle(ci)+(ri+1)+'"';
+        if(v==null || v==='') return ref+'/>';
+        return ref+' t="inlineStr"><is><t xml:space="preserve">'
+          + leXmlTekst(v) + '</t></is></c>';
+      }).join('') + '</row>';
+    }).join('');
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+      + (bredder||'')
+      + '<sheetData>'+rows+'</sheetData>'
+      /* dataValidations SKAL stå efter sheetData – ellers afviser Excel filen. */
+      + (ekstra||'')
+      + '</worksheet>';
+  }
+
+  /* Listerne ved siden af hinanden: én søjle pr. liste. */
+  var navne=Object.keys(lister);
+  var hoejest=navne.reduce(function(m,n){ return Math.max(m, lister[n].length); }, 0);
+  var lRaekker=[navne];
+  for(var i=0;i<hoejest;i++){
+    lRaekker.push(navne.map(function(n){ return lister[n][i]||''; }));
+  }
+
+  var dv = validering.map(function(v){
+    var si=navne.indexOf(v.liste);
+    if(si<0) return '';
+    var n=lister[v.liste].length;
+    if(!n) return '';                   // tom liste giver ingen rulleliste
+    var col=leSoejle(si);
+    var felt=leSoejle(v.soejle);
+    /* allowBlank: feltet må gerne stå tomt – ikke alt udstyr hører til en
+       pakke eller en vogn. showErrorMessage: skriver man noget, der ikke er
+       på listen, siger regnearket fra med det samme. */
+    return '<dataValidation type="list" allowBlank="1" showInputMessage="1" '
+      + 'showErrorMessage="1" errorTitle="Ikke p&#229; listen" '
+      + 'error="' + leXmlTekst(v.fejl||'V\u00e6lg en fra listen.') + '" '
+      + 'sqref="'+felt+'2:'+felt+MAKS+'">'
+      + '<formula1>Lister!$'+col+'$2:$'+col+'$'+(n+1)+'</formula1>'
+      + '</dataValidation>';
+  }).filter(Boolean).join('');
+
+  var bredder='<cols><col min="1" max="1" width="38" customWidth="1"/>'
+    + '<col min="2" max="2" width="8" customWidth="1"/>'
+    + '<col min="3" max="5" width="26" customWidth="1"/>'
+    + '<col min="6" max="7" width="18" customWidth="1"/>'
+    + '<col min="8" max="11" width="16" customWidth="1"/></cols>';
+
+  var ark1=arkXml([hoved].concat(raekker||[]),
+    dv ? '<dataValidations count="'+validering.length+'">'+dv+'</dataValidations>' : '',
+    bredder);
+  var ark2=arkXml(lRaekker, '', '');
+
+  return leZip([
+   {navn:'[Content_Types].xml', indhold:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    +'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+    +'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+    +'<Default Extension="xml" ContentType="application/xml"/>'
+    +'<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+    +'<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+    +'<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+    +'</Types>'},
+   {navn:'_rels/.rels', indhold:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    +'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    +'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+    +'</Relationships>'},
+   {navn:'xl/workbook.xml', indhold:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    +'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+    +'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+    +'<sheets><sheet name="Udstyr" sheetId="1" r:id="rId1"/>'
+    /* Listerne er skjult: de skal ikke rodes i, men de skal være i filen. */
+    +'<sheet name="Lister" sheetId="2" state="hidden" r:id="rId2"/></sheets></workbook>'},
+   {navn:'xl/_rels/workbook.xml.rels', indhold:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    +'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    +'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+    +'<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>'
+    +'</Relationships>'},
+   {navn:'xl/worksheets/sheet1.xml', indhold:ark1},
+   {navn:'xl/worksheets/sheet2.xml', indhold:ark2}
+  ]);
+}
+
+var LI_ARK_HOVED = ['NAVN','ANTAL','KATEGORI','PAKKE','OB VOGN','PRODUCENT',
+                    'MODEL','SERIENUMMER','TV 2 NR','INVENTORY NR','BEMÆRKNING'];
+
+function liArkUd(){
+  var kat = CATEGORIES.map(function(c){ return c.name; })
+                      .sort(function(a,b){ return a.localeCompare(b,'da'); });
+  var pak = PACKAGES.map(function(p){ return p.name; })
+                    .sort(function(a,b){ return a.localeCompare(b,'da'); });
+  var vog = OB_VOGNE.map(function(v){ return v.name; })
+                    .sort(function(a,b){ return a.localeCompare(b,'da'); });
+  if(!kat.length){
+    alert('Der er ingen kategorier i lageret endnu.\n\n'
+      + 'Opret dem under Kategorier først — så står de i arkets rulleliste.');
+    return;
+  }
+  var blob = liArkXlsx(LI_ARK_HOVED,
+    {Kategori:kat, Pakke:pak, Vogn:vog},
+    [{soejle:2, liste:'Kategori', fejl:'Vælg en kategori fra listen. Mangler der en, så opret den i East Production først.'},
+     {soejle:3, liste:'Pakke',    fejl:'Vælg en pakke fra listen, eller skriv et helt nyt pakkenavn i East Production først.'},
+     {soejle:4, liste:'Vogn',     fejl:'Vælg en OB-vogn fra listen, eller lad feltet stå tomt.'}],
+    []);
+  var d=new Date();
+  var navn='Indtastningsark '+d.getFullYear()+'-'
+    +String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'.xlsx';
+  /* Samme måde som eksporten henter sin fil. */
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = navn;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 400);
+  alert('Arket er hentet.\n\n'
+    + 'Kategori, pakke og OB-vogn er rullelister, fyldt med det lageret '
+    + 'indeholder nu — så kan der ikke staves forkert i dem.\n\n'
+    + 'Én række pr. ting. Skal flere i samme kasse, skrives kassens navn i '
+    + 'PAKKE på dem alle. Når arket er udfyldt, læses det ind med '
+    + '"⤓ Importér lager".');
+}
+
+(function(){
+  var b=document.getElementById('liArkBtn');
+  if(b) b.addEventListener('click', liArkUd);
+})();
 
 function leEksport(){
   var H = ['NAVN','OBJEKT KLASSE','GRUPPE','INVENTORY NR','PRODUCENT','MODEL','SERINUMMER','TV 2 NR.'];
@@ -6157,6 +6419,26 @@ function togglePkg(id){
   const c=document.getElementById('chev-'+id); if(c) c.classList.toggle('open');
 }
 
+/* Hvad er slået til, og gav det noget? Står man med en tom liste, skal man
+   kunne se om det er lageret eller filtrene, der er skyld i det. */
+function lagerFilterSvar(vist, ialt, filtre){
+  var el=document.getElementById('lagerFilterSvar');
+  var ryd=document.getElementById('lagerRydBtn');
+  var paa=!!(filtre.kat||filtre.hvor||filtre.type||filtre.fejl);
+  [['lagerKat',filtre.kat],['lagerHvor',filtre.hvor],['lagerType',filtre.type]]
+    .forEach(function(p){
+      var n=document.getElementById(p[0]); if(n) n.classList.toggle('paa', !!p[1]);
+    });
+  var hak=document.querySelector('.lagerfiltre .lf-hak');
+  if(hak) hak.classList.toggle('paa', !!filtre.fejl);
+  if(ryd) ryd.style.display = paa ? '' : 'none';
+  if(!el) return;
+  if(!paa && !filtre.tekst){ el.textContent=''; el.className='lf-svar'; return; }
+  el.textContent = vist
+    ? (vist+' af '+ialt)
+    : 'ingen rammer filtrene';
+  el.className = 'lf-svar'+(vist?'':' tom');
+}
 function renderLager(filter){
   const list=document.getElementById('lagerList');
   const countEl=document.getElementById('lagerCount');
@@ -6165,8 +6447,50 @@ function renderLager(filter){
   const items=[];
   PACKAGES.forEach(function(pkg){ items.push({type:'pkg',obj:pkg,category:pkg.category,name:pkg.name}); });
   EQUIPMENT.filter(function(e){return !e.package_id;}).forEach(function(e){ items.push({type:'equip',obj:e,category:e.category,name:e.name}); });
-  items.sort(function(a,b){ const c=a.category.localeCompare(b.category,'da'); return c!==0?c:a.name.localeCompare(b.name,'da'); });
-  const filtered=items.filter(function(it){return !f||it.name.toLowerCase().includes(f)||it.category.toLowerCase().includes(f);});
+
+  /* Sorteringen: feltet har altid været der, men blev aldrig læst – listen
+     stod sorteret på kategori, uanset hvad man valgte. */
+  const sortV=(document.getElementById('lagerSort')||{}).value||'category';
+  items.sort(function(a,b){
+    if(sortV==='name') return a.name.localeCompare(b.name,'da');
+    if(sortV==='type'){
+      if(a.type!==b.type) return a.type==='pkg'?-1:1;
+      return a.name.localeCompare(b.name,'da');
+    }
+    const c=a.category.localeCompare(b.category,'da');
+    return c!==0?c:a.name.localeCompare(b.name,'da');
+  });
+
+  const fKat =(document.getElementById('lagerKat') ||{}).value||'';
+  const fHvor=(document.getElementById('lagerHvor')||{}).value||'';
+  const fType=(document.getElementById('lagerType')||{}).value||'';
+  const fFejl=!!((document.getElementById('lagerFejl')||{}).checked);
+  const filtered=items.filter(function(it){
+    if(f && !it.name.toLowerCase().includes(f) && !(it.category||'').toLowerCase().includes(f)) return false;
+    if(fKat && it.category!==fKat) return false;
+    if(fType && it.type!==fType) return false;
+    if(fHvor){
+      /* En pakke står i den vogn, dens ob_vogn_id peger på. Udstyr kan være
+         fordelt: tre tromler i én vogn, resten i puljen – og så er den begge
+         dele. Derfor "noget i en vogn" og ikke "hele molevitten". */
+      var iVogn = it.type==='pkg'
+        ? !!it.obj.ob_vogn_id
+        : placeringer(it.obj).length>0;
+      if(fHvor==='vogn'  && !iVogn) return false;
+      if(fHvor==='pulje' && iVogn)  return false;
+    }
+    if(fFejl){
+      /* Fejlmeldinger sidder på det enkelte stykke udstyr. En pakke er
+         fejlmeldt, hvis noget af dens indhold er det. */
+      var fejl = it.type==='pkg'
+        ? EQUIPMENT.some(function(e){ return e.package_id===it.obj.id && activeRepair(e.id); })
+        : !!activeRepair(it.obj.id);
+      if(!fejl) return false;
+    }
+    return true;
+  });
+  lagerFilterSvar(filtered.length, items.length,
+    {kat:fKat, hvor:fHvor, type:fType, fejl:fFejl, tekst:f});
 
   const total=PACKAGES.length+EQUIPMENT.filter(function(e){return !e.package_id;}).length;
   if(multiMode && EQUIPMENT.filter(function(e){return !e.package_id;}).length>0){
@@ -6327,7 +6651,14 @@ function renderLager(filter){
       // Repair status badge
       var activeRep = activeRepair(equip.id);
       if(activeRep){
-        var repBadge=document.createElement('span'); repBadge.className='repair-badge'; repBadge.textContent='⚠ Fejlmeldt';
+        var repBadge=document.createElement('span'); repBadge.className='repair-badge';
+        /* Står der ti og to er i stykker, er "Fejlmeldt" alene misvisende –
+           man tror hele linjen er ude. */
+        var antalFejlmeldt = fejlmeldteAf(equip.id);
+        var iAlt = +equip.qty || 1;
+        repBadge.textContent = (iAlt>1 && antalFejlmeldt)
+          ? ('⚠ '+antalFejlmeldt+' af '+iAlt+' fejlmeldt')
+          : '⚠ Fejlmeldt';
         actions.insertBefore(repBadge, actions.firstChild);
       }
       var bfejl=document.createElement('button');
@@ -6347,6 +6678,22 @@ function renderLager(filter){
 
 document.getElementById('lagerSearch').addEventListener('input', function(e){ renderLager(e.target.value); });
 document.getElementById('lagerSort').addEventListener('change', function(){ renderLager(document.getElementById('lagerSearch').value||''); });
+['lagerKat','lagerHvor','lagerType','lagerFejl'].forEach(function(id){
+  var el=document.getElementById(id); if(!el) return;
+  el.addEventListener('change', function(){
+    renderLager(document.getElementById('lagerSearch').value||'');
+  });
+});
+(function(){
+  var r=document.getElementById('lagerRydBtn'); if(!r) return;
+  r.addEventListener('click', function(){
+    ['lagerKat','lagerHvor','lagerType'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.value='';
+    });
+    var fx=document.getElementById('lagerFejl'); if(fx) fx.checked=false;
+    renderLager(document.getElementById('lagerSearch').value||'');
+  });
+})();
 document.getElementById('addEquipBtn').addEventListener('click', function(){
   const row=document.getElementById('lagerNewRow'); row.style.display='block';
   row.innerHTML='<div class="panel" style="padding:12px;background:var(--panel-2);">'
@@ -9852,6 +10199,14 @@ async function loadRepairs(){
 function activeRepair(equipId){
   return REPAIRS.find(function(r){ return r.equipment_id===equipId && r.status==='fejlmeldt'; });
 }
+/* Hvor mange af dem er i stykker lige nu? Der kan stå flere fejlmeldinger
+   på det samme udstyr – to meldt i tirsdags og en i dag er tre. Gamle
+   rækker har ingen qty, og så er det én. */
+function fejlmeldteAf(equipId){
+  return REPAIRS.reduce(function(s,r){
+    return s + ((r.equipment_id===equipId && r.status==='fejlmeldt')
+                ? (+r.qty||1) : 0); }, 0);
+}
 
 // ── Fejlmeld modal ─────────────────────────────────────────
 function openRepairModal(equipId){
@@ -9860,6 +10215,32 @@ function openRepairModal(equipId){
   document.getElementById('repairEquipId').value = equipId;
   document.getElementById('repairEquipName').textContent = eq.name;
   document.getElementById('repairModalTitle').textContent = 'Fejlmeld: ' + eq.name;
+  /* Har vi ti af dem, er det sjældent alle ti der er i stykker. Feltet
+     kommer kun frem, når der er mere end ét – ellers er svaret givet. */
+  var antal = +eq.qty || 1;
+  var raekke = document.getElementById('repairAntalRaekke');
+  raekke.style.display = antal>1 ? '' : 'none';
+  var qf = document.getElementById('repairQty');
+  qf.value = 1; qf.max = antal;
+  document.getElementById('repairAfTekst').textContent = 'af '+antal+' på lageret';
+
+  /* Serienummeret: lageret har ÉT nummer på rækken, men er der tyve
+     headsets, har de tyve forskellige. Er der kun ét, er lagerets nummer
+     også enhedens, og så er det sat ind. Er der flere, skal man selv læse
+     nummeret på den, der er gået i stykker – vi ved ikke hvilken det er. */
+  var sf=document.getElementById('repairSerie');
+  sf.value = (antal===1 && eq.serial_number) ? eq.serial_number : '';
+  document.getElementById('repairSerieHint').textContent =
+    antal===1
+      ? (eq.serial_number ? 'Fra lageret — ret det, hvis det ikke passer.'
+                          : 'Der står intet serienummer på lageret.')
+      : ('Der er '+antal+' af dem, og lageret har kun ét nummer'
+         + (eq.serial_number ? ' ('+eq.serial_number+')' : '')
+         + '. Skriv nummeret på netop den, der er i stykker.');
+
+  document.getElementById('repairSnow').checked=false;
+  document.getElementById('repairInc').value='';
+  document.getElementById('repairIncRaekke').style.display='none';
   document.getElementById('repairDate').value = todayStr();
   document.getElementById('repairBy').value = '';
   document.getElementById('repairDesc').value = '';
@@ -9870,6 +10251,16 @@ function openRepairModal(equipId){
 document.getElementById('repairCancelBtn').addEventListener('click', function(){
   document.getElementById('repairOverlay').classList.remove('open');
 });
+/* INC-feltet kommer frem, når sagen er meldt videre – ellers står der et
+   tomt felt og venter på noget, der ikke findes endnu. */
+(function(){
+  var h=document.getElementById('repairSnow');
+  if(!h) return;
+  h.addEventListener('change', function(){
+    document.getElementById('repairIncRaekke').style.display = h.checked ? '' : 'none';
+    if(h.checked) setTimeout(function(){ document.getElementById('repairInc').focus(); }, 60);
+  });
+})();
 lukVedKlikUdenfor(document.getElementById('repairOverlay'), ()=>document.getElementById('repairOverlay').classList.remove('open'));
 
 document.getElementById('repairSaveBtn').addEventListener('click', async function(){
@@ -9882,9 +10273,21 @@ document.getElementById('repairSaveBtn').addEventListener('click', async functio
   const btn = document.getElementById('repairSaveBtn');
   btn.disabled=true; btn.textContent='Gemmer...';
   try{
+    const eqR = EQUIPMENT.find(function(e){ return e.id===equipId; });
+    const maks = eqR ? (+eqR.qty||1) : 1;
+    /* Aldrig flere end der findes – man kan ikke melde tre i stykker,
+       når der står to på lageret. */
+    const antalFejl = Math.min(maks,
+      Math.max(1, parseInt(document.getElementById('repairQty').value,10)||1));
+    var snow = document.getElementById('repairSnow').checked;
+    var inc  = (document.getElementById('repairInc').value||'').trim();
     const {error} = await supa.from('repairs').insert({
       equipment_id: equipId, reported_date: date, reported_by: by,
-      description: desc, action: action, status: 'fejlmeldt'
+      description: desc, action: action, status: 'fejlmeldt', qty: antalFejl,
+      serial_number: (document.getElementById('repairSerie').value||'').trim() || null,
+      servicenow: snow,
+      /* Tom tekst skal være null, så man kan søge på "mangler INC". */
+      inc_nr: (snow && inc) ? inc : null
     });
     if(error) throw error;
     await loadRepairs();
@@ -9953,6 +10356,7 @@ function openHistoryModal(equipId){
           +'<span style="font-size:11px;color:var(--muted);">› Tryk for detaljer</span>'
           +'</div>'
           +'<div style="padding:0 16px 10px;font-size:12.5px;color:var(--muted);">'+escapeHtml(r.description.slice(0,80))+(r.description.length>80?'…':'')+'</div>'
+          +repairMaerker(r, EQUIPMENT.find(function(e){ return e.id===r.equipment_id; }))
           +'</div>';
       });
       if(repairs.length > 3){
@@ -10064,9 +10468,30 @@ function renderVaerksted(){
       +'<button class="btn small" style="font-size:11px;background:var(--green);color:#0a1f14;" onclick="openResolveModal(\''+r.id+'\')">✓ Repareret</button>'
       +'</div></div>'
       +'<div style="padding:0 16px 12px;font-size:13px;"><strong>Fejl:</strong> '+escapeHtml(r.description)+'</div>'
-      +(r.action?'<div style="padding:0 16px 12px;font-size:12px;color:var(--muted);"><strong>Handling:</strong> '+escapeHtml(r.action)+'</div>':'');
+      +(r.action?'<div style="padding:0 16px 12px;font-size:12px;color:var(--muted);"><strong>Handling:</strong> '+escapeHtml(r.action)+'</div>':'')
+      /* Antal, serienummer og ServiceNow står nederst: det er dét, man
+         skal bruge for at finde netop den enhed og netop den sag igen. */
+      +repairMaerker(r, eq);
     cont.appendChild(card);
   });
+}
+
+/* Mærkerne under en fejlmelding: hvor mange, hvilken enhed, og om sagen
+   er meldt videre. Står der et hak uden INC-nummer, skal det kunne ses —
+   ellers tror man, sagen er fuldt oprettet. */
+function repairMaerker(r, eq){
+  var d=[];
+  var antal=+r.qty||1;
+  var iAlt=eq?(+eq.qty||1):1;
+  if(iAlt>1) d.push('<span class="rm">'+antal+' af '+iAlt+'</span>');
+  if(r.serial_number) d.push('<span class="rm">SN '+escapeHtml(r.serial_number)+'</span>');
+  if(r.servicenow){
+    d.push(r.inc_nr
+      ? '<span class="rm rm-snow">ServiceNow · '+escapeHtml(r.inc_nr)+'</span>'
+      : '<span class="rm rm-mangler">ServiceNow · intet INC-nummer</span>');
+  }
+  if(!d.length) return '';
+  return '<div class="repair-maerker">'+d.join('')+'</div>';
 }
 
 // ── PDF export ─────────────────────────────────────────────
@@ -10077,6 +10502,10 @@ function printRepairHistory(eq, repairs){
       +'<td style="padding:8px;white-space:nowrap;">'+fmtDate(r.reported_date)+'</td>'
       +'<td style="padding:8px;"><span style="background:'+(isFejl?'#fde8e8':'#e8f5e9')+';color:'+(isFejl?'#c0392b':'#27ae60')+';padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;">'+(isFejl?'Fejlmeldt':'Repareret')+'</span></td>'
       +'<td style="padding:8px;">'+escapeHtml(r.reported_by||'—')+'</td>'
+      +'<td style="padding:8px;">'+((+r.qty||1)>1?(+r.qty||1)+' stk. ':'')
+        +(r.serial_number?'SN '+escapeHtml(r.serial_number):'—')
+        +(r.servicenow?'<br><span style="color:#555;font-size:11px;">ServiceNow '
+          +escapeHtml(r.inc_nr||'(intet INC)')+'</span>':'')+'</td>'
       +'<td style="padding:8px;">'+escapeHtml(r.description)+'</td>'
       +'<td style="padding:8px;">'+escapeHtml(r.action||'—')+'</td>'
       +'<td style="padding:8px;">'+(r.resolved_date?fmtDate(r.resolved_date):'—')+'</td>'
@@ -10091,7 +10520,7 @@ function printRepairHistory(eq, repairs){
     +'<div style="font-size:11pt;color:#555;margin-bottom:4px;">'+escapeHtml(eq.name)+' · '+escapeHtml(eq.category)+'</div>'
     +(eq.serial_number?'<div style="font-size:10pt;color:#777;">SN: '+escapeHtml(eq.serial_number)+(eq.tv2_number?' · TV2: '+escapeHtml(eq.tv2_number):'')+'</div>':'')
     +'<div style="font-size:9pt;color:#999;margin-top:4px;">Udskrevet: '+new Date().toLocaleDateString('da-DK')+'</div>'
-    +'<table><thead><tr><th>Dato</th><th>Status</th><th>Af</th><th>Fejlbeskrivelse</th><th>Handling</th><th>Repareret</th><th>Reparationsnote</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<table><thead><tr><th>Dato</th><th>Status</th><th>Af</th><th>Enhed</th><th>Fejlbeskrivelse</th><th>Handling</th><th>Repareret</th><th>Reparationsnote</th></tr></thead><tbody>'+rows+'</tbody></table>'
     +'<div class="no-print" style="margin-top:20px;text-align:center;"><button onclick="window.print()" style="background:#1a1a1a;color:#fff;border:none;padding:12px 28px;font-size:13px;border-radius:7px;cursor:pointer;">Udskriv / Gem som PDF</button></div>'
     +'</body></html>';
   var win=window.open('','_blank');
