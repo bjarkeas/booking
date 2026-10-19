@@ -3247,7 +3247,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_blZoSR5idK-yHYwPJTzvxg_Ea6Mbrvq';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.19-b';
+const EP_VERSION = '2026.10.19-c';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -10281,14 +10281,31 @@ document.getElementById('repairSaveBtn').addEventListener('click', async functio
       Math.max(1, parseInt(document.getElementById('repairQty').value,10)||1));
     var snow = document.getElementById('repairSnow').checked;
     var inc  = (document.getElementById('repairInc').value||'').trim();
-    const {error} = await supa.from('repairs').insert({
-      equipment_id: equipId, reported_date: date, reported_by: by,
-      description: desc, action: action, status: 'fejlmeldt', qty: antalFejl,
+    var basis = {equipment_id: equipId, reported_date: date, reported_by: by,
+                 description: desc, action: action, status: 'fejlmeldt'};
+    var nyt = Object.assign({}, basis, {
+      qty: antalFejl,
       serial_number: (document.getElementById('repairSerie').value||'').trim() || null,
       servicenow: snow,
       /* Tom tekst skal være null, så man kan søge på "mangler INC". */
       inc_nr: (snow && inc) ? inc : null
     });
+    var svar = await supa.from('repairs').insert(nyt);
+    if(svar.error && /column|does not exist|schema cache/i.test(svar.error.message||'')){
+      /* Databasen mangler de nye kolonner. Fejlmeldingen er vigtigere end
+         felterne: den gemmes uden dem, og så får man at vide hvad der skal
+         køres for at få dem med. Ellers ville hele meldingen gå tabt. */
+      var igen = await supa.from('repairs').insert(basis);
+      if(igen.error) throw igen.error;
+      await loadRepairs();
+      document.getElementById('repairOverlay').classList.remove('open');
+      renderLager(document.getElementById('lagerSearch').value||'');
+      alert('Fejlmeldingen er gemt — men uden antal, serienummer og '
+        + 'ServiceNow.\n\nDe felter mangler i databasen. Kør '
+        + '"fejlmeld_alle.sql" i Supabase, så kommer de med næste gang.');
+      return;
+    }
+    const error = svar.error;
     if(error) throw error;
     await loadRepairs();
     document.getElementById('repairOverlay').classList.remove('open');
