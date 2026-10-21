@@ -3412,7 +3412,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_d2b4pWi-2jTYIeCAAUAQcA_0ygShdrH';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.21-c';
+const EP_VERSION = '2026.10.21-e';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -4334,22 +4334,97 @@ alter table ep_job_log enable row level security;
 create policy "log_laes"  on ep_job_log for select using (auth.uid() is not null);
 create policy "log_skriv" on ep_job_log for insert with check (auth.uid() is not null);
 
--- ===== Til sidst: tag rettighederne fra den, der ikke er logget ind =====
--- Adgangsregler og PostgreSQL-rettigheder er to forskellige lag. En regel,
--- der kræver login, hjælper ikke, hvis rollen bagved stadig har select på
--- tabellen. Står til SIDST med vilje: den rammer kun de tabeller, der findes,
--- når den kører.
+-- ═══════════════════════════════════════════════════════════════
+--  TIL SIDST · RETTIGHEDERNE
 --
--- Pakkelinket går ikke gennem tabellerne, men gennem fire afgrænsede
--- funktioner, der hver kun kan nå det ene job, nøglen hører til. Dem rører
--- linjen ikke — deres rettigheder står nedenfor.
-revoke all on all tables in schema public from anon;
+--  Adgangsregler og PostgreSQL-rettigheder er to lag, og der skal
+--  være begge. En regel, der kræver login, hjælper ikke, hvis
+--  rollen bagved stadig har select på tabellen.
+--
+--  ⚠  "on all tables in schema public" rammer SAMTLIGE tabeller i
+--     public — ikke kun East Productions. Her er det med vilje:
+--     begge programmer deler database, og ingen af dem giver anon
+--     adgang til en tabel. Kører nogen filen i en database, hvor en
+--     anden løsning bevidst har anonym tabeladgang, lukker den den
+--     løsning ned.
+--
+--  Står til SIDST med vilje: sætningerne rammer kun det, der findes
+--  når de kører.
+-- ═══════════════════════════════════════════════════════════════
+
+revoke all on all tables    in schema public from anon;
 revoke all on all sequences in schema public from anon;
 
-grant execute on function ep_pack_get(uuid)              to anon, authenticated;
-grant execute on function ep_pack_set(uuid, jsonb, text) to anon, authenticated;
-grant execute on function ep_pack_indleje(text)          to anon, authenticated;
-grant execute on function ep_pack_lager(uuid, text)      to anon, authenticated;`;
+-- Den, der ER logget ind, skal kunne arbejde. Står her, fordi filen
+-- før regnede med at Supabase af sig selv havde givet authenticated
+-- rettighederne. Det gør Supabase — men så var filen afhængig af en
+-- standard, den ikke selv satte, og en prøve med den standard bygget
+-- ind beviser ingenting om filen.
+--
+-- Bredt og ikke tabel for tabel, fordi afgrænsningen ligger i
+-- ADGANGSREGLERNE: uden en tilladende regel er en kommando spærret,
+-- uanset rettigheden. Skrives afgrænsningen to steder, skal den
+-- vedligeholdes to steder, og den dag de ikke passer sammen, er det
+-- reglerne der gælder.
+grant usage on schema public to authenticated;
+grant select, insert, update, delete
+  on all tables in schema public to authenticated;
+grant usage, select on all sequences in schema public to authenticated;
+
+-- ── Funktionerne · KUN East Productions egne ────────────────────
+--
+--  PostgreSQL giver execute til PUBLIC af sig selv på hver ny
+--  funktion, og anon er en del af PUBLIC. Rettigheden følger med,
+--  hvis man ikke tager den.
+--
+--  ⚠  'ep\_%' er ikke pedanteri. SignalFlows fil havde samme blok
+--     UDEN afgrænsning, og den tog rettigheden fra pakkelistens
+--     fire funktioner, så linket til en pakkeliste holdt op med at
+--     virke. Hvert program rydder op efter sig selv. Skal hele
+--     databasen gennemgås, er det funktioner_luk.sql, der gør det.
+--
+--     Og escape på _: uden den er _ et jokertegn for ét vilkårligt
+--     tegn, og 'ep_%' ville også ramme fx epost_send.
+do $$
+declare
+  f record;
+  n int := 0;
+begin
+  for f in
+    select p.proname, pg_get_function_identity_arguments(p.oid) as args
+      from pg_proc p
+      join pg_namespace nn on nn.oid = p.pronamespace
+     where nn.nspname = 'public'
+       and p.proname like 'ep\_%'
+       and not exists (select 1 from pg_depend d
+                        where d.objid = p.oid
+                          and d.classid = 'pg_proc'::regclass
+                          and d.deptype = 'e')
+  loop
+    execute format('revoke all on function public.%I(%s) from public',
+                   f.proname, f.args);
+    execute format('revoke all on function public.%I(%s) from anon',
+                   f.proname, f.args);
+    execute format('grant execute on function public.%I(%s) to authenticated',
+                   f.proname, f.args);
+    n := n + 1;
+  end loop;
+  raise notice 'East Productions egne funktioner: PUBLIC fjernet fra %', n;
+end $$;
+
+-- Og så DE FIRE, den der pakker skal kunne kalde uden at logge ind.
+-- Hver af dem slår op gennem jobbets share_token og kan kun nå det
+-- ene job, nøglen hører til.
+--
+-- ⚠  LINKET ER ET PASSWORD. ep_pack_set kan SKRIVE i jobbets
+--    udstyrsliste, og ep_pack_lager kan søge i hele lageret. Det er
+--    med vilje — uden det kan den der pakker ikke bruge listen — men
+--    linket bør have udløb og en knap til at trække det tilbage.
+--    Begge står som åbne punkter.
+grant execute on function public.ep_pack_get(uuid)              to anon;
+grant execute on function public.ep_pack_set(uuid, jsonb, text) to anon;
+grant execute on function public.ep_pack_indleje(text)          to anon;
+grant execute on function public.ep_pack_lager(uuid, text)      to anon;`;
 
 let presFolk = [], presFejl = null;
 
