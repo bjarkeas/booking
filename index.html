@@ -234,6 +234,33 @@
   .avail-free.ok{ color:var(--green); }
   .avail-free.bad{ color:var(--red); }
   .avail-used-by{ font-size:11px; color:var(--muted); margin-top:2px; }
+  /* Højre side af en linje: svaret, og knappen der lægger den på listen
+     til et nyt job. Har man tjekket ledigheden, skal man ikke taste det
+     hele om igen inde i jobvinduet. */
+  .avail-h{ display:flex; align-items:center; gap:10px; flex:none; }
+  .kurvknap{ white-space:nowrap; }
+  .kurvknap.paa{ border-color:var(--green,#4caf7d); color:var(--green,#4caf7d); }
+  .avail-kurv{ margin-top:16px; border:1px solid var(--border); border-radius:9px;
+    padding:12px; background:var(--panel-2,#1d2430); }
+  .avail-kurv .ak-top{ display:flex; justify-content:space-between; align-items:center;
+    gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+  .avail-kurv .ak-mrk{ font-size:10.5px; font-family:var(--mono); text-transform:uppercase;
+    letter-spacing:.07em; color:var(--muted); }
+  .avail-kurv .ak-linje{ display:flex; align-items:center; gap:10px; padding:6px 0;
+    border-bottom:1px solid var(--border); font-size:13px; }
+  .avail-kurv .ak-linje:last-of-type{ border-bottom:none; }
+  .avail-kurv .ak-navn{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; }
+  .avail-kurv .ak-antal{ width:62px; background:var(--panel);border:1px solid var(--border);
+    color:var(--text);padding:5px 7px;border-radius:6px;font-size:12.5px;
+    font-family:var(--mono);text-align:right; }
+  .avail-kurv .ak-advarsel{ font-size:11.5px; color:var(--amber,#e0a33e); margin-top:2px; }
+  .avail-kurv .ak-vaek{ background:none;border:0;color:var(--muted);cursor:pointer;
+    font-size:15px;line-height:1;padding:2px 4px; }
+  .avail-kurv .ak-vaek:hover{ color:var(--red,#e06c6c); }
+  .avail-kurv .ak-bund{ display:flex; justify-content:space-between; align-items:center;
+    gap:10px; flex-wrap:wrap; margin-top:12px; }
+  .avail-kurv .ak-dage{ font-size:11.5px; color:var(--muted); font-family:var(--mono); }
 
   .loading{ text-align:center; padding:40px; color:var(--muted); font-family:var(--mono); font-size:12px; }
 
@@ -1090,6 +1117,24 @@ body.show-mobile .indlej-maerke{display:block;text-align:left;margin:3px 0 1px;m
 .lagerfiltre .lf-svar.tom{color:var(--amber,#e0a33e)}
 body.show-mobile .lagerfiltre select{max-width:100%;flex:1 1 140px}
 body.show-mobile .lagerfiltre .lf-svar{margin-left:0;width:100%}
+
+/* Tandhjulet på lageret: regneark og opsætning ligger herinde, så knapperne
+   i rækken er dem man bruger hver dag. */
+.tandhjul{position:relative;display:inline-flex}
+.tandknap{font-size:14px;line-height:1;padding:7px 10px}
+.tandknap.paa{border-color:var(--amber,#e0a33e);color:var(--amber,#e0a33e)}
+.tandmenu{display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:70;
+ min-width:268px;background:var(--panel,#161b22);border:1px solid var(--border);
+ border-radius:9px;padding:6px;box-shadow:0 12px 34px rgba(0,0,0,.5)}
+.tandmenu.open{display:block}
+.tandmenu .tandmrk{font-size:10px;font-family:var(--mono);text-transform:uppercase;
+ letter-spacing:.07em;color:var(--muted);padding:7px 9px 4px}
+.tandmenu button{display:block;width:100%;text-align:left;background:none;border:0;
+ color:var(--text);font-size:13px;font-family:inherit;padding:7px 9px;border-radius:6px;
+ cursor:pointer;line-height:1.35}
+.tandmenu button:hover{background:var(--panel-2,#1d2430)}
+.tandmenu button small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+body.show-mobile .tandmenu{right:auto;left:0;min-width:0;width:min(300px,86vw)}
 .imp-mangler{color:var(--amber,#e0a33e)}
 .imp-tom{font-size:12.5px;color:var(--muted);padding:14px 2px;line-height:1.6}
 .imp-tabel{width:100%;border-collapse:collapse;font-size:12.5px;max-height:320px;display:block;overflow-y:auto}
@@ -1299,6 +1344,7 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
       </div>
       <div id="availMatches" style="display:none;"></div>
       <div id="availResult" class="avail-result"></div>
+      <div id="availKurv" class="avail-kurv" style="display:none;"></div>
     </div>
   </div>
 
@@ -1317,15 +1363,22 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
             <option value="type">Type (pakker først)</option>
           </select>
           <button class="btn small secondary" id="addPkgBtn" title="Opret en pakke, så flere stykker udstyr kan bookes samlet">+ Ny pakke</button>
-          <button class="btn small secondary" id="lsAabnBtn" title="Sammenlign lageret med regnearkets UDSTYR-faneblad og opdatér det">⤒ Opdatér fra regneark</button>
-          <button class="btn small secondary" id="liArkBtn" title="Hent et regneark med rullelister til kategori, pakke og OB-vogn – til at taste nyt udstyr ind i">⤵ Lav indtastningsark</button>
-          <button class="btn small secondary" id="liAabnBtn" title="Læs et helt lager ind fra Farmers Wife, eller et udfyldt indtastningsark">⤓ Importér lager</button>
-          <button class="btn small secondary" id="leUdBtn" title="Skriv lageret ud i samme form som Farmers Wifes eksport">⤴ Eksportér lager</button>
           <button class="btn small" id="addEquipBtn">+ Tilføj udstyr</button>
-          <button class="btn small secondary" onclick="openCatManager()">Kategorier</button>
           <button class="btn small secondary" id="showVaerkstedBtn">🔧 Værksted</button>
           <button class="btn small secondary" id="multiModeBtn" onclick="toggleMultiMode()">☑ Vælg flere</button>
-          <button class="btn small secondary" id="showStatsBtn">Statistik</button>
+          <div class="tandhjul">
+            <button class="btn small secondary tandknap" id="lagerGearBtn" aria-expanded="false" aria-haspopup="true" title="Regneark og opsætning">⚙</button>
+            <div class="tandmenu" id="lagerGearMenu" role="menu">
+              <div class="tandmrk">Regneark</div>
+              <button type="button" id="liArkBtn">⤵ Lav indtastningsark<small>Tomt ark med rullelister til kategori, pakke og OB-vogn</small></button>
+              <button type="button" id="liAabnBtn">⤓ Importér lager<small>Læs ind fra Farmers Wife, eller et udfyldt indtastningsark</small></button>
+              <button type="button" id="lsAabnBtn">⤒ Opdatér fra regneark<small>Sammenlign med regnearkets UDSTYR-faneblad</small></button>
+              <button type="button" id="leUdBtn">⤴ Eksportér lager<small>Skriv lageret ud i Farmers Wifes form</small></button>
+              <div class="tandmrk">Opsætning</div>
+              <button type="button" onclick="openCatManager()">Kategorier<small>Ret, tilføj og slet kategorier</small></button>
+              <button type="button" id="showStatsBtn">Statistik<small>Hvor meget udstyret har kørt, måned for måned</small></button>
+            </div>
+          </div>
         </div>
       </div>
       <div class="lagerfiltre" id="lagerFiltre">
@@ -3242,12 +3295,35 @@ const EQUIPMENT_SEED = [{"name": "WL RACK 1 RX & TX (DNK 37)", "category": "TRÅ
 
 // ═══════════════════════════════════════════════════════════
 // STATE & SUPABASE
+//
+// ┌─────────────────────────────────────────────────────────┐
+// │  NØGLEN HERUNDER SKIFTES HER — OG KUN HER.              │
+// │  Supabase → Settings → API → publishable key.           │
+// └─────────────────────────────────────────────────────────┘
+//
+// Nøglen er en "publishable key". Den er lavet til at ligge i
+// browseren hos hver bruger og er dermed offentlig – det er sådan
+// Supabase er bygget. Den er IKKE en adgangskode.
+//
+// Det betyder, at sikkerheden hviler ét sted og kun ét sted: på
+// adgangsreglerne i databasen (row level security). Hver tabel skal
+// kræve, at man er logget ind. Står der blot én regel uden betingelse
+// på en tabel, er den tabel åben for alle med denne fil i hånden,
+// uanset hvad de andre regler siger – regler lægges sammen med ELLER.
+//
+// Tjek derfor adgangsreglerne EFTER enhver ændring i databasen, og
+// efter enhver gendannelse fra backup. Eftersynet står nederst i
+// adgang_luk2.sql: alle tabeller skal vise false i begge de sidste
+// søjler.
+//
+// service_role-nøglen går uden om al adgangskontrol. Den må aldrig
+// stå i denne fil, i Git, i en mail eller i en chat.
 // ═══════════════════════════════════════════════════════════
 const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_blZoSR5idK-yHYwPJTzvxg_Ea6Mbrvq';
+const SUPABASE_ANON_KEY = 'sb_publishable_d2b4pWi-2jTYIeCAAUAQcA_0ygShdrH';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.19-d';
+const EP_VERSION = '2026.10.21-a';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -6366,20 +6442,23 @@ function runAvailCheck(){
   // ── OB Vogn match ──
   if(vogn){
     if(!start||!end){
-      html += '<div class="avail-row"><div><div style="font-weight:700;">🚐 '+escapeHtml(vogn.name)+'</div></div><div class="avail-free">Vælg datoer</div></div>';
+      html += '<div class="avail-row"><div><div style="font-weight:700;">🚐 '+escapeHtml(vogn.name)+'</div></div>'
+        +availHoejre('Vælg datoer','',kurvKnapHTML('vogn',vogn.id))+'</div>';
     } else {
       const obB = obBookingConflict(vogn.id, start, end, null);
       html += '<div class="avail-row"><div>'
         +'<div style="font-weight:700;">🚐 '+escapeHtml(vogn.name)+'</div>'
         +(obB?'<div class="avail-used-by">Booket: '+escapeHtml(obB.name)+(obB.who?' ('+escapeHtml(obB.who)+')':'')+' '+fmtDate(obB.start_date)+' → '+fmtDate(obB.end_date)+'</div>':'')
-        +'</div><div class="avail-free '+(obB?'bad':'ok')+'">'+(obB?'Booket':'Ledig')+'</div></div>';
+        +'</div>'
+        +availHoejre(obB?'Booket':'Ledig', obB?'bad':'ok', kurvKnapHTML('vogn',vogn.id))+'</div>';
     }
   }
 
   // ── Equipment match ──
   if(eq){
     if(!start||!end){
-      html += '<div class="avail-row"><div>'+escapeHtml(eq.name)+'</div><div class="avail-free">'+eq.qty+' stk. — vælg datoer</div></div>';
+      html += '<div class="avail-row"><div>'+escapeHtml(eq.name)+'</div>'
+        +availHoejre(eq.qty+' stk. — vælg datoer','',kurvKnapHTML('equip',eq.name))+'</div>';
     } else {
       const bq = bookedQty(eq.name, start, end, null);
       const free = eq.qty - bq.sum;
@@ -6395,14 +6474,17 @@ function runAvailCheck(){
       html += '<div class="avail-row"><div><div>'+escapeHtml(eq.name)+'</div>'
         +(bq.users.length?'<div class="avail-used-by">Pulje booket: '+escapeHtml(bq.users.join(', '))+'</div>':'')
         +obWarn
-        +'</div><div class="avail-free '+(free>0&&!obWarn?'ok':'bad')+'">'+free+' / '+eq.qty+' ledige</div></div>';
+        +'</div>'
+        +availHoejre(free+' / '+eq.qty+' ledige', (free>0&&!obWarn?'ok':'bad'),
+                     kurvKnapHTML('equip',eq.name))+'</div>';
     }
   }
 
   // ── Package match ──
   if(pkg && pkg !== eq){
     if(!start||!end){
-      html += '<div class="avail-row"><div>📦 '+escapeHtml(pkg.name)+'</div><div class="avail-free">Vælg datoer</div></div>';
+      html += '<div class="avail-row"><div>📦 '+escapeHtml(pkg.name)+'</div>'
+        +availHoejre('Vælg datoer','',kurvKnapHTML('pkg',pkg.id))+'</div>';
     } else {
       var obWarnP = '';
       if(pkg.ob_vogn_id){
@@ -6414,15 +6496,210 @@ function runAvailCheck(){
       }
       html += '<div class="avail-row"><div><div>📦 '+escapeHtml(pkg.name)+'</div>'
         +obWarnP
-        +'</div><div class="avail-free '+(obWarnP?'bad':'ok')+'">'+(obWarnP?'Booket':'Ledig')+'</div></div>';
+        +'</div>'
+        +availHoejre(obWarnP?'Booket':'Ledig', obWarnP?'bad':'ok', kurvKnapHTML('pkg',pkg.id))+'</div>';
     }
   }
 
   result.innerHTML = html || '<div class="empty">Ingen resultater</div>';
 }
+
+/* ═══════════════════════════════════════════════════════════
+   FRA LEDIGHED TIL JOB
+   Man tjekker et stykke udstyr ad gangen, og har tjekket fem, når man er
+   færdig. Før skulle alle fem findes frem igen inde i jobvinduet — med
+   datoerne tastet om. Nu lægges de på en liste undervejs, og jobvinduet
+   åbner med datoerne, udstyret og vognen sat.
+   ═══════════════════════════════════════════════════════════ */
+
+/* Linjer: {slags:'equip'|'pkg'|'vogn', id, antal}. For løst udstyr er id
+   navnet — det er sådan jobs.items hænger sammen med lageret. */
+var LEDIG_KURV = [];
+
+function availHoejre(txt, klasse, knap){
+  return '<div class="avail-h"><span class="avail-free '+(klasse||'')+'">'+txt+'</span>'
+    +(knap||'')+'</div>';
+}
+function kurvKnapHTML(slags, id){
+  var paa = kurvFind(slags, id) >= 0;
+  return '<button type="button" class="btn small secondary kurvknap'+(paa?' paa':'')+'"'
+    +' data-kslags="'+slags+'" data-kid="'+escapeHtml(String(id))+'"'
+    +' title="'+(paa?'Ligger allerede på listen til et nyt job':'Læg på listen til et nyt job')+'">'
+    +(paa?'✓ på listen':'+ til job')+'</button>';
+}
+function kurvFind(slags, id){
+  for(var i=0;i<LEDIG_KURV.length;i++){
+    if(LEDIG_KURV[i].slags===slags && String(LEDIG_KURV[i].id)===String(id)) return i;
+  }
+  return -1;
+}
+function kurvNavn(l){
+  if(l.slags==='vogn'){ var v=obVognById(l.id); return v?v.name:'(slettet vogn)'; }
+  if(l.slags==='pkg'){
+    var p=PACKAGES.find(function(x){ return x.id===l.id; });
+    return p?p.name:'(slettet pakke)';
+  }
+  return l.id;
+}
+/* Samme knap igen tager linjen af listen. Trykker man ved siden af, skal
+   man kunne trykke sig ud af det igen uden at lede efter et kryds. */
+function kurvLaeg(slags, id){
+  var i=kurvFind(slags, id);
+  if(i>=0) LEDIG_KURV.splice(i,1);
+  else LEDIG_KURV.push({slags:slags, id:id, antal:1});
+  tegnKurv();
+  runAvailCheck();
+}
+function kurvFjern(i){
+  LEDIG_KURV.splice(i,1);
+  tegnKurv();
+  runAvailCheck();
+}
+function kurvSatAntal(i, v){
+  if(!LEDIG_KURV[i]) return;
+  var n=parseInt(v,10);
+  LEDIG_KURV[i].antal = (isNaN(n)||n<1) ? 1 : n;
+  tegnKurv();
+}
+function kurvTom(){
+  LEDIG_KURV = [];
+  tegnKurv();
+  runAvailCheck();
+}
+
+/* Hvad der er tilbage, med dét der allerede ligger på listen trukket fra.
+   Står der 2 på listen og 2 er ledige, er der ikke noget at advare om –
+   tager man 3, skal det stå med gult, inden jobbet bliver oprettet. */
+function kurvMangel(l, start, end){
+  if(l.slags!=='equip' || !start || !end) return null;
+  var eq=EQUIPMENT.find(function(x){ return x.name===l.id; });
+  if(!eq) return 'Står ikke på lageret længere';
+  var bq=bookedQty(eq.name, start, end, null);
+  var fri=(eq.qty||0)-bq.sum;
+  if(l.antal>fri) return 'Kun '+fri+' ledige i de dage – du har sat '+l.antal;
+  return null;
+}
+function tegnKurv(){
+  var box=document.getElementById('availKurv');
+  if(!box) return;
+  if(!LEDIG_KURV.length){ box.style.display='none'; box.innerHTML=''; return; }
+  var start=(document.getElementById('availStart')||{}).value||'';
+  var end=(document.getElementById('availEnd')||{}).value||'';
+  var udstyr=LEDIG_KURV.filter(function(l){ return l.slags!=='vogn'; });
+  var vogne=LEDIG_KURV.filter(function(l){ return l.slags==='vogn'; });
+
+  var linjer=LEDIG_KURV.map(function(l, i){
+    var navn=kurvNavn(l);
+    var maerke = l.slags==='vogn' ? '🚐 ' : (l.slags==='pkg' ? '📦 ' : '');
+    var advar = kurvMangel(l, start, end);
+    return '<div class="ak-linje">'
+      +'<div class="ak-navn">'+maerke+escapeHtml(navn)
+      +(l.slags==='vogn'?'<div class="ak-dage">Jobbet bliver bundet til vognen</div>':'')
+      +(advar?'<div class="ak-advarsel">⚠ '+escapeHtml(advar)+'</div>':'')
+      +'</div>'
+      +(l.slags==='vogn' ? ''
+        : '<input type="number" class="ak-antal" min="1" value="'+(l.antal||1)+'"'
+          +' data-kantal="'+i+'" title="Antal på jobbet">')
+      +'<button type="button" class="ak-vaek" data-kvaek="'+i+'" title="Tag af listen">✕</button>'
+      +'</div>';
+  }).join('');
+
+  var dage = (start&&end) ? (dageMellem(start,end)+1) : 0;
+  box.style.display='block';
+  box.innerHTML='<div class="ak-top">'
+    +'<span class="ak-mrk">Til nyt job · '+LEDIG_KURV.length+' linje'+(LEDIG_KURV.length===1?'':'r')+'</span>'
+    +'<button type="button" class="btn small secondary" id="kurvTomBtn">Ryd listen</button>'
+    +'</div>'
+    +linjer
+    +'<div class="ak-bund">'
+    +'<span class="ak-dage">'+(start&&end
+        ? fmtDate(start)+' → '+fmtDate(end)+' · '+dage+' dag'+(dage===1?'':'e')
+        : 'Vælg start- og slutdato')+'</span>'
+    +'<button type="button" class="btn small" id="kurvJobBtn"'
+    +(start&&end?'':' disabled')+'>+ Opret job med dette</button>'
+    +'</div>';
+
+  var t=document.getElementById('kurvTomBtn');
+  if(t) t.addEventListener('click', kurvTom);
+  var j=document.getElementById('kurvJobBtn');
+  if(j) j.addEventListener('click', kurvOpretJob);
+  box.querySelectorAll('[data-kantal]').forEach(function(inp){
+    inp.addEventListener('change', function(){ kurvSatAntal(+inp.dataset.kantal, inp.value); });
+  });
+  box.querySelectorAll('[data-kvaek]').forEach(function(b){
+    b.addEventListener('click', function(){ kurvFjern(+b.dataset.kvaek); });
+  });
+  /* Et ord om vognen, hvis den er med: så ved man, at vognens eget udstyr
+     ikke kommer til at stå som en konflikt bagefter. */
+  if(vogne.length && !udstyr.length){
+    var d=document.createElement('div');
+    d.className='ak-dage';
+    d.style.marginTop='6px';
+    d.textContent='Der er kun en vogn på listen – jobbet bliver oprettet uden udstyr.';
+    box.appendChild(d);
+  }
+}
+
+/* Jobvinduet åbnes, som var det trykket på "+ Nyt job" – og så sættes
+   datoerne, udstyret og vognen oveni. Resten af vinduet opfører sig
+   præcis som ellers, så der er ikke to måder at oprette et job på. */
+function kurvOpretJob(){
+  var start=(document.getElementById('availStart')||{}).value||'';
+  var end=(document.getElementById('availEnd')||{}).value||'';
+  if(!start||!end){ alert('Vælg start- og slutdato først.'); return; }
+  if(!LEDIG_KURV.length){ alert('Der er ikke noget på listen.'); return; }
+
+  openNew();
+  document.getElementById('jobStart').value=start;
+  document.getElementById('jobEnd').value=end;
+
+  var mistet=[];
+  LEDIG_KURV.forEach(function(l){
+    if(l.slags==='vogn'){
+      if(REDIGER_VOGNE && REDIGER_VOGNE.vogne.indexOf(l.id)<0) REDIGER_VOGNE.vogne.push(l.id);
+      return;
+    }
+    if(l.slags==='pkg'){
+      var p=PACKAGES.find(function(x){ return x.id===l.id; });
+      if(!p){ mistet.push(kurvNavn(l)); return; }
+      selectedItems['PKG:'+p.id]=l.antal||1;
+      return;
+    }
+    var eq=EQUIPMENT.find(function(x){ return x.name===l.id; });
+    if(!eq){ mistet.push(l.id); return; }
+    selectedItems[eq.name]=l.antal||1;
+  });
+
+  tegnRedigerVogne();
+  renderEquipList(''); renderSelectedStrip(); renderConflicts();
+  /* Navnet er det eneste, der mangler – så det er der, markøren skal stå. */
+  var n=document.getElementById('jobName');
+  if(n) n.focus();
+  if(mistet.length){
+    alert('Disse linjer kunne ikke lægges på jobbet, fordi de ikke findes på '
+      +'lageret længere:\n\n' + mistet.join('\n'));
+  }
+  /* Listen ryddes, når jobbet er lagt i vinduet. Gemmer man ikke, står
+     udstyret stadig i vinduet – og ellers begynder man forfra. */
+  LEDIG_KURV=[];
+  tegnKurv();
+  runAvailCheck();
+}
+
+(function(){
+  var r=document.getElementById('availResult');
+  if(!r) return;
+  r.addEventListener('click', function(e){
+    var b=e.target.closest('.kurvknap');
+    if(!b) return;
+    kurvLaeg(b.dataset.kslags, b.dataset.kid);
+  });
+})();
 document.getElementById('availSearch').addEventListener('input', function(e){ renderAvailMatches(e.target.value); runAvailCheck(); });
-document.getElementById('availStart').addEventListener('change', runAvailCheck);
-document.getElementById('availEnd').addEventListener('change', runAvailCheck);
+/* Datoerne står også på listen nedenunder: skifter de, skifter både
+   advarslerne og om "Opret job" kan trykkes. */
+document.getElementById('availStart').addEventListener('change', function(){ runAvailCheck(); tegnKurv(); });
+document.getElementById('availEnd').addEventListener('change', function(){ runAvailCheck(); tegnKurv(); });
 document.getElementById('availStart').value=todayStr();
 
 // ═══════════════════════════════════════════════════════════
@@ -6698,6 +6975,40 @@ document.getElementById('lagerSort').addEventListener('change', function(){ rend
     renderLager(document.getElementById('lagerSearch').value||'');
   });
 });
+/* ── Tandhjulet ────────────────────────────────────────────────
+   Rækken var vokset til ti knapper, og de fire regnearks-knapper er dem,
+   man bruger mindst. De ligger herinde nu – sammen med kategorier og
+   statistik, som heller ikke er noget man gør hver dag. Knapperne har
+   beholdt deres id'er, så alt det, der hang på dem, hænger der endnu. */
+function lagerGear(aaben){
+  var m=document.getElementById('lagerGearMenu');
+  var b=document.getElementById('lagerGearBtn');
+  if(!m||!b) return;
+  var vis = (aaben===undefined) ? !m.classList.contains('open') : !!aaben;
+  m.classList.toggle('open', vis);
+  b.classList.toggle('paa', vis);
+  b.setAttribute('aria-expanded', vis?'true':'false');
+}
+(function(){
+  var b=document.getElementById('lagerGearBtn');
+  var m=document.getElementById('lagerGearMenu');
+  if(!b||!m) return;
+  b.addEventListener('click', function(e){ e.stopPropagation(); lagerGear(); });
+  /* Et valg i menuen lukker den. Ellers står den åben oven på det vindue,
+     valget lige åbnede. */
+  m.addEventListener('click', function(e){
+    if(e.target.closest('button')) lagerGear(false);
+  });
+  document.addEventListener('click', function(e){
+    if(!m.classList.contains('open')) return;
+    if(e.target.closest('.tandhjul')) return;
+    lagerGear(false);
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape') lagerGear(false);
+  });
+})();
+
 (function(){
   var r=document.getElementById('lagerRydBtn'); if(!r) return;
   r.addEventListener('click', function(){
