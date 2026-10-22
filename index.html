@@ -197,6 +197,14 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
   .modal h2{ margin:0 0 16px; font-size:16px; }
   .field{ margin-bottom:14px; }
   .field label{ display:block; font-size:11.5px; color:var(--muted); margin-bottom:5px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.03em; }
+  /* Samme udseende som et feltnavn, men UDEN at vaere i en .field —
+     se kommentaren ved #obUdstyrField. */
+  .felt-overskrift{ display:block; font-size:11.5px; color:var(--muted); margin-bottom:5px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.03em; }
+  /* Fluebenskasser og talfelter i udstyrslisterne har deres egen
+     bredde. Staar her, saa en fremtidig .field-regel ikke kan naa dem. */
+  .udstyrsliste input[type=checkbox]{ width:16px; height:16px; flex:none; margin:0; padding:0; }
+  .udstyrsliste input[type=number]{ width:56px; padding:2px 4px; font-size:12px; }
+  .udstyrsliste label{ text-transform:none; font-family:var(--sans); font-size:13px; color:var(--text); margin:0; }
   .field input, .field textarea{
     width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text);
     padding:9px 10px; border-radius:7px; font-size:13.5px; font-family:var(--sans);
@@ -1808,8 +1816,12 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
          perioden. Ikke markeret = frigivet, og så kan et almindeligt
          job booke det, selv om det bor i vognen. Det er hele pointen,
          så det står med rene ord over listen og ikke kun i en manual. -->
-    <div class="field" id="obUdstyrField" style="margin-top:14px;">
-      <label>Udstyr på dette OB-job</label>
+    <!-- IKKE en .field. Reglen ".field input{width:100%}" gælder ALLE
+         input-felter i en .field, også fluebenskasser — og så blev hver
+         kasse 632 px bred og skubbede navnet ud til højre. Derfor en
+         almindelig div med en overskrift, der ligner et feltnavn. -->
+    <div id="obUdstyrField" style="margin-top:14px;margin-bottom:14px;">
+      <div class="felt-overskrift">Udstyr på dette OB-job</div>
       <div id="obUdstyrBox"></div>
     </div>
 
@@ -3447,7 +3459,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_d2b4pWi-2jTYIeCAAUAQcA_0ygShdrH';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.21-f';
+const EP_VERSION = '2026.10.22-b';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -5057,11 +5069,23 @@ function initFilterDates(){
 // ═══════════════════════════════════════════════════════════
 // TABS
 // ═══════════════════════════════════════════════════════════
+/* ── Hvilken fane var man på? ────────────────────────────────
+   Trykkede man opdater i browseren, startede programmet altid på
+   Produktioner: "active" står hårdt i HTML'en, og valget blev ikke
+   gemt nogen steder. Står man i Lager og genindlæser for at se en
+   kollegas rettelse, er det en ærgerlig vej tilbage.
+
+   Én nøgle i localStorage, try/catch om både skrivning og læsning.
+   Fejler det — privat vindue, spærret lagring — sker der ingenting,
+   og programmet starter som før. Fanen er ikke en hemmelighed, så
+   den ryddes ikke ved log ud. */
+var LS_FANE = 'eastpro:fane';
 document.querySelectorAll('nav.tabs button').forEach(function(btn){
   btn.addEventListener('click', function(){
     document.querySelectorAll('nav.tabs button').forEach(function(b){ b.classList.remove('active'); });
     btn.classList.add('active');
     var tab = btn.dataset.tab;
+    try{ localStorage.setItem(LS_FANE, tab); }catch(e){}
     ['jobs','avail','lager','stats','obvogne'].forEach(function(t){
       var el=document.getElementById('tab-'+t); if(el) el.style.display='none';
     });
@@ -8125,13 +8149,27 @@ function renderObVogne(){
       var dates=document.createElement('div'); dates.className='ob-booking-dates'; dates.textContent=fmtDate(b.start_date)+' → '+fmtDate(b.end_date); right.appendChild(dates);
       if(isTilbud){
         var bc=document.createElement('button'); bc.className='btn small'; bc.textContent='→ Ordre'; bc.style.cssText='font-size:11px;background:var(--green);color:#0a1f14;';
-        (function(bb2,v){ bc.addEventListener('click', async function(){ if(!confirm('Konverter til ordre?')) return; await supa.from('ob_bookinger').update({status:'ordre'}).eq('id',bb2.id); await loadObBookinger(); renderObVogne(); }); })(b,vogn);
+        (function(bb2,v){ bc.addEventListener('click', async function(e){ e.stopPropagation(); if(!confirm('Konverter til ordre?')) return; await supa.from('ob_bookinger').update({status:'ordre'}).eq('id',bb2.id); await loadObBookinger(); renderObVogne(); }); })(b,vogn);
         right.appendChild(bc);
       }
       var be=document.createElement('button'); be.className='btn small secondary'; be.textContent='Rediger'; be.style.fontSize='11px';
-      (function(bb2,v){ be.addEventListener('click',function(){openObModal(v.id,bb2);}); })(b,vogn); right.appendChild(be);
+      (function(bb2,v){ be.addEventListener('click',function(e){ e.stopPropagation(); openObModal(v.id,bb2); }); })(b,vogn); right.appendChild(be);
+      /* ── Hele linjen åbner bookingen ──────────────────────────
+         Man skulle ramme den lille "Rediger"-knap for at komme ind i
+         en booking, og det er dét, man gør hver gang. Nu åbner et
+         klik hvor som helst på linjen den — knapperne stopper selv
+         klikket, så "Slet" og "→ Ordre" gør stadig kun deres eget.
+         Samme måde som pakkekortene i Lager gør det. */
+      brow.style.cursor='pointer';
+      brow.title='Klik for at åbne bookingen';
+      (function(bb2,v){
+        brow.addEventListener('click', function(e){
+          if(e.target.closest('button')) return;
+          openObModal(v.id, bb2);
+        });
+      })(b,vogn);
       var bd2=document.createElement('button'); bd2.className='btn small danger'; bd2.textContent='Slet'; bd2.style.fontSize='11px';
-      (function(bb2){ bd2.addEventListener('click', async function(){ if(!confirm('Slet "'+bb2.name+'"?')) return; await supa.from('ob_bookinger').delete().eq('id',bb2.id); await loadObBookinger(); renderObVogne(); }); })(b);
+      (function(bb2){ bd2.addEventListener('click', async function(e){ e.stopPropagation(); if(!confirm('Slet "'+bb2.name+'"?')) return; await supa.from('ob_bookinger').delete().eq('id',bb2.id); await loadObBookinger(); renderObVogne(); }); })(b);
       right.appendChild(bd2); brow.appendChild(right); bs.appendChild(brow);
     });
     body.appendChild(bs);
@@ -8321,13 +8359,14 @@ function renderObUdstyr(){
 
   var sumValgt = valgte.reduce(function(s,l){ return s+l.antal; }, 0);
   var sumAlle  = alle.reduce(function(s,l){ return s+l.maks; }, 0);
-  h += '<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">'
+  h += '<div id="obUdstyrTael" style="font-size:12px;color:var(--muted);margin-bottom:6px;">'
      + '<strong>'+sumValgt+'</strong> af '+sumAlle+' stykker udstyr reserveret'
      + (OB_KLADDE.skabelonNavn
         ? ' · fra skabelonen "'+escapeHtml(OB_KLADDE.skabelonNavn)+'"' : '')
      + '</div>';
 
-  h += '<div style="max-height:260px;overflow:auto;border:1px solid var(--border);'
+  h += '<div class="udstyrsliste" id="obUdstyrListe" '
+     + 'style="max-height:260px;overflow:auto;border:1px solid var(--border);'
      + 'border-radius:8px;">';
   var sidsteKat = null;
   alle.forEach(function(l, i){
@@ -8337,38 +8376,79 @@ function renderObUdstyr(){
          + 'font-size:10px;letter-spacing:.08em;text-transform:uppercase;'
          + 'color:var(--muted);">'+escapeHtml(l.kat||'Uden kategori')+'</div>';
     }
-    h += '<label style="display:flex;align-items:center;gap:10px;padding:6px 10px;'
-       + 'cursor:pointer;border-top:1px solid var(--border);">'
+    h += '<label data-obrow="'+i+'" style="display:flex;align-items:center;gap:10px;'
+       + 'padding:6px 10px;cursor:pointer;border-top:1px solid var(--border);">'
        + '<input type="checkbox" data-obu="'+i+'"'+(l.valgt?' checked':'')+'>'
-       + '<span style="flex:1;'+(l.valgt?'':'color:var(--muted);')+'">'
+       + '<span data-obnavn="'+i+'" style="flex:1;min-width:0;'
+       + (l.valgt?'':'color:var(--muted);')+'">'
        + escapeHtml(l.navn)+'</span>';
     /* Antal vises kun, når der ER mere end ét. Et felt med "1 af 1"
        på hver linje ville støje uden at sige noget. */
     if(l.maks > 1){
-      h += '<span style="font-size:12px;color:var(--muted);">'
+      h += '<span style="font-size:12px;color:var(--muted);flex:none;">'
          + '<input type="number" data-obn="'+i+'" min="1" max="'+l.maks+'" '
          + 'value="'+l.antal+'"'+(l.valgt?'':' disabled')
-         + ' style="width:52px;padding:2px 4px;font-size:12px;"> af '+l.maks+'</span>';
+         + '> af '+l.maks+'</span>';
     }
     h += '</label>';
   });
   h += '</div>';
   box.innerHTML = h;
 
+  /* ── Opdatér i stedet for at tegne forfra ────────────────────
+     Før kaldte hvert flueben renderObUdstyr(), som erstattede hele
+     box.innerHTML. To ting gik galt af det:
+
+       · listen hoppede op i toppen, fordi den div, der rulles i,
+         blev udskiftet — man satte ét flueben, rullede ned, satte
+         det næste, og røg op igen
+       · elementet, man lige havde klikket på, blev revet ud af
+         siden midt i klikket, og så opfører museklikket sig
+         uforudsigeligt — det er den slags, der får et vindue til at
+         lukke af sig selv
+
+     Nu ændres kun det, der faktisk er anderledes: tælleren øverst,
+     linjens farve og om talfeltet kan bruges. Resten af siden står
+     stille. */
+  function obOpdaterTael(){
+    var v = obKladdeValgte();
+    var sv = v.reduce(function(s,l){ return s+l.antal; }, 0);
+    var sa = OB_KLADDE.linjer.reduce(function(s,l){ return s+l.maks; }, 0);
+    var t = document.getElementById('obUdstyrTael');
+    if(t) t.innerHTML = '<strong>'+sv+'</strong> af '+sa
+      + ' stykker udstyr reserveret'
+      + (OB_KLADDE.skabelonNavn
+         ? ' · fra skabelonen "'+escapeHtml(OB_KLADDE.skabelonNavn)+'"' : '');
+  }
+  function obOpdaterLinje(i){
+    var l = OB_KLADDE.linjer[i];
+    var navn = box.querySelector('[data-obnavn="'+i+'"]');
+    if(navn) navn.style.color = l.valgt ? '' : 'var(--muted)';
+    var tal = box.querySelector('[data-obn="'+i+'"]');
+    if(tal){ tal.disabled = !l.valgt; tal.value = l.antal; }
+    var kasse = box.querySelector('[data-obu="'+i+'"]');
+    if(kasse) kasse.checked = l.valgt;
+  }
   box.querySelectorAll('[data-obu]').forEach(function(c){
     c.addEventListener('change', function(){
-      var l = OB_KLADDE.linjer[+c.getAttribute('data-obu')];
+      var i = +c.getAttribute('data-obu');
+      var l = OB_KLADDE.linjer[i];
       l.valgt = c.checked;
       if(l.valgt && !l.antal) l.antal = l.maks;
-      renderObUdstyr();
+      obOpdaterLinje(i); obOpdaterTael();
     });
   });
   box.querySelectorAll('[data-obn]').forEach(function(n){
+    /* Et klik i talfeltet må ikke slå fluebenet fra. Feltet ligger
+       inde i etiketten, og uden det her sender browseren klikket
+       videre til fluebenskassen. */
+    n.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); });
     n.addEventListener('change', function(){
-      var l = OB_KLADDE.linjer[+n.getAttribute('data-obn')];
-      var v = Math.max(1, Math.min(l.maks, parseInt(n.value,10)||1));
-      l.antal = v; n.value = v;
-      renderObUdstyr();
+      var i = +n.getAttribute('data-obn');
+      var l = OB_KLADDE.linjer[i];
+      l.antal = Math.max(1, Math.min(l.maks, parseInt(n.value,10)||1));
+      n.value = l.antal;
+      obOpdaterTael();
     });
   });
   var sv = document.getElementById('obSkabelonVaelg');
@@ -8479,9 +8559,10 @@ function renderSkab(){
   var h = '<div class="field"><label>Navn</label>'
     + '<input type="text" id="skabNavn" value="'+escapeHtml(SKAB.navn)+'" '
     + 'placeholder="fx Lille håndbold"></div>'
-    + '<div style="font-size:12px;color:var(--muted);margin:8px 0 6px;">'
+    + '<div id="skabTael" style="font-size:12px;color:var(--muted);margin:8px 0 6px;">'
     + '<strong>'+sumV+'</strong> af '+sumA+' stykker udstyr i skabelonen</div>'
-    + '<div style="max-height:300px;overflow:auto;border:1px solid var(--border);border-radius:8px;">';
+    + '<div class="udstyrsliste" style="max-height:300px;overflow:auto;'
+    + 'border:1px solid var(--border);border-radius:8px;">';
   var sidste=null;
   SKAB.linjer.forEach(function(l,i){
     if(l.kat!==sidste){
@@ -8493,32 +8574,53 @@ function renderSkab(){
     h += '<label style="display:flex;align-items:center;gap:10px;padding:6px 10px;'
        + 'cursor:pointer;border-top:1px solid var(--border);">'
        + '<input type="checkbox" data-sk="'+i+'"'+(l.valgt?' checked':'')+'>'
-       + '<span style="flex:1;'+(l.valgt?'':'color:var(--muted);')+'">'+escapeHtml(l.navn)+'</span>';
+       + '<span data-sknavn="'+i+'" style="flex:1;min-width:0;'
+       + (l.valgt?'':'color:var(--muted);')+'">'+escapeHtml(l.navn)+'</span>';
     if(l.maks>1){
-      h += '<span style="font-size:12px;color:var(--muted);">'
+      h += '<span style="font-size:12px;color:var(--muted);flex:none;">'
          + '<input type="number" data-skn="'+i+'" min="1" max="'+l.maks+'" value="'+l.antal+'"'
-         + (l.valgt?'':' disabled')+' style="width:52px;padding:2px 4px;font-size:12px;"> af '+l.maks+'</span>';
+         + (l.valgt?'':' disabled')+'> af '+l.maks+'</span>';
     }
     h += '</label>';
   });
   h += '</div>';
   box.innerHTML = h;
+  /* Samme som i bookingvinduet: opdatér i stedet for at tegne forfra.
+     En fuld genoptegning river det element ud, man lige har klikket
+     på, og sender listen op i toppen. */
+  function skabOpdaterTael(){
+    var v = SKAB.linjer.filter(function(l){ return l.valgt; });
+    var sv = v.reduce(function(s,l){ return s+l.antal; },0);
+    var sa = SKAB.linjer.reduce(function(s,l){ return s+l.maks; },0);
+    var t = document.getElementById('skabTael');
+    if(t) t.innerHTML = '<strong>'+sv+'</strong> af '+sa+' stykker udstyr i skabelonen';
+  }
   box.querySelectorAll('[data-sk]').forEach(function(c){
     c.addEventListener('change', function(){
-      var l = SKAB.linjer[+c.getAttribute('data-sk')];
+      var i = +c.getAttribute('data-sk');
+      var l = SKAB.linjer[i];
       l.valgt = c.checked; if(l.valgt && !l.antal) l.antal = l.maks;
-      SKAB.navn = (document.getElementById('skabNavn')||{}).value || SKAB.navn;
-      renderSkab();
+      var navn = box.querySelector('[data-sknavn="'+i+'"]');
+      if(navn) navn.style.color = l.valgt ? '' : 'var(--muted)';
+      var tal = box.querySelector('[data-skn="'+i+'"]');
+      if(tal){ tal.disabled = !l.valgt; tal.value = l.antal; }
+      skabOpdaterTael();
     });
   });
   box.querySelectorAll('[data-skn]').forEach(function(n){
+    n.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); });
     n.addEventListener('change', function(){
       var l = SKAB.linjer[+n.getAttribute('data-skn')];
       l.antal = Math.max(1, Math.min(l.maks, parseInt(n.value,10)||1));
-      SKAB.navn = (document.getElementById('skabNavn')||{}).value || SKAB.navn;
-      renderSkab();
+      n.value = l.antal;
+      skabOpdaterTael();
     });
   });
+  /* Navnet læses løbende i stedet for ved hver genoptegning. Før blev
+     det kopieret ind i SKAB, hver gang listen blev tegnet forfra —
+     og det var kun nødvendigt, fordi den BLEV tegnet forfra. */
+  var nf = document.getElementById('skabNavn');
+  if(nf) nf.addEventListener('input', function(){ SKAB.navn = nf.value; });
 }
 
 function renderObConflicts(){
@@ -11768,6 +11870,25 @@ async function startProgram(){
   renderJobs();
   initMobile();
   applyViewPreference();
+
+  /* Den fane, man sidst var på. Genskabes ved at KLIKKE på knappen og
+     ikke ved at sætte display: Lager og OB Vogne henter deres data i
+     klikket, så en genskabelse, der bare viser panelet, ville give en
+     tom fane. Samme vej igennem som et rigtigt klik, så der ikke er to
+     steder, der skal holdes ens.
+
+     Værdien kontrolleres mod de knapper, der faktisk findes. Det, der
+     står i localStorage, har vi ikke skrevet denne gang — det kan være
+     en gammel udgave af programmet eller noget, nogen har rettet i
+     hånden. Står der noget ukendt, bliver Produktioner stående. */
+  try{
+    var gemtFane = localStorage.getItem(LS_FANE);
+    if(gemtFane && gemtFane !== 'jobs'){
+      var knap = document.querySelector('nav.tabs button[data-tab="'+
+                   (gemtFane.replace(/[^a-z]/g,'')) +'"]');
+      if(knap) knap.click();
+    }
+  }catch(e){}
   const u=document.getElementById('miguser');
   if(u) u.textContent = mineInitialer() || (MIG&&MIG.email ? MIG.email : '');
   const v=document.getElementById('epversion');
