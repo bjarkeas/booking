@@ -3459,7 +3459,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_d2b4pWi-2jTYIeCAAUAQcA_0ygShdrH';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.22-b';
+const EP_VERSION = '2026.10.22-c';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -4831,6 +4831,36 @@ function fmtDate(d){
 function escapeHtml(s){
   return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
 }
+/* ── Et navn, der skal ind i en onclick ──────────────────────────
+   Teksten skal igennem TO lag, og de skal gøres i den rigtige
+   rækkefølge — ellers ophæver det ene det andet:
+
+     1. JavaScript-strengen inde i attributten.  ' bliver til \'
+     2. HTML-attributten udenom.                 escapeHtml()
+
+   Før stod der bare escapeHtml(navn).replace(/'/g,"&#39;"), og det
+   SÅ rigtigt ud. Men escapeHtml laver allerede ' om til &#39;, så
+   replace ramte ingenting — og vigtigere: HTML-fortolkeren laver
+   &#39; TILBAGE til en apostrof, før JavaScriptet overhovedet
+   bliver læst. Så blev
+
+     openByt('j2','Samsung Terrace Højlys TV 55'' BB')
+
+   til noget, browseren svarede "missing ) after argument list" på,
+   og alle knapper på den linje var døde i alle job. Fundet 22.10.2026
+   på "Samsung Terrace Højlys TV 55'' BB".
+
+   Rækkefølgen her virker, fordi backslashen overlever escapeHtml:
+   \' bliver til \&#39;, som browseren afkoder til \' — og det er
+   netop en apostrof inde i en JavaScript-streng.
+
+   Linjeskift ryddes: de kan ikke stå i en almindelig JS-streng. */
+function tilJsTekst(s){
+  return escapeHtml(String(s == null ? '' : s)
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\r?\n/g, ' '));
+}
 function datesOverlap(s1,e1,s2,e2){ return s1<=e2 && s2<=e1; }
 /* Hvor mange har vi af det? Står det ikke i lageret længere – omdøbt eller
    slettet – så ved vi det ikke. Før svarede den bare "1", og så regnede
@@ -5164,7 +5194,7 @@ function renderJobs(){
       if(it.tilfoejetAf) spor+='<div class="pak-spor tilfoejet">+ tilføjet af '+escapeHtml(it.tilfoejetAf)+'</div>';
       if(it.pakket) spor+='<div class="pak-spor">✓ pakket'+(it.pakketAf?' af '+escapeHtml(it.pakketAf):'')
         +(it.pakketKl?' · '+pakTid(it.pakketKl):'')+'</div>';
-      const nvn=escapeHtml(it.name).replace(/'/g,"&#39;");
+      const nvn=tilJsTekst(it.name);
       /* Står der en konflikt på linjen, skal den kunne ses her – ikke kun
          som et tal oppe i hovedet på kortet. Tryk eller mus giver hvilke
          job udstyret allerede er lovet væk til. */
@@ -5217,9 +5247,9 @@ function renderJobs(){
            linje mere pr. stykke udstyr gør kortet dobbelt så langt. */
         +kon+fraV+indl+lej
         +'<div class="item-qty">'
-        +'<button class="jq-knap" title="Ét mindre" onclick="event.stopPropagation();jobAntal(\''+j.id+'\',\''+escapeHtml(it.name).replace(/'/g,"&#39;")+'\',-1)">−</button>'
+        +'<button class="jq-knap" title="Ét mindre" onclick="event.stopPropagation();jobAntal(\''+j.id+'\',\''+tilJsTekst(it.name)+'\',-1)">−</button>'
         +'<span class="jq-tal">×'+it.qty+'</span>'
-        +'<button class="jq-knap" title="Ét mere" onclick="event.stopPropagation();jobAntal(\''+j.id+'\',\''+escapeHtml(it.name).replace(/'/g,"&#39;")+'\',1)">+</button>'
+        +'<button class="jq-knap" title="Ét mere" onclick="event.stopPropagation();jobAntal(\''+j.id+'\',\''+tilJsTekst(it.name)+'\',1)">+</button>'
         +'</div></div>';
     }).join('')||'<div class="empty" style="padding:16px;">Intet udstyr tilføjet</div>';
 
@@ -10646,7 +10676,7 @@ function renderMobileJobs(q){
     });
 
     var itemsHtml = (j.items||[]).map(function(it){
-      var nvn = escapeHtml(it.name).replace(/'/g,"&#39;");
+      var nvn = tilJsTekst(it.name);
       var spor = '';
       if(it.tilfoejetAf) spor += '<div class="pak-spor tilfoejet">+ tilføjet af '+escapeHtml(it.tilfoejetAf)+'</div>';
       if(it.pakket) spor += '<div class="pak-spor">✓ '+(it.pakketAf?escapeHtml(it.pakketAf):'pakket')
