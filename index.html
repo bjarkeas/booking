@@ -1802,9 +1802,44 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
       </div>
     </div>
     <div id="obConflictBox"></div>
+
+    <!-- ── Udstyr på dette OB-job ──────────────────────────────────
+         Markeret = OB-jobbet reserverer det, og så er det optaget i
+         perioden. Ikke markeret = frigivet, og så kan et almindeligt
+         job booke det, selv om det bor i vognen. Det er hele pointen,
+         så det står med rene ord over listen og ikke kun i en manual. -->
+    <div class="field" id="obUdstyrField" style="margin-top:14px;">
+      <label>Udstyr på dette OB-job</label>
+      <div id="obUdstyrBox"></div>
+    </div>
+
     <div class="modal-actions">
       <button class="btn secondary" id="obCancelBtn">Annuller</button>
       <button class="btn" id="obSaveBtn">Gem booking</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Skabeloner for en OB-vogn ────────────────────────────────────
+     En skabelon er udgangspunktet for et nyt OB-job: "Lille håndbold"
+     tager fire kameraer, "Stor fodbold" tager otte. Den KOPIERES over
+     på jobbet, så en rettelse her ikke ændrer job, der allerede er
+     lagt. Navnene bestemmer brugeren – der er ingen faste
+     produktionstyper nogen steder i programmet. -->
+<div class="overlay" id="skabOverlay">
+  <div class="modal" style="max-width:720px;">
+    <h2 id="skabTitel">Skabeloner</h2>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+      <select id="skabVaelg" class="btn small secondary" style="font-size:12px;padding:5px 8px;min-width:180px;"></select>
+      <button type="button" class="btn small secondary" id="skabNy">+ Ny</button>
+      <button type="button" class="btn small secondary" id="skabOmdoeb">Omdøb</button>
+      <button type="button" class="btn small secondary" id="skabKopi">Kopiér</button>
+      <button type="button" class="btn small secondary" id="skabSlet">Slet</button>
+    </div>
+    <div id="skabKrop"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="skabLuk">Luk</button>
+      <button class="btn" id="skabGem">Gem skabelon</button>
     </div>
   </div>
 </div>
@@ -3412,7 +3447,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_d2b4pWi-2jTYIeCAAUAQcA_0ygShdrH';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.21-e';
+const EP_VERSION = '2026.10.21-f';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -4668,6 +4703,82 @@ async function loadObBookinger(){
     OB_BOOKINGER=data||[];
   }catch(e){ console.warn(e); OB_BOOKINGER=[]; }
 }
+/* ── Udstyr på OB-jobs ─────────────────────────────────────────
+   Før spærrede en OB-booking ALT udstyr i vognen. Kører Remote 2 en
+   lille håndbold med fire kameraer, var de fire andre stadig låst, og
+   så meldte programmet overbooking på udstyr, der stod på hylden.
+
+   Nu har hver OB-booking sin egen reservationsliste, og det er DEN,
+   der tæller. At udstyret bor i vognen er ikke længere nok.
+
+   OB_SKABELONER er udstyrsopsætninger pr. vogn ("Lille håndbold").
+   De KOPIERES over på jobbet – de refereres ikke – så en rettelse i
+   skabelonen ændrer ikke et job, der allerede er lagt.
+
+   Begge tåler at tabellen ikke findes endnu: så er der ingen
+   reservationer, og resten af programmet skal stadig virke. Samme
+   mønster som INDLEJE. */
+let OB_SKABELONER = [], OB_SKABELON_LINJER = [], OB_JOB_UDSTYR = [];
+
+async function loadObSkabeloner(){
+  try{
+    const {data,error} = await supa.from('ob_skabeloner')
+      .select('*').order('navn');
+    if(error){ console.warn('loadObSkabeloner:',error.message); OB_SKABELONER=[]; return; }
+    OB_SKABELONER = data||[];
+  }catch(e){ console.warn(e); OB_SKABELONER=[]; }
+}
+async function loadObSkabelonLinjer(){
+  try{
+    const {data,error} = await supa.from('ob_skabelon_linjer').select('*');
+    if(error){ console.warn('loadObSkabelonLinjer:',error.message); OB_SKABELON_LINJER=[]; return; }
+    OB_SKABELON_LINJER = data||[];
+  }catch(e){ console.warn(e); OB_SKABELON_LINJER=[]; }
+}
+async function loadObJobUdstyr(){
+  try{
+    const {data,error} = await supa.from('ob_job_udstyr').select('*');
+    if(error){ console.warn('loadObJobUdstyr:',error.message); OB_JOB_UDSTYR=[]; return; }
+    OB_JOB_UDSTYR = data||[];
+  }catch(e){ console.warn(e); OB_JOB_UDSTYR=[]; }
+}
+/* Er tabellen slet ikke oprettet endnu, må programmet ikke pludselig
+   frigive alt udstyr i alle vogne. Så skal det opføre sig som før:
+   vognens indhold er optaget. Den her siger hvilken af de to verdener
+   vi er i, og den spørges ét sted – i iVogneFor(). */
+function obReservationerFindes(){
+  return Array.isArray(OB_JOB_UDSTYR) && OB_JOB_UDSTYR.length > 0;
+}
+/* Hvad reserverer ÉN booking af ét stykke udstyr? */
+function obReserveret(bookingId, equipmentId){
+  if(!bookingId || !equipmentId) return 0;
+  for(var i=0;i<OB_JOB_UDSTYR.length;i++){
+    var r = OB_JOB_UDSTYR[i];
+    if(r.booking_id===bookingId && r.equipment_id===equipmentId) return +r.antal||0;
+  }
+  return 0;
+}
+/* Pakker hører også til en vogn ("Remote 2 kommentering sæt"), og de
+   skal kunne frigives på samme måde. Derfor peger en reservationslinje
+   enten på et stykke udstyr ELLER på en pakke – aldrig begge. */
+function obReserveretPakke(bookingId, packageId){
+  if(!bookingId || !packageId) return 0;
+  for(var i=0;i<OB_JOB_UDSTYR.length;i++){
+    var r = OB_JOB_UDSTYR[i];
+    if(r.booking_id===bookingId && r.package_id===packageId) return +r.antal||0;
+  }
+  return 0;
+}
+function obLinjerFor(bookingId){
+  return OB_JOB_UDSTYR.filter(function(r){ return r.booking_id===bookingId; });
+}
+function obSkabelonerFor(vognId){
+  return OB_SKABELONER.filter(function(s){ return s.ob_vogn_id===vognId; });
+}
+function obSkabelonLinjer(skabelonId){
+  return OB_SKABELON_LINJER.filter(function(l){ return l.skabelon_id===skabelonId; });
+}
+
 async function loadJobs(){
   try{
     const {data,error} = await supa.from('jobs').select('*').order('start_date');
@@ -4757,12 +4868,46 @@ function vogneForJobId(jobId){
 /* Hvor mange af det her står der i de vogne? Udstyret kan være fordelt –
    tre tromler i én vogn, fire i en anden, resten i puljen – så det er
    summen af dét, der står i netop de vogne. Pakker bor i én vogn ad gangen. */
-function iVogneFor(vogne, navn){
+function iVogneFor(vogne, navn, start, slut){
   if(!vogne||!vogne.length||!navn) return 0;
   var eq=EQUIPMENT.find(function(e){ return e.name===navn; });
+  var pk=eq?null:PACKAGES.find(function(p){ return p.name===navn; });
+
+  /* ── Reservationen er sandheden, når der ER en ──────────────────
+     Før svarede den her "hvad står der i vognen", og så var alt
+     udstyr i en booket vogn optaget — også de fire kameraer,
+     produktionen ikke skulle bruge.
+
+     Nu: find de bookinger på vognene, der overlapper perioden, og
+     spørg hvad de faktisk reserverer. Det er ÉT sted, og derfor
+     følger både jobTager(), bookedQty() og konfliktFor() med af sig
+     selv. To bookingsystemer, der kan modsige hinanden, er præcis
+     det, vi ikke vil have.
+
+     Tre ting skal være opfyldt, ellers falder den igennem til den
+     gamle opførsel — og det er med vilje:
+       · vi skal kende perioden (uden datoer er der ingen booking
+         at slå op)
+       · tabellen skal findes og have indhold (er SQL'en ikke kørt,
+         må programmet ikke pludselig frigive alt udstyr i huset)
+       · der skal være en overlappende booking på vognen (er der
+         ingen, er der ingen reservationsliste at spørge, og så
+         kører vognens indhold med jobbet som før) */
+  if((eq||pk) && start && slut && obReservationerFindes()){
+    var sum = 0, fandtBooking = false;
+    for(var i=0;i<OB_BOOKINGER.length;i++){
+      var b = OB_BOOKINGER[i];
+      if(vogne.indexOf(b.ob_vogn_id) < 0) continue;
+      if(!datesOverlap(start, slut, b.start_date, b.end_date)) continue;
+      fandtBooking = true;
+      sum += eq ? obReserveret(b.id, eq.id) : obReserveretPakke(b.id, pk.id);
+    }
+    if(fandtBooking) return sum;
+  }
+
+  /* Den gamle opførsel: hvad står der fysisk i vognene. */
   if(eq) return placeringer(eq).reduce(function(s,p){
     return s + (vogne.indexOf(p.vogn)>=0 ? p.antal : 0); }, 0);
-  var pk=PACKAGES.find(function(p){ return p.name===navn; });
   if(pk && pk.ob_vogn_id && vogne.indexOf(pk.ob_vogn_id)>=0) return pk.qty||1;
   return 0;
 }
@@ -4775,7 +4920,10 @@ function iVogneFor(vogne, navn){
 function jobTager(j, name){
   var f=(j.items||[]).find(function(it){ return it.name===name; });
   var paaListen = f ? (f.qty||0) : 0;
-  var iVogn = iVogneFor(vogneForJobId(j.id), name);
+  /* Jobbets EGNE dage afgør, hvilken OB-booking der gælder. Uden dem
+     kan reservationen ikke slås op, og så falder iVogneFor tilbage til
+     vognens indhold – altså den gamle, for brede opførsel. */
+  var iVogn = iVogneFor(vogneForJobId(j.id), name, j.start, j.end);
   return {antal: Math.max(paaListen, iVogn), paaListen:paaListen, iVogn:iVogn};
 }
 function bookedQty(name,start,end,excludeJobId){
@@ -4923,7 +5071,12 @@ document.querySelectorAll('nav.tabs button').forEach(function(btn){
     if(tab==='obvogne'){
       var obC=document.getElementById('obvogneContent');
       if(obC) obC.innerHTML='<div class="loading">Henter OB Vogne...</div>';
-      Promise.all([loadObVogne(),loadObBookinger()]).then(function(){
+      /* Reservationerne skal med: mærket "4 af 12 udstyr" på hver
+         bookingslinje bygger på dem, og skabelonvælgeren i vinduet
+         gør det samme. Uden dem ville fanen vise, at ingenting er
+         frigivet, indtil noget andet tilfældigvis hentede dem. */
+      Promise.all([loadObVogne(),loadObBookinger(),loadObJobUdstyr(),
+                   loadObSkabeloner(),loadObSkabelonLinjer()]).then(function(){
         try{ renderObVogne(); }
         catch(e){ console.error('renderObVogne fejl:',e); if(obC) obC.innerHTML='<div class="empty"><div class="big">⚠️</div>Fejl: '+e.message+'<br><small>Tjek F12 Console</small></div>'; }
       }).catch(function(e){ console.error('OB load fejl:',e); });
@@ -5685,7 +5838,7 @@ function konfliktFor(noegle, antal, start, end, undtagJob){
      hver enkelt linje rødt med "OB-vognen er booket til Superligaen", selv
      når jobbet OG bookingen var den samme Superligaen. */
   var mineVogne = vogneForJobId(undtagJob);
-  var fraVogn = iVogneFor(mineVogne, navn);
+  var fraVogn = iVogneFor(mineVogne, navn, start, end);
   if(fraVogn){
     svar.fraVogn = fraVogn;
     svar.fraVognNavne = mineVogne.map(function(id){
@@ -5693,6 +5846,31 @@ function konfliktFor(noegle, antal, start, end, undtagJob){
   }
   if(obId && mineVogne.indexOf(obId) < 0){
     var obC = obBookingConflict(obId, start, end, null);
+    /* ── Reserverer OB-jobbet det her? ──────────────────────────
+       Det var HER den falske overbooking sad. Før var det nok, at
+       udstyret BOEDE i en booket vogn: kørte Remote 2 en lille
+       håndbold med fire kameraer, lyste alle otte rødt.
+
+       Nu spørger vi bookingens reservationsliste. Står udstyret
+       ikke på den, er det frigivet, og så er der ingen konflikt —
+       uanset at det bor i vognen.
+
+       Er listen tom for HELE bookingen, er det enten en booking,
+       hvor alt er frigivet, eller en vogn uden udstyr i lageret
+       (EKSTERN). Begge dele betyder "ingen konflikt". Men er
+       tabellen slet ikke taget i brug endnu, skal den gamle, brede
+       regel stadig gælde — ellers ville en manglende SQL-kørsel
+       frigive hele huset i stilhed. */
+    if(obC && obReservationerFindes()){
+      var reserveret = (noegle.indexOf('PKG:') === 0)
+        ? obReserveretPakke(obC.id, noegle.slice(4))
+        : (function(){
+            var e2 = EQUIPMENT.find(function(e){ return e.name === noegle; });
+            return e2 ? obReserveret(obC.id, e2.id) : 0;
+          })();
+      if(reserveret <= 0) obC = null;
+      else svar.obReserveret = reserveret;
+    }
     if(obC){
       var ov = obVognById(obId);
       svar.konflikt = true;
@@ -5701,9 +5879,22 @@ function konfliktFor(noegle, antal, start, end, undtagJob){
          Derfor sit eget mærke og sin egen vej ud: bind jobbet til vognen. */
       svar.vognBooket = {id:obId, navn:(ov?ov.name:'?'), booking:(obC.name||'')};
       if(!svar.kort) svar.kort = 'OB-vognen er booket';
+      /* Den første sætning er uændret med vilje: den navngiver den
+         booking, der spærrer, og det er dét, man skal bruge for at
+         kunne ringe og flytte noget. En prøve vogter den.
+         Det nye er den sidste sætning — nu er der to veje ud, og
+         den anden er den, som hele reservationslisten handler om. */
       svar.aarsager.push('Står på OB-vogn ' + (ov ? ov.name : '?')
-        + ', som er booket til "' + obC.name + '" i perioden.'
-        + ' Hører bookingen til dette job, så bind jobbet til vognen.');
+        + ', som er booket til "' + obC.name + '" i perioden'
+        + (svar.obReserveret > 1
+           ? ', og OB-jobbet reserverer ' + svar.obReserveret + ' stk.' : '')
+        + '.'
+        + ' Hører bookingen til dette job, så bind jobbet til vognen.'
+        + (obReservationerFindes()
+           ? ' Skal udstyret ikke med i vognen, så fjern det fra'
+             + ' "Udstyr på dette OB-job" under OB Vogne — så bliver det'
+             + ' frit her.'
+           : ''));
     }
   }
   return svar;
@@ -7905,6 +8096,30 @@ function renderObVogne(){
       left.innerHTML=(isAct?'<span style="color:var(--red);">● </span>':'')
         +(isTilbud?'<span style="background:#5c4521;color:var(--amber);font-size:9.5px;padding:1px 6px;border-radius:8px;font-family:var(--mono);font-weight:700;margin-right:5px;">TILBUD</span>':'')
         +escapeHtml(b.name)+(b.who?'<span style="color:var(--muted);"> · '+escapeHtml(b.who)+'</span>':'');
+      /* ── Hvor meget af vognen kører med? ──────────────────────
+         Uden det her kan man ikke se udefra, at en booking har
+         frigivet noget – og så er det en skjult tilstand, der
+         afgør om et kamera er ledigt. Mærket vises kun, når der
+         FAKTISK er frigivet noget: står hele vognen på listen, er
+         der ikke noget at fortælle. */
+      if(obReservationerFindes()){
+        var harIVogn = obVognensUdstyr(b.ob_vogn_id);
+        if(harIVogn.length){
+          var res = obLinjerFor(b.id);
+          var sumRes = res.reduce(function(t,r){ return t+(+r.antal||0); }, 0);
+          var sumAlt = harIVogn.reduce(function(t,h){ return t+h.maks; }, 0);
+          if(sumRes < sumAlt){
+            var m=document.createElement('span');
+            m.style.cssText='font-size:9.5px;padding:1px 6px;border-radius:8px;'
+              +'font-family:var(--mono);font-weight:700;margin-left:6px;'
+              +'background:rgba(91,134,168,.18);color:var(--muted);';
+            m.textContent = sumRes + ' af ' + sumAlt + ' udstyr';
+            m.title = (sumAlt-sumRes) + ' stykker udstyr er frigivet og kan '
+                    + 'bookes på andre job i perioden.';
+            left.appendChild(m);
+          }
+        }
+      }
       brow.appendChild(left);
       var right=document.createElement('div'); right.style.cssText='display:flex;align-items:center;gap:8px;';
       var dates=document.createElement('div'); dates.className='ob-booking-dates'; dates.textContent=fmtDate(b.start_date)+' → '+fmtDate(b.end_date); right.appendChild(dates);
@@ -7960,8 +8175,352 @@ function openObModal(vognId,ob){
   document.getElementById('obStatusTilbud').checked=st==='tilbud';
   updateObStatusStyle();
   renderObConflicts();
+  /* Kladden bygges HVER gang vinduet åbnes, af den friske OB_JOB_UDSTYR.
+     Har en kollega frigivet et kamera, siden man sidst kiggede, skal man
+     se dét og ikke en gammel kopi. */
+  obByggKladde(vognId, ob?ob.id:null);
+  renderObUdstyr();
   document.getElementById('obOverlay').classList.add('open');
 }
+/* ══════════════════════════════════════════════════════════════
+   UDSTYR PÅ DETTE OB-JOB
+
+   Kladden er en ARBEJDSKOPI. Fluebenene sættes her og gemmes først,
+   når man trykker "Gem booking" — i ét kald, så listen aldrig står
+   halvt skrevet. Og den hentes forfra fra serveren bagefter, så det
+   man ser er det, der faktisk står, og ikke det man håbede.
+
+   Hver linje er {id, slags, navn, kat, maks, antal, valgt}:
+     slags  'eq' eller 'pkg'
+     maks   hvor mange vognen overhovedet har af det
+     antal  hvor mange OB-jobbet reserverer (1..maks)
+     valgt  om fluebenet er sat
+   ══════════════════════════════════════════════════════════════ */
+var OB_KLADDE = null;
+
+/* Hvad HAR vognen? Udstyr kan være fordelt – tre tromler her, fire
+   der – så maks er dét, der står i netop denne vogn. Pakker bor i én
+   vogn ad gangen. */
+/* Svaret huskes pr. vogn, indtil lageret eller vognene ændrer sig.
+   renderObVogne() kalder den for HVER booking — med 99 bookinger og
+   et lager på nogle tusinde linjer blev det 99 gennemløb af hele
+   lageret ved hver optegning, og programmet bruges på en telefon i
+   en vogn. Nøglen er antallet af udstyrs- og pakkelinjer: ændrer
+   lageret sig, falder hukommelsen af sig selv. */
+var OB_UDSTYR_HUSK = {n:-1, pr:{}};
+function obVognensUdstyr(vognId){
+  var noegle = EQUIPMENT.length + ':' + PACKAGES.length;
+  if(OB_UDSTYR_HUSK.n !== noegle){ OB_UDSTYR_HUSK = {n:noegle, pr:{}}; }
+  if(OB_UDSTYR_HUSK.pr[vognId]) return OB_UDSTYR_HUSK.pr[vognId];
+  var ud=[];
+  EQUIPMENT.forEach(function(e){
+    if(e.package_id) return;           // ligger i en pakke, tælles med den
+    var n = antalPaaVogn(e, vognId);
+    if(n > 0) ud.push({id:e.id, slags:'eq', navn:e.name,
+                       kat:(e.category||''), maks:n});
+  });
+  PACKAGES.forEach(function(p){
+    if(p.ob_vogn_id !== vognId) return;
+    ud.push({id:p.id, slags:'pkg', navn:p.name, kat:'Pakke',
+             maks:Math.max(+p.qty||1, 1)});
+  });
+  ud.sort(function(a,b){
+    if(a.kat !== b.kat) return a.kat < b.kat ? -1 : 1;
+    return a.navn < b.navn ? -1 : (a.navn > b.navn ? 1 : 0);
+  });
+  OB_UDSTYR_HUSK.pr[vognId] = ud;
+  return ud;
+}
+
+/* Byg kladden: vognens udstyr, med flueben sat efter hvad bookingen
+   allerede reserverer.
+
+   For en NY booking er intet reserveret endnu, og så tages HELE
+   vognen som udgangspunkt. Det er med vilje, og det er den sikre vej:
+   vognen kører af sted med sit indhold, med mindre nogen aktivt siger
+   andet. Startede en ny booking tom, ville alt udstyr i vognen være
+   frit fra det sekund, bookingen blev oprettet — og så kunne en
+   kollega booke et kamera, der står i en vogn på vej til Parken.
+
+   Det er samme valg som i migreringen af de gamle bookinger: intet
+   bliver frit, uden at nogen har taget stilling. Frigivelsen er det,
+   man gør bagefter. */
+function obByggKladde(vognId, bookingId){
+  var haves = obVognensUdstyr(vognId);
+  var linjer = obLinjerFor(bookingId);
+  var erNy = !bookingId;
+  OB_KLADDE = {
+    vognId: vognId,
+    bookingId: bookingId || null,
+    skabelonNavn: (linjer.length && linjer[0].skabelon_navn) || '',
+    linjer: haves.map(function(h){
+      var r = null;
+      for(var i=0;i<linjer.length;i++){
+        var l = linjer[i];
+        if(h.slags==='eq'  && l.equipment_id===h.id){ r=l; break; }
+        if(h.slags==='pkg' && l.package_id  ===h.id){ r=l; break; }
+      }
+      return {id:h.id, slags:h.slags, navn:h.navn, kat:h.kat, maks:h.maks,
+              antal: r ? Math.min(+r.antal||1, h.maks) : h.maks,
+              valgt: erNy ? true : !!r};
+    })
+  };
+  /* Står der linjer på bookingen for udstyr, der IKKE længere er i
+     vognen – nogen har flyttet det siden – skal de ikke forsvinde i
+     stilhed. De vises nederst, så man kan se hvorfor noget er
+     optaget, og fjerne det. */
+  linjer.forEach(function(l){
+    var fundet = OB_KLADDE.linjer.some(function(k){
+      return (k.slags==='eq' && l.equipment_id===k.id)
+          || (k.slags==='pkg' && l.package_id===k.id); });
+    if(fundet) return;
+    var e = EQUIPMENT.find(function(x){ return x.id===l.equipment_id; });
+    var p = PACKAGES.find(function(x){ return x.id===l.package_id; });
+    OB_KLADDE.linjer.push({
+      id: l.equipment_id || l.package_id,
+      slags: l.equipment_id ? 'eq' : 'pkg',
+      navn: (e&&e.name) || (p&&p.name) || '(slettet udstyr)',
+      kat: 'Ikke længere i vognen',
+      maks: Math.max(+l.antal||1,1), antal: +l.antal||1, valgt: true});
+  });
+}
+
+function obKladdeValgte(){
+  return OB_KLADDE ? OB_KLADDE.linjer.filter(function(l){ return l.valgt; }) : [];
+}
+
+function renderObUdstyr(){
+  var box = document.getElementById('obUdstyrBox');
+  if(!box) return;
+  if(!OB_KLADDE){ box.innerHTML=''; return; }
+
+  var vogn = obVognById(OB_KLADDE.vognId);
+  var alle = OB_KLADDE.linjer, valgte = obKladdeValgte();
+
+  if(!alle.length){
+    box.innerHTML = '<div class="conflict-box"><span class="ok">'
+      + escapeHtml(vogn?vogn.name:'Vognen')
+      + ' har intet udstyr registreret i lageret, så der er ingenting at '
+      + 'reservere eller frigive.</span></div>';
+    return;
+  }
+
+  var skabeloner = obSkabelonerFor(OB_KLADDE.vognId);
+  var h = '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">';
+  h += '<select id="obSkabelonVaelg" class="btn small secondary" '
+     + 'style="font-size:12px;padding:5px 8px;">'
+     + '<option value="">— Vælg skabelon —</option>'
+     + skabeloner.map(function(s){
+         return '<option value="'+escapeHtml(s.id)+'">'+escapeHtml(s.navn)+'</option>'; }).join('')
+     + '</select>';
+  h += '<button type="button" class="btn small secondary" id="obTagHele">Tag hele vognen</button>';
+  h += '<button type="button" class="btn small secondary" id="obRydAlle">Frigiv alt</button>';
+  h += '<button type="button" class="btn small secondary" id="obSkabAdm" '
+     + 'title="Opret og ret skabeloner for '+escapeHtml(vogn?vogn.name:'vognen')+'">⚙ Skabeloner</button>';
+  h += '</div>';
+
+  var sumValgt = valgte.reduce(function(s,l){ return s+l.antal; }, 0);
+  var sumAlle  = alle.reduce(function(s,l){ return s+l.maks; }, 0);
+  h += '<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">'
+     + '<strong>'+sumValgt+'</strong> af '+sumAlle+' stykker udstyr reserveret'
+     + (OB_KLADDE.skabelonNavn
+        ? ' · fra skabelonen "'+escapeHtml(OB_KLADDE.skabelonNavn)+'"' : '')
+     + '</div>';
+
+  h += '<div style="max-height:260px;overflow:auto;border:1px solid var(--border);'
+     + 'border-radius:8px;">';
+  var sidsteKat = null;
+  alle.forEach(function(l, i){
+    if(l.kat !== sidsteKat){
+      sidsteKat = l.kat;
+      h += '<div style="padding:5px 10px;background:var(--bg2,rgba(127,127,127,.08));'
+         + 'font-size:10px;letter-spacing:.08em;text-transform:uppercase;'
+         + 'color:var(--muted);">'+escapeHtml(l.kat||'Uden kategori')+'</div>';
+    }
+    h += '<label style="display:flex;align-items:center;gap:10px;padding:6px 10px;'
+       + 'cursor:pointer;border-top:1px solid var(--border);">'
+       + '<input type="checkbox" data-obu="'+i+'"'+(l.valgt?' checked':'')+'>'
+       + '<span style="flex:1;'+(l.valgt?'':'color:var(--muted);')+'">'
+       + escapeHtml(l.navn)+'</span>';
+    /* Antal vises kun, når der ER mere end ét. Et felt med "1 af 1"
+       på hver linje ville støje uden at sige noget. */
+    if(l.maks > 1){
+      h += '<span style="font-size:12px;color:var(--muted);">'
+         + '<input type="number" data-obn="'+i+'" min="1" max="'+l.maks+'" '
+         + 'value="'+l.antal+'"'+(l.valgt?'':' disabled')
+         + ' style="width:52px;padding:2px 4px;font-size:12px;"> af '+l.maks+'</span>';
+    }
+    h += '</label>';
+  });
+  h += '</div>';
+  box.innerHTML = h;
+
+  box.querySelectorAll('[data-obu]').forEach(function(c){
+    c.addEventListener('change', function(){
+      var l = OB_KLADDE.linjer[+c.getAttribute('data-obu')];
+      l.valgt = c.checked;
+      if(l.valgt && !l.antal) l.antal = l.maks;
+      renderObUdstyr();
+    });
+  });
+  box.querySelectorAll('[data-obn]').forEach(function(n){
+    n.addEventListener('change', function(){
+      var l = OB_KLADDE.linjer[+n.getAttribute('data-obn')];
+      var v = Math.max(1, Math.min(l.maks, parseInt(n.value,10)||1));
+      l.antal = v; n.value = v;
+      renderObUdstyr();
+    });
+  });
+  var sv = document.getElementById('obSkabelonVaelg');
+  if(sv) sv.addEventListener('change', function(){ obBrugSkabelon(sv.value); });
+  var th = document.getElementById('obTagHele');
+  if(th) th.addEventListener('click', function(){
+    OB_KLADDE.linjer.forEach(function(l){ l.valgt=true; l.antal=l.maks; });
+    OB_KLADDE.skabelonNavn=''; renderObUdstyr();
+  });
+  var ra = document.getElementById('obRydAlle');
+  if(ra) ra.addEventListener('click', function(){
+    if(!confirm('Frigiv alt udstyr på dette OB-job?\\n\\n'
+      + 'Udstyret bliver i vognen, men kan bookes på andre job i perioden.')) return;
+    OB_KLADDE.linjer.forEach(function(l){ l.valgt=false; });
+    OB_KLADDE.skabelonNavn=''; renderObUdstyr();
+  });
+  var sa = document.getElementById('obSkabAdm');
+  if(sa) sa.addEventListener('click', function(){ aabnSkabeloner(OB_KLADDE.vognId); });
+}
+
+/* Skabelonen KOPIERES ind i kladden. Retter nogen skabelonen senere,
+   ændrer det ikke dette job – derfor en kopi og ikke en reference. */
+function obBrugSkabelon(skabelonId){
+  if(!skabelonId || !OB_KLADDE) return;
+  var s = OB_SKABELONER.find(function(x){ return x.id===skabelonId; });
+  if(!s) return;
+  var linjer = obSkabelonLinjer(skabelonId);
+  OB_KLADDE.linjer.forEach(function(l){
+    var m = linjer.find(function(x){
+      return (l.slags==='eq'  && x.equipment_id===l.id)
+          || (l.slags==='pkg' && x.package_id  ===l.id); });
+    l.valgt = !!m;
+    if(m) l.antal = Math.min(Math.max(+m.antal||1,1), l.maks);
+  });
+  OB_KLADDE.skabelonNavn = s.navn;
+  renderObUdstyr();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SKABELONADMINISTRATION
+   Samme arbejdskopi-princip som på bookingen: der rettes i SKAB, og
+   det gemmes først når nogen trykker Gem. Luk uden at gemme, og
+   skabelonen står som før.
+   ══════════════════════════════════════════════════════════════ */
+var SKAB = null;   // {vognId, id, navn, linjer:[{id,slags,navn,kat,maks,antal,valgt}]}
+
+function aabnSkabeloner(vognId){
+  var vogn = obVognById(vognId);
+  document.getElementById('skabTitel').textContent =
+    'Skabeloner — ' + (vogn ? vogn.name : 'OB-vogn');
+  SKAB = {vognId:vognId, id:null, navn:'', linjer:[]};
+  skabFyldVaelger();
+  var f = obSkabelonerFor(vognId);
+  if(f.length) skabVaelgEn(f[0].id); else skabNySkabelon(true);
+  document.getElementById('skabOverlay').classList.add('open');
+}
+function skabFyldVaelger(){
+  var v = document.getElementById('skabVaelg');
+  var f = obSkabelonerFor(SKAB.vognId);
+  v.innerHTML = f.length
+    ? f.map(function(s){ return '<option value="'+escapeHtml(s.id)+'">'
+        +escapeHtml(s.navn)+'</option>'; }).join('')
+    : '<option value="">(ingen endnu)</option>';
+  if(SKAB.id) v.value = SKAB.id;
+}
+function skabVaelgEn(id){
+  var s = OB_SKABELONER.find(function(x){ return x.id===id; });
+  var haves = obVognensUdstyr(SKAB.vognId);
+  var linjer = s ? obSkabelonLinjer(s.id) : [];
+  SKAB.id = s ? s.id : null;
+  SKAB.navn = s ? s.navn : '';
+  SKAB.linjer = haves.map(function(h){
+    var m = linjer.find(function(l){
+      return (h.slags==='eq'  && l.equipment_id===h.id)
+          || (h.slags==='pkg' && l.package_id  ===h.id); });
+    return {id:h.id, slags:h.slags, navn:h.navn, kat:h.kat, maks:h.maks,
+            antal: m ? Math.min(Math.max(+m.antal||1,1), h.maks) : h.maks,
+            valgt: !!m};
+  });
+  skabFyldVaelger();
+  renderSkab();
+}
+function skabNySkabelon(stille){
+  var navn = stille ? '' : (prompt('Navn på skabelonen?\n\n'
+    + 'Fx "Lille håndbold", "Stor fodbold" — det er dit eget valg.') || '').trim();
+  if(!stille && !navn) return;
+  var haves = obVognensUdstyr(SKAB.vognId);
+  SKAB.id = null;
+  SKAB.navn = navn;
+  SKAB.linjer = haves.map(function(h){
+    return {id:h.id, slags:h.slags, navn:h.navn, kat:h.kat, maks:h.maks,
+            antal:h.maks, valgt:false};
+  });
+  renderSkab();
+}
+function renderSkab(){
+  var box = document.getElementById('skabKrop');
+  if(!SKAB){ box.innerHTML=''; return; }
+  if(!SKAB.linjer.length){
+    box.innerHTML = '<div class="conflict-box"><span class="ok">Vognen har '
+      + 'intet udstyr registreret i lageret, så der er ingenting at '
+      + 'lægge i en skabelon.</span></div>';
+    return;
+  }
+  var valgt = SKAB.linjer.filter(function(l){ return l.valgt; });
+  var sumV = valgt.reduce(function(s,l){ return s+l.antal; },0);
+  var sumA = SKAB.linjer.reduce(function(s,l){ return s+l.maks; },0);
+  var h = '<div class="field"><label>Navn</label>'
+    + '<input type="text" id="skabNavn" value="'+escapeHtml(SKAB.navn)+'" '
+    + 'placeholder="fx Lille håndbold"></div>'
+    + '<div style="font-size:12px;color:var(--muted);margin:8px 0 6px;">'
+    + '<strong>'+sumV+'</strong> af '+sumA+' stykker udstyr i skabelonen</div>'
+    + '<div style="max-height:300px;overflow:auto;border:1px solid var(--border);border-radius:8px;">';
+  var sidste=null;
+  SKAB.linjer.forEach(function(l,i){
+    if(l.kat!==sidste){
+      sidste=l.kat;
+      h += '<div style="padding:5px 10px;background:var(--bg2,rgba(127,127,127,.08));'
+         + 'font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">'
+         + escapeHtml(l.kat||'Uden kategori')+'</div>';
+    }
+    h += '<label style="display:flex;align-items:center;gap:10px;padding:6px 10px;'
+       + 'cursor:pointer;border-top:1px solid var(--border);">'
+       + '<input type="checkbox" data-sk="'+i+'"'+(l.valgt?' checked':'')+'>'
+       + '<span style="flex:1;'+(l.valgt?'':'color:var(--muted);')+'">'+escapeHtml(l.navn)+'</span>';
+    if(l.maks>1){
+      h += '<span style="font-size:12px;color:var(--muted);">'
+         + '<input type="number" data-skn="'+i+'" min="1" max="'+l.maks+'" value="'+l.antal+'"'
+         + (l.valgt?'':' disabled')+' style="width:52px;padding:2px 4px;font-size:12px;"> af '+l.maks+'</span>';
+    }
+    h += '</label>';
+  });
+  h += '</div>';
+  box.innerHTML = h;
+  box.querySelectorAll('[data-sk]').forEach(function(c){
+    c.addEventListener('change', function(){
+      var l = SKAB.linjer[+c.getAttribute('data-sk')];
+      l.valgt = c.checked; if(l.valgt && !l.antal) l.antal = l.maks;
+      SKAB.navn = (document.getElementById('skabNavn')||{}).value || SKAB.navn;
+      renderSkab();
+    });
+  });
+  box.querySelectorAll('[data-skn]').forEach(function(n){
+    n.addEventListener('change', function(){
+      var l = SKAB.linjer[+n.getAttribute('data-skn')];
+      l.antal = Math.max(1, Math.min(l.maks, parseInt(n.value,10)||1));
+      SKAB.navn = (document.getElementById('skabNavn')||{}).value || SKAB.navn;
+      renderSkab();
+    });
+  });
+}
+
 function renderObConflicts(){
   var box=document.getElementById('obConflictBox');
   var start=document.getElementById('obStart').value,end=document.getElementById('obEnd').value;
@@ -7971,6 +8530,76 @@ function renderObConflicts(){
   box.innerHTML=c?'<div class="conflict-box">⚠ Overlapper: <strong>'+escapeHtml(c.name)+'</strong> ('+fmtDate(c.start_date)+' → '+fmtDate(c.end_date)+')</div>'
     :'<div class="conflict-box"><span class="ok">✓ Ingen konflikter.</span></div>';
 }
+/* ── Skabelonvinduets knapper ───────────────────────────────────
+   Alt, der skriver, henter bagefter forfra fra serveren. Ellers
+   ville skærmen vise det, vi sendte, og ikke det der står. */
+document.getElementById('skabVaelg').addEventListener('change', function(){
+  var v=this.value; if(v) skabVaelgEn(v);
+});
+document.getElementById('skabNy').addEventListener('click', function(){ skabNySkabelon(false); });
+document.getElementById('skabOmdoeb').addEventListener('click', function(){
+  if(!SKAB) return;
+  var n=(prompt('Nyt navn?', SKAB.navn)||'').trim();
+  if(!n) return;
+  SKAB.navn=n; renderSkab();
+});
+document.getElementById('skabKopi').addEventListener('click', function(){
+  if(!SKAB) return;
+  var n=(prompt('Navn på kopien?', SKAB.navn+' (kopi)')||'').trim();
+  if(!n) return;
+  /* id'et nulstilles – så bliver det en NY skabelon ved gemning, og
+     originalen står uændret. */
+  SKAB.id=null; SKAB.navn=n; renderSkab();
+});
+document.getElementById('skabSlet').addEventListener('click', async function(){
+  if(!SKAB || !SKAB.id) return;
+  if(!confirm('Slet skabelonen "'+SKAB.navn+'"?\n\n'
+    + 'OB-job, der er lagt med den, beholder deres udstyr — listen er '
+    + 'en kopi, ikke en henvisning.')) return;
+  try{
+    var r = await supa.from('ob_skabeloner').delete().eq('id', SKAB.id);
+    if(r.error) throw r.error;
+    await Promise.all([loadObSkabeloner(), loadObSkabelonLinjer()]);
+    var f = obSkabelonerFor(SKAB.vognId);
+    if(f.length) skabVaelgEn(f[0].id); else skabNySkabelon(true);
+    skabFyldVaelger();
+  }catch(e){ sigFejl(e, 'slette skabelonen'); }
+});
+document.getElementById('skabLuk').addEventListener('click', function(){
+  document.getElementById('skabOverlay').classList.remove('open');
+  SKAB=null;
+});
+lukVedKlikUdenfor(document.getElementById('skabOverlay'), function(){
+  document.getElementById('skabOverlay').classList.remove('open'); SKAB=null;
+});
+document.getElementById('skabGem').addEventListener('click', async function(){
+  if(!SKAB) return;
+  var knap=this;
+  var navnFelt=document.getElementById('skabNavn');
+  var navn=(navnFelt?navnFelt.value:SKAB.navn||'').trim();
+  if(!navn){ alert('Skabelonen skal have et navn.'); return; }
+  var linjer = SKAB.linjer.filter(function(l){ return l.valgt; }).map(function(l){
+    var r={antal:l.antal};
+    if(l.slags==='eq') r.equipment_id=l.id; else r.package_id=l.id;
+    return r;
+  });
+  if(!linjer.length && !confirm('Skabelonen "'+navn+'" indeholder ingenting.\n\n'
+    + 'Lægger man den på et OB-job, frigives alt udstyr. Gem alligevel?')) return;
+  knap.disabled=true; knap.textContent='Gemmer...';
+  try{
+    var r = await supa.rpc('ep_ob_gem_skabelon', {
+      p_id:SKAB.id, p_vogn:SKAB.vognId, p_navn:navn,
+      p_linjer:linjer, p_hvem:mineInitialer()||''});
+    if(r.error) throw r.error;
+    await Promise.all([loadObSkabeloner(), loadObSkabelonLinjer()]);
+    skabVaelgEn(Array.isArray(r.data)?r.data[0]:r.data);
+    /* Skabelonvælgeren i bookingvinduet skal kende den nye med det
+       samme – ellers skal man lukke og åbne for at se den. */
+    if(OB_KLADDE) renderObUdstyr();
+  }catch(e){ sigFejl(e, 'gemme skabelonen'); }
+  finally{ knap.disabled=false; knap.textContent='Gem skabelon'; }
+});
+
 document.getElementById('obStart').addEventListener('change',renderObConflicts);
 document.getElementById('obEnd').addEventListener('change',renderObConflicts);
 document.getElementById('obCancelBtn').addEventListener('click',function(){document.getElementById('obOverlay').classList.remove('open');});
@@ -7986,10 +8615,47 @@ document.getElementById('obSaveBtn').addEventListener('click', async function(){
   btn.disabled=true; btn.textContent='Gemmer...';
   try{
     var row={ob_vogn_id:currentObVognId,name,who,start_date:start,end_date:end,notes,status};
-    if(editId){var {error}=await supa.from('ob_bookinger').update(row).eq('id',editId);if(error) throw error;}
-    else {var {error}=await supa.from('ob_bookinger').insert(row);if(error) throw error;}
-    await loadObBookinger(); document.getElementById('obOverlay').classList.remove('open'); renderObVogne();
-  }catch(e){console.error(e);sigFejl(e, 'gemme pakken');}
+    var bookingId = editId;
+    if(editId){
+      var {error}=await supa.from('ob_bookinger').update(row).eq('id',editId);
+      if(error) throw error;
+    }else{
+      /* select() så vi får id'et tilbage med det samme: reservationerne
+         skal hænge på bookingen, og uden id'et kunne vi kun gætte
+         hvilken række der lige blev oprettet. */
+      var sv2 = await supa.from('ob_bookinger').insert(row).select();
+      if(sv2.error) throw sv2.error;
+      bookingId = (sv2.data && sv2.data[0] && sv2.data[0].id) || null;
+    }
+
+    /* ── Udstyret på OB-jobbet ───────────────────────────────────
+       Ét kald med hele listen. Fejler det, kommer vi i catch og
+       brugeren får det at vide — det må ikke se ud som om det gik
+       godt, for så ville nogen tro, at fire kameraer var frigivet,
+       mens de otte stadig stod reserveret. */
+    if(bookingId && OB_KLADDE){
+      var linjer = obKladdeValgte().map(function(l){
+        var r = {antal:l.antal};
+        if(l.slags==='eq') r.equipment_id = l.id; else r.package_id = l.id;
+        if(OB_KLADDE.skabelonNavn) r.skabelon_navn = OB_KLADDE.skabelonNavn;
+        return r;
+      });
+      var rs = await supa.rpc('ep_ob_saet_udstyr',
+        {p_booking:bookingId, p_linjer:linjer, p_hvem:mineInitialer()||''});
+      if(rs.error) throw rs.error;
+    }
+
+    /* Hent den autoritative tilstand igen – både bookingen og
+       reservationerne. Det, der står på skærmen bagefter, er det,
+       serveren har, ikke det vi sendte. */
+    await Promise.all([loadObBookinger(), loadObJobUdstyr()]);
+    OB_KLADDE = null;
+    document.getElementById('obOverlay').classList.remove('open');
+    renderObVogne();
+    /* Jobkortene kan have skiftet mærke: frigiver man et kamera her,
+       forsvinder en overbooking et andet sted. */
+    if(typeof renderJobs==='function') renderJobs();
+  }catch(e){console.error(e);sigFejl(e, 'gemme OB-bookingen');}
   finally{btn.disabled=false;btn.textContent='Gem booking';}
 });
 
@@ -11091,7 +11757,12 @@ async function startProgram(){
   initFilterDates();
   document.getElementById('availStart').value=todayStr();
   try{
-    await Promise.all([loadCategories(),loadObVogne(),loadObBookinger(),loadPackages(),loadEquipment(),loadRepairs(),loadIndleje()]);
+    await Promise.all([loadCategories(),loadObVogne(),loadObBookinger(),loadPackages(),loadEquipment(),loadRepairs(),loadIndleje(),
+      /* Reservationerne SKAL med i opstarten og ikke kun når nogen
+         åbner OB-fanen: det er dem, der afgør om et almindeligt job
+         har en konflikt. Hentes de for sent, viser jobbene forkert
+         ledighed, indtil man tilfældigvis klikker på OB Vogne. */
+      loadObJobUdstyr(),loadObSkabeloner(),loadObSkabelonLinjer()]);
   }catch(e){ console.warn('Init load fejl:',e); }
   try{ await loadJobs(); }catch(e){ console.error('loadJobs fejlede:',e); }
   renderJobs();
@@ -11220,7 +11891,10 @@ async function startProgram(){
   window.opdatering = lavGentager('Opdatering', async function(){
     /* Indlejen skal med i hver opdatering: den afgør om et underskud er
        dækket, og retter en kollega den, skal mærket her skifte med. */
-    await Promise.all([loadJobs(), loadObBookinger(), loadIndleje()]);
+    await Promise.all([loadJobs(), loadObBookinger(), loadIndleje(),
+        /* Frigiver en kollega et kamera fra et OB-job, skal mærkerne
+           her skifte med – derfor med i hver opdatering. */
+        loadObJobUdstyr()]);
     /* Mobilen og skrivebordet deler den samme hentning – kun tegningen er
        forskellig. Før hentede de hver for sig, altså to gange det samme. */
     if(document.body.classList.contains('show-mobile')){
