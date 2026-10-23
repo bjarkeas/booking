@@ -3459,7 +3459,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_d2b4pWi-2jTYIeCAAUAQcA_0ygShdrH';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.22-c';
+const EP_VERSION = '2026.10.23-a';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -4674,7 +4674,19 @@ let detailCustomFields = [];
 let currentObVognId = null;
 
 // ── Loaders ──────────────────────────────────────────────────
+/* Bookingens liste over vognens indhold huskes i obVognensUdstyr. Den
+   huskede på ANTALLET af udstyrs- og pakkelinjer, og det ændrer sig
+   ikke, når man flytter noget fra én vogn til en anden eller sætter en
+   vogn på en pakke. Så blev den gamle liste ved med at komme tilbage,
+   og det flyttede kunne ikke vælges i bookingen før en genindlæsning.
+
+   Hver eneste ændring i lageret ender med at hente tabellen igen. Så
+   er dét stedet at glemme — ikke en nøgle, der skal gætte sig til om
+   noget har rykket sig. */
+function obGlemVognHusk(){ OB_UDSTYR_HUSK = {n:-1, pr:{}}; }
+
 async function loadEquipment(){
+  obGlemVognHusk();
   try{
     const {data,error} = await supa.from('equipment').select('*').order('category').order('name');
     if(error){ console.error(error); EQUIPMENT=[]; return; }
@@ -4687,6 +4699,7 @@ async function loadEquipment(){
   }catch(e){ console.error(e); EQUIPMENT=[]; }
 }
 async function loadPackages(){
+  obGlemVognHusk();
   try{
     const {data,error} = await supa.from('packages').select('*').order('category').order('name');
     if(error){ console.warn('loadPackages:',error.message); PACKAGES=[]; return; }
@@ -4732,6 +4745,21 @@ async function loadObBookinger(){
    mønster som INDLEJE. */
 let OB_SKABELONER = [], OB_SKABELON_LINJER = [], OB_JOB_UDSTYR = [];
 
+/* ── Den vendte model ─────────────────────────────────────────────
+   OB_JOB_UDSTYR siger hvad en booking RESERVERER. Den betydning har
+   ét hul: udstyr, der kommer i vognen efter bookingen er lavet, står
+   ikke på listen, og er derfor frit på bookingen. Et importeret lager
+   var frit på alle bookinger, uden at nogen kunne se det.
+
+   OB_JOB_FRIGIVET siger i stedet hvad en booking har FRIGIVET. Ingen
+   række = reserveret, også for det der kommer til bagefter. "Tag alt,
+   indtil jeg vælger noget fra."
+
+   Den gamle tabel bliver skrevet med det modsatte af databasen, så en
+   tilbagerulning til den gamle udgave af programmet stadig viser det
+   rigtige. Den læses bare ikke længere her. */
+let OB_JOB_FRIGIVET = [], OB_FRIGIVET_TABEL = false;
+
 async function loadObSkabeloner(){
   try{
     const {data,error} = await supa.from('ob_skabeloner')
@@ -4754,16 +4782,55 @@ async function loadObJobUdstyr(){
     OB_JOB_UDSTYR = data||[];
   }catch(e){ console.warn(e); OB_JOB_UDSTYR=[]; }
 }
-/* Er tabellen slet ikke oprettet endnu, må programmet ikke pludselig
-   frigive alt udstyr i alle vogne. Så skal det opføre sig som før:
-   vognens indhold er optaget. Den her siger hvilken af de to verdener
-   vi er i, og den spørges ét sted – i iVogneFor(). */
+async function loadObJobFrigivet(){
+  try{
+    const {data,error} = await supa.from('ob_job_frigivet').select('*');
+    if(error){
+      /* Tabellen findes ikke endnu. Så er SQL'en ikke kørt, og vi må
+         ikke lade som om alt er reserveret ud fra en tom liste — så
+         falder vi tilbage på den gamle tabel. */
+      console.warn('loadObJobFrigivet:',error.message);
+      OB_JOB_FRIGIVET=[]; OB_FRIGIVET_TABEL=false; return;
+    }
+    OB_JOB_FRIGIVET = data||[]; OB_FRIGIVET_TABEL = true;
+  }catch(e){ console.warn(e); OB_JOB_FRIGIVET=[]; OB_FRIGIVET_TABEL=false; }
+}
+
+/* Hvor mange af den her ting har bookingen frigivet? */
+function obFrigivetAntal(bookingId, id, erPakke){
+  if(!bookingId || !id) return 0;
+  for(var i=0;i<OB_JOB_FRIGIVET.length;i++){
+    var r = OB_JOB_FRIGIVET[i];
+    if(r.booking_id!==bookingId) continue;
+    if(erPakke ? r.package_id===id : r.equipment_id===id) return +r.antal||0;
+  }
+  return 0;
+}
+function obFrigivetFor(bookingId){
+  return OB_JOB_FRIGIVET.filter(function(r){ return r.booking_id===bookingId; });
+}
+
+/* Er hverken den nye eller den gamle tabel oprettet, må programmet
+   ikke pludselig frigive alt udstyr i alle vogne. Så skal det opføre
+   sig som før: vognens indhold er optaget. Den her siger hvilken af
+   verdenerne vi er i, og den spørges ét sted – i iVogneFor(). */
 function obReservationerFindes(){
+  if(OB_FRIGIVET_TABEL) return true;
   return Array.isArray(OB_JOB_UDSTYR) && OB_JOB_UDSTYR.length > 0;
 }
 /* Hvad reserverer ÉN booking af ét stykke udstyr? */
 function obReserveret(bookingId, equipmentId){
   if(!bookingId || !equipmentId) return 0;
+  if(OB_FRIGIVET_TABEL){
+    /* Vendt model: alt i vognen er reserveret, minus det frigivne. */
+    var b = OB_BOOKINGER.find(function(x){ return x.id===bookingId; });
+    if(!b) return 0;
+    var eq = EQUIPMENT.find(function(e){ return e.id===equipmentId; });
+    if(!eq) return 0;
+    var iVognen = antalPaaVogn(eq, b.ob_vogn_id);
+    if(iVognen <= 0) return 0;
+    return Math.max(0, iVognen - obFrigivetAntal(bookingId, equipmentId, false));
+  }
   for(var i=0;i<OB_JOB_UDSTYR.length;i++){
     var r = OB_JOB_UDSTYR[i];
     if(r.booking_id===bookingId && r.equipment_id===equipmentId) return +r.antal||0;
@@ -4775,6 +4842,16 @@ function obReserveret(bookingId, equipmentId){
    enten på et stykke udstyr ELLER på en pakke – aldrig begge. */
 function obReserveretPakke(bookingId, packageId){
   if(!bookingId || !packageId) return 0;
+  if(OB_FRIGIVET_TABEL){
+    var b = OB_BOOKINGER.find(function(x){ return x.id===bookingId; });
+    if(!b) return 0;
+    var pk = PACKAGES.find(function(p){ return p.id===packageId; });
+    /* En pakke bor i én vogn ad gangen – den har ikke en fordeling
+       som udstyret. Står den ikke i bookingens vogn, er den ikke med. */
+    if(!pk || pk.ob_vogn_id !== b.ob_vogn_id) return 0;
+    var iVognen = Math.max(+pk.qty||1, 1);
+    return Math.max(0, iVognen - obFrigivetAntal(bookingId, packageId, true));
+  }
   for(var i=0;i<OB_JOB_UDSTYR.length;i++){
     var r = OB_JOB_UDSTYR[i];
     if(r.booking_id===bookingId && r.package_id===packageId) return +r.antal||0;
@@ -5129,7 +5206,7 @@ document.querySelectorAll('nav.tabs button').forEach(function(btn){
          bookingslinje bygger på dem, og skabelonvælgeren i vinduet
          gør det samme. Uden dem ville fanen vise, at ingenting er
          frigivet, indtil noget andet tilfældigvis hentede dem. */
-      Promise.all([loadObVogne(),loadObBookinger(),loadObJobUdstyr(),
+      Promise.all([loadObVogne(),loadObBookinger(),loadObJobUdstyr(),loadObJobFrigivet(),
                    loadObSkabeloner(),loadObSkabelonLinjer()]).then(function(){
         try{ renderObVogne(); }
         catch(e){ console.error('renderObVogne fejl:',e); if(obC) obC.innerHTML='<div class="empty"><div class="big">⚠️</div>Fejl: '+e.message+'<br><small>Tjek F12 Console</small></div>'; }
@@ -6392,12 +6469,30 @@ async function liOpretAlt(){
     var pakkeId = {};
     PACKAGES.forEach(function(p){ if(p.inventory_nr) pakkeId[p.inventory_nr]=p.id;
                                   pakkeId['navn:'+p.name]=p.id; });
+    var pakkeVogn = 0;
     for(var k=0;k<LI_DATA.pakker.length;k++){
       var pn = LI_DATA.pakker[k];
-      if(pakkeId['navn:'+pn]) continue;                       // findes allerede
       var kit = LI_DATA.kit.find(function(x){ return x.navn===pn; });
+      if(pakkeId['navn:'+pn]){
+        /* Pakken findes i forvejen. Det eneste vi retter er OB-vognen, og
+           kun hvis den ikke har nogen — en vogn, nogen har sat med vilje,
+           skal et ark ikke kunne flytte i det stille. */
+        var gl = PACKAGES.find(function(p){ return p.id === pakkeId['navn:'+pn]; });
+        if(kit && kit.vognId && gl && !gl.ob_vogn_id){
+          var svp = await supa.from('packages')
+            .update({ob_vogn_id:kit.vognId}).eq('id', gl.id);
+          if(svp.error) throw svp.error;
+          pakkeVogn++;
+        }
+        continue;
+      }
       var prk = {name:pn, category:(kit?kit.kat:liKategori('', LI_DATA.prefix)), qty:1,
                  notes:'Importeret fra Farmers Wife'};
+      /* Står der en OB-vogn på kassens egen linje, hører kassen til der.
+         Uden dette dukkede den aldrig op på vognen: OB-fanen vælger
+         pakker på pakkens ob_vogn_id, ikke på indholdets. Udstyret inde
+         i kassen kom med, kassen selv blev stående i puljen. */
+      if(kit && kit.vognId){ prk.ob_vogn_id = kit.vognId; pakkeVogn++; }
       if(kit){
         prk.inventory_nr=kit.inv; prk.serial_number=kit.serie||null;
         prk.tv2_number=kit.tv2||null;
@@ -6450,7 +6545,9 @@ async function liOpretAlt(){
     if(typeof renderLager==='function') renderLager();
     document.getElementById('liOverlay').classList.remove('open');
     alert('Lageret er læst ind.\n\n' + nye.length + ' oprettet · ' + ret.length
-      + ' opdateret · ' + LI_DATA.pakker.length + ' pakker.');
+      + ' opdateret · ' + LI_DATA.pakker.length + ' pakker.'
+      + (pakkeVogn ? '\n' + pakkeVogn + (pakkeVogn===1 ? ' pakke' : ' pakker')
+                     + ' er sat på en OB-vogn.' : ''));
   }catch(e){
     sigFejl(e, 'læse lageret ind');
     ud.insertAdjacentHTML('beforeend',
@@ -8315,8 +8412,37 @@ function obVognensUdstyr(vognId){
    man gør bagefter. */
 function obByggKladde(vognId, bookingId){
   var haves = obVognensUdstyr(vognId);
-  var linjer = obLinjerFor(bookingId);
   var erNy = !bookingId;
+
+  if(OB_FRIGIVET_TABEL){
+    /* Vendt model: alt er valgt, undtagen det der står som frigivet.
+       Der er ingen forskel på en ny og en gammel booking længere —
+       begge tager hele vognen, indtil nogen vælger noget fra. Og det
+       gælder også udstyr, der er kommet i vognen siden bookingen. */
+    var frigivne = obFrigivetFor(bookingId);
+    OB_KLADDE = {
+      vognId: vognId,
+      bookingId: bookingId || null,
+      skabelonNavn: (frigivne.length && frigivne[0].skabelon_navn) || '',
+      linjer: haves.map(function(h){
+        var f = 0;
+        for(var i=0;i<frigivne.length;i++){
+          var g = frigivne[i];
+          if(h.slags==='eq'  && g.equipment_id===h.id){ f = Math.max(0,+g.antal||0); break; }
+          if(h.slags==='pkg' && g.package_id  ===h.id){ f = Math.max(0,+g.antal||0); break; }
+        }
+        var rest = Math.max(0, h.maks - f);
+        return {id:h.id, slags:h.slags, navn:h.navn, kat:h.kat, maks:h.maks,
+                /* Er den frigivet helt, står antallet på fuldt – så tager
+                   man hele linjen igen, hvis man sætter fluebenet. */
+                antal: rest > 0 ? rest : h.maks,
+                valgt: rest > 0};
+      })
+    };
+    return;
+  }
+
+  var linjer = obLinjerFor(bookingId);
   OB_KLADDE = {
     vognId: vognId,
     bookingId: bookingId || null,
@@ -8766,21 +8892,40 @@ document.getElementById('obSaveBtn').addEventListener('click', async function(){
        godt, for så ville nogen tro, at fire kameraer var frigivet,
        mens de otte stadig stod reserveret. */
     if(bookingId && OB_KLADDE){
-      var linjer = obKladdeValgte().map(function(l){
-        var r = {antal:l.antal};
-        if(l.slags==='eq') r.equipment_id = l.id; else r.package_id = l.id;
-        if(OB_KLADDE.skabelonNavn) r.skabelon_navn = OB_KLADDE.skabelonNavn;
-        return r;
-      });
-      var rs = await supa.rpc('ep_ob_saet_udstyr',
-        {p_booking:bookingId, p_linjer:linjer, p_hvem:mineInitialer()||''});
-      if(rs.error) throw rs.error;
+      if(OB_FRIGIVET_TABEL){
+        /* Vendt model: vi gemmer det FRIGIVNE, ikke det reserverede.
+           En linje med fuldt antal har ingenting at gemme — ingen
+           række betyder reserveret, og så følger den automatisk med,
+           hvis vognens indhold vokser senere. */
+        var frigivet = [];
+        OB_KLADDE.linjer.forEach(function(l){
+          var f = l.valgt ? Math.max(0, l.maks - (+l.antal||0)) : l.maks;
+          if(f <= 0) return;
+          var r = {antal:f};
+          if(l.slags==='eq') r.equipment_id = l.id; else r.package_id = l.id;
+          if(OB_KLADDE.skabelonNavn) r.skabelon_navn = OB_KLADDE.skabelonNavn;
+          frigivet.push(r);
+        });
+        var rf = await supa.rpc('ep_ob_saet_frigivet',
+          {p_booking:bookingId, p_linjer:frigivet, p_hvem:mineInitialer()||''});
+        if(rf.error) throw rf.error;
+      }else{
+        var linjer = obKladdeValgte().map(function(l){
+          var r = {antal:l.antal};
+          if(l.slags==='eq') r.equipment_id = l.id; else r.package_id = l.id;
+          if(OB_KLADDE.skabelonNavn) r.skabelon_navn = OB_KLADDE.skabelonNavn;
+          return r;
+        });
+        var rs = await supa.rpc('ep_ob_saet_udstyr',
+          {p_booking:bookingId, p_linjer:linjer, p_hvem:mineInitialer()||''});
+        if(rs.error) throw rs.error;
+      }
     }
 
     /* Hent den autoritative tilstand igen – både bookingen og
        reservationerne. Det, der står på skærmen bagefter, er det,
        serveren har, ikke det vi sendte. */
-    await Promise.all([loadObBookinger(), loadObJobUdstyr()]);
+    await Promise.all([loadObBookinger(), loadObJobUdstyr(), loadObJobFrigivet()]);
     OB_KLADDE = null;
     document.getElementById('obOverlay').classList.remove('open');
     renderObVogne();
@@ -11894,7 +12039,7 @@ async function startProgram(){
          åbner OB-fanen: det er dem, der afgør om et almindeligt job
          har en konflikt. Hentes de for sent, viser jobbene forkert
          ledighed, indtil man tilfældigvis klikker på OB Vogne. */
-      loadObJobUdstyr(),loadObSkabeloner(),loadObSkabelonLinjer()]);
+      loadObJobUdstyr(),loadObJobFrigivet(),loadObSkabeloner(),loadObSkabelonLinjer()]);
   }catch(e){ console.warn('Init load fejl:',e); }
   try{ await loadJobs(); }catch(e){ console.error('loadJobs fejlede:',e); }
   renderJobs();
@@ -12045,7 +12190,7 @@ async function startProgram(){
     await Promise.all([loadJobs(), loadObBookinger(), loadIndleje(),
         /* Frigiver en kollega et kamera fra et OB-job, skal mærkerne
            her skifte med – derfor med i hver opdatering. */
-        loadObJobUdstyr()]);
+        loadObJobUdstyr(), loadObJobFrigivet()]);
     /* Mobilen og skrivebordet deler den samme hentning – kun tegningen er
        forskellig. Før hentede de hver for sig, altså to gange det samme. */
     if(document.body.classList.contains('show-mobile')){
