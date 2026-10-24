@@ -1283,6 +1283,54 @@ tr.imp-ingen td:first-child{border-left:2px solid #7a3b3b;padding-left:8px;color
 .ephvem.flere{color:#3fd99c;border-color:#1f5742}
 .ephvem.advarsel{color:#e0a33e;border-color:#6b5418}
 @media print{#cubesked,#fastbesked,#epversion,#epversionM{display:none!important}}
+
+  /* ── I DAG · panel der skubbes ind fra siden ──────────────────── */
+  /* Skyggen er til at SE med, ikke til at klikke paa. Med
+     pointer-events:auto laa den over hele programmet, saa man ikke
+     kunne skifte fane, mens panelet var aabent - og et panel, man
+     kigger i, maa ikke laase siden som et modalvindue. Den er nu
+     svagere og lader alle klik gaa igennem; panelet lukker selv. */
+  #idagSkygge{ position:fixed; inset:0; background:rgba(0,0,0,.28);
+    opacity:0; pointer-events:none; transition:opacity .18s; z-index:1400; }
+  #idagSkygge.open{ opacity:1; }
+  #idagPanel{ position:fixed; top:0; right:0; bottom:0; width:380px;
+    max-width:92vw; background:var(--panel); border-left:1px solid var(--border);
+    transform:translateX(102%); transition:transform .22s ease;
+    z-index:1401; display:flex; flex-direction:column; }
+  #idagPanel.open{ transform:translateX(0); }
+  #idagPanel .idag-top{ display:flex; align-items:center; gap:10px;
+    padding:14px 16px; border-bottom:1px solid var(--border); }
+  #idagPanel .idag-top h2{ margin:0; font-size:15px; letter-spacing:.04em;
+    text-transform:uppercase; font-family:var(--mono); }
+  #idagDato{ font-size:12px; color:var(--muted); }
+  #idagLuk{ margin-left:auto; background:none; border:0; color:var(--muted);
+    font-size:20px; cursor:pointer; line-height:1; padding:2px 6px; }
+  #idagIndhold{ overflow:auto; padding:12px 16px 24px; flex:1; }
+  .idag-vaelg{ margin-bottom:12px; font-size:12px; }
+  .idag-vaelg summary{ cursor:pointer; color:var(--muted); padding:4px 0; }
+  .idag-vaelg > div{ display:flex; flex-direction:column; gap:2px;
+    padding:8px 2px 2px; }
+  /* IKKE en .field: reglen ".field input{width:100%}" ville goere hver
+     fluebenskasse lige saa bred som panelet. Samme faelde som i OB-vinduet. */
+  .idag-vaelg label{ display:flex; align-items:center; gap:8px;
+    padding:4px 2px; cursor:pointer; }
+  .idag-vaelg label input{ width:16px; height:16px; flex:0 0 16px; margin:0; }
+  .idag-blok{ margin-bottom:16px; }
+  .idag-blok-titel{ display:flex; align-items:center; gap:8px;
+    font-family:var(--mono); font-size:10.5px; text-transform:uppercase;
+    letter-spacing:.05em; color:var(--muted); margin-bottom:6px; }
+  .idag-tal{ margin-left:auto; background:var(--panel-2); border-radius:8px;
+    padding:1px 7px; font-weight:700; color:var(--text); }
+  .idag-linje{ background:var(--panel-2); border-radius:8px;
+    padding:8px 10px; margin-bottom:5px; }
+  .idag-tekst{ font-size:13px; font-weight:600; display:flex;
+    align-items:center; gap:7px; }
+  .idag-under{ font-size:11.5px; color:var(--muted); margin-top:2px; }
+  .idag-maerke{ margin-left:auto; font-family:var(--mono); font-size:9.5px;
+    font-weight:700; padding:1px 6px; border-radius:8px;
+    background:rgba(91,134,168,.18); color:var(--muted); }
+  .idag-tom{ font-size:12px; color:var(--muted); padding:4px 2px 8px; }
+  @media (max-width:620px){ #idagPanel{ width:100%; max-width:100%; } }
 </style>
 </head>
 <body>
@@ -1393,6 +1441,7 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
       <span id="miguser" title="Du er logget ind"></span>
       <button id="epversion" onclick="visDiagnose()" title="Version og hvad programmet mener om skærmen"></button>
       <button class="btn secondary" id="logoutBtn" title="Log ud – programmet låses, og data hentes ikke længere">Log ud</button>
+      <button class="btn secondary" id="idagKnap" title="Hvad sker der i dag — vogne ude, pakning i morgen, indleje og værksted">I dag</button>
       <button class="btn" id="newJobBtn" title="Opret et nyt job og vælg udstyr til det">+ Nyt job</button>
     </div>
   </header>
@@ -1812,16 +1861,17 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
     <div id="obConflictBox"></div>
 
     <!-- ── Udstyr på dette OB-job ──────────────────────────────────
-         Markeret = OB-jobbet reserverer det, og så er det optaget i
-         perioden. Ikke markeret = frigivet, og så kan et almindeligt
-         job booke det, selv om det bor i vognen. Det er hele pointen,
-         så det står med rene ord over listen og ikke kun i en manual. -->
+         Alt i vognen er valgt fra start. Fjerner man fluebenet, er
+         udstyret fravalgt — det bliver i vognen, men et almindeligt job
+         kan booke det i perioden. Det er hele pointen, så det står med
+         rene ord over listen og ikke kun i en manual. -->
     <!-- IKKE en .field. Reglen ".field input{width:100%}" gælder ALLE
          input-felter i en .field, også fluebenskasser — og så blev hver
          kasse 632 px bred og skubbede navnet ud til højre. Derfor en
          almindelig div med en overskrift, der ligner et feltnavn. -->
     <div id="obUdstyrField" style="margin-top:14px;margin-bottom:14px;">
       <div class="felt-overskrift">Udstyr på dette OB-job</div>
+      <div style="font-size:11.5px;color:var(--muted);margin:-4px 0 8px;">Alt i vognen er valgt. Fjern fluebenet ved det, jobbet ikke skal bruge — så kan andre booke det i perioden.</div>
       <div id="obUdstyrBox"></div>
     </div>
 
@@ -2150,6 +2200,11 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
 <div class="view-toggle" id="viewToggle"><button id="btnMobileView" onclick="switchToMobile()" title="Mobil">📱</button><button id="btnDesktopView" onclick="switchToDesktop()" title="PC">🖥</button></div>
     <button id="epHvemM" class="ephvem alene" onclick="visHvemErInde()" title="Hvem er inde i programmet">●</button>
     <button id="epversionM" onclick="visDiagnose()" title="Version og hvad programmet mener om skærmen">ⓘ</button>
+    <!-- Samme panel som på computeren. body.show-mobile skjuler hele
+         .app, så skrivebordsknappen kan ikke nås her — uden den her
+         knap ville I DAG være bygget og usynlig på telefonen. -->
+    <button id="idagKnapM" class="btn small secondary" style="padding:8px 12px;"
+      title="Hvad sker der i dag">I dag</button>
     <button class="btn small" id="mobileNewJobBtn" style="padding:8px 14px;">+ Job</button>
   </div>
 
@@ -3459,7 +3514,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_d2b4pWi-2jTYIeCAAUAQcA_0ygShdrH';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.23-a';
+const EP_VERSION = '2026.10.24-a';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -5757,6 +5812,21 @@ function renderEquipList(filter){
   const start=document.getElementById('jobStart').value;
   const end=document.getElementById('jobEnd').value;
 
+  /* Vognmærket. Ét sted, så en pakke og et stykke løst udstyr viser
+     tilknytningen på nøjagtig samme måde — også at vognen er booket i
+     jobbets dage. Før havde kun det løse udstyr mærket, og så kunne man
+     ikke se, at en kamerakasse hørte til Remote 1. */
+  function obMaerke(vognId){
+    if(!vognId) return null;
+    const v=obVognById(vognId);
+    if(!v) return null;
+    const tag=document.createElement('span'); tag.className='ob-tag';
+    const conflict=start&&end?obBookingConflict(v.id,start,end,null):null;
+    tag.style.cssText='background:'+v.color+'22;color:'+v.color+';border:1px solid '+v.color+'44;';
+    tag.textContent=conflict?'🚐 '+v.name+' BOOKET':'🚐 '+v.name;
+    return tag;
+  }
+
   const items=[];
   PACKAGES.forEach(function(pkg){ items.push({type:'pkg',obj:pkg,category:pkg.category,name:pkg.name}); });
   EQUIPMENT.filter(function(e){return !e.package_id;}).forEach(function(e){ items.push({type:'equip',obj:e,category:e.category,name:e.name}); });
@@ -5802,6 +5872,9 @@ function renderEquipList(filter){
     if(item.type==='pkg'){
       const pkg=item.obj;
       const contents=EQUIPMENT.filter(function(e){return e.package_id===pkg.id;});
+      /* Mærket står før navnet, præcis som på en linje med løst udstyr. */
+      const ptag=obMaerke(pkg.ob_vogn_id);
+      if(ptag) row.appendChild(ptag);
       const ni=document.createElement('div'); ni.style.flex='1';
       const ne=document.createElement('div'); ne.className='name'; ne.textContent='📦 '+pkg.name;
       const sub=document.createElement('div'); sub.style.cssText='font-size:10px;color:var(--muted);';
@@ -5810,17 +5883,8 @@ function renderEquipList(filter){
       const sv=document.createElement('div'); sv.className='stock'; sv.textContent='pakke'; row.appendChild(sv);
     } else {
       const equip=item.obj;
-      // OB tag
-      if(equip.ob_vogn_id){
-        const v=obVognById(equip.ob_vogn_id);
-        if(v){
-          const tag=document.createElement('span'); tag.className='ob-tag';
-          const conflict=start&&end?obBookingConflict(v.id,start,end,null):null;
-          tag.style.cssText='background:'+v.color+'22;color:'+v.color+';border:1px solid '+v.color+'44;';
-          tag.textContent=conflict?'🚐 '+v.name+' BOOKET':'🚐 '+v.name;
-          row.appendChild(tag);
-        }
-      }
+      const etag=obMaerke(equip.ob_vogn_id);
+      if(etag) row.appendChild(etag);
       const ne=document.createElement('div'); ne.className='name'; ne.textContent=equip.name; row.appendChild(ne);
       const sv=document.createElement('div'); sv.className='stock'; sv.textContent='af '+equip.qty; row.appendChild(sv);
     }
@@ -8256,17 +8320,26 @@ function renderObVogne(){
       if(obReservationerFindes()){
         var harIVogn = obVognensUdstyr(b.ob_vogn_id);
         if(harIVogn.length){
-          var res = obLinjerFor(b.id);
-          var sumRes = res.reduce(function(t,r){ return t+(+r.antal||0); }, 0);
+          /* Tælleren SKAL regne som resten af programmet.
+             Før summerede den linjerne i ob_job_udstyr direkte, og da
+             modellen blev vendt, skrives den tabel kun når en booking
+             gemmes. Alle urørte bookinger viste derfor "0 af 69",
+             mens de i virkeligheden tog hele vognen.
+             obReserveret() er det ene sted, sandheden bor — og den
+             svarer rigtigt i begge modeller. */
+          var sumValgt = harIVogn.reduce(function(t,h){
+            return t + (h.slags==='eq' ? obReserveret(b.id, h.id)
+                                       : obReserveretPakke(b.id, h.id)); }, 0);
           var sumAlt = harIVogn.reduce(function(t,h){ return t+h.maks; }, 0);
-          if(sumRes < sumAlt){
+          if(sumValgt < sumAlt){
             var m=document.createElement('span');
             m.style.cssText='font-size:9.5px;padding:1px 6px;border-radius:8px;'
               +'font-family:var(--mono);font-weight:700;margin-left:6px;'
               +'background:rgba(91,134,168,.18);color:var(--muted);';
-            m.textContent = sumRes + ' af ' + sumAlt + ' udstyr';
-            m.title = (sumAlt-sumRes) + ' stykker udstyr er frigivet og kan '
-                    + 'bookes på andre job i perioden.';
+            m.textContent = sumValgt + ' af ' + sumAlt + ' valgt';
+            m.title = sumValgt + ' af vognens ' + sumAlt + ' stykker udstyr er '
+                    + 'valgt til denne booking. De ' + (sumAlt-sumValgt)
+                    + ', der er fravalgt, kan bookes på andre job i perioden.';
             left.appendChild(m);
           }
         }
@@ -8507,8 +8580,8 @@ function renderObUdstyr(){
      + skabeloner.map(function(s){
          return '<option value="'+escapeHtml(s.id)+'">'+escapeHtml(s.navn)+'</option>'; }).join('')
      + '</select>';
-  h += '<button type="button" class="btn small secondary" id="obTagHele">Tag hele vognen</button>';
-  h += '<button type="button" class="btn small secondary" id="obRydAlle">Frigiv alt</button>';
+  h += '<button type="button" class="btn small secondary" id="obTagHele">Vælg alt</button>';
+  h += '<button type="button" class="btn small secondary" id="obRydAlle">Fravælg alt</button>';
   h += '<button type="button" class="btn small secondary" id="obSkabAdm" '
      + 'title="Opret og ret skabeloner for '+escapeHtml(vogn?vogn.name:'vognen')+'">⚙ Skabeloner</button>';
   h += '</div>';
@@ -8516,7 +8589,7 @@ function renderObUdstyr(){
   var sumValgt = valgte.reduce(function(s,l){ return s+l.antal; }, 0);
   var sumAlle  = alle.reduce(function(s,l){ return s+l.maks; }, 0);
   h += '<div id="obUdstyrTael" style="font-size:12px;color:var(--muted);margin-bottom:6px;">'
-     + '<strong>'+sumValgt+'</strong> af '+sumAlle+' stykker udstyr reserveret'
+     + '<strong>'+sumValgt+'</strong> af '+sumAlle+' stykker udstyr valgt'
      + (OB_KLADDE.skabelonNavn
         ? ' · fra skabelonen "'+escapeHtml(OB_KLADDE.skabelonNavn)+'"' : '')
      + '</div>';
@@ -8616,7 +8689,7 @@ function renderObUdstyr(){
   });
   var ra = document.getElementById('obRydAlle');
   if(ra) ra.addEventListener('click', function(){
-    if(!confirm('Frigiv alt udstyr på dette OB-job?\\n\\n'
+    if(!confirm('Fravælg alt udstyr på dette OB-job?\\n\\n'
       + 'Udstyret bliver i vognen, men kan bookes på andre job i perioden.')) return;
     OB_KLADDE.linjer.forEach(function(l){ l.valgt=false; });
     OB_KLADDE.skabelonNavn=''; renderObUdstyr();
@@ -8842,7 +8915,7 @@ document.getElementById('skabGem').addEventListener('click', async function(){
     return r;
   });
   if(!linjer.length && !confirm('Skabelonen "'+navn+'" indeholder ingenting.\n\n'
-    + 'Lægger man den på et OB-job, frigives alt udstyr. Gem alligevel?')) return;
+    + 'Lægger man den på et OB-job, bliver alt udstyr fravalgt. Gem alligevel?')) return;
   knap.disabled=true; knap.textContent='Gemmer...';
   try{
     var r = await supa.rpc('ep_ob_gem_skabelon', {
@@ -10921,11 +10994,29 @@ function renderMobileOb(q){
         var brow = document.createElement('div'); brow.className='m-ob-booking';
         brow.innerHTML = '<div><div style="font-weight:600;font-size:13px;">'+(isTilbud?'<span style="background:#5c4521;color:var(--amber);font-size:8px;padding:1px 4px;border-radius:3px;font-weight:700;margin-right:4px;">TILBUD</span>':'')+escapeHtml(b.name)+'</div><div style="font-size:11px;color:var(--muted);">'+fmtDate(b.start_date)+' → '+fmtDate(b.end_date)+'</div></div>'
           +'<button class="btn small secondary" style="font-size:11px;padding:6px 10px;">Rediger</button>';
-        brow.querySelector('button').addEventListener('click', function(){ openObModal(vogn.id, b); });
+        brow.querySelector('button').addEventListener('click', function(e){
+          e.stopPropagation(); openObModal(vogn.id, b); });
+        /* Hele linjen åbner bookingen, som på computeren. Man rammer
+           sjældent en lille knap med en tommelfinger i en vogn. */
+        brow.style.cursor='pointer';
+        brow.addEventListener('click', function(e){
+          if(e.target.closest('button')) return;
+          openObModal(vogn.id, b);
+        });
         body.appendChild(brow);
       });
     }
-    body.innerHTML += '<button class="btn small" style="width:100%;margin-top:10px;padding:12px;" onclick="openObModal(\''+vogn.id+'\',null)">+ Book '+escapeHtml(vogn.name)+'</button>';
+    /* ⚠ IKKE innerHTML += her.
+       Det river alle childnodes ned og bygger dem op igen fra tekst —
+       og så er hver eneste addEventListener ovenfor væk. Det var
+       grunden til, at "Rediger" var død på telefonen, mens "+ Book"
+       virkede: den sad i markuppen som onclick og overlevede. */
+    var bNy=document.createElement('button');
+    bNy.className='btn small';
+    bNy.style.cssText='width:100%;margin-top:10px;padding:12px;';
+    bNy.textContent='+ Book '+vogn.name;
+    (function(v){ bNy.addEventListener('click', function(){ openObModal(v.id, null); }); })(vogn);
+    body.appendChild(bNy);
     card.appendChild(body);
 
     head.addEventListener('click', function(){
@@ -11666,6 +11757,264 @@ async function loadRepairs(){
   }catch(e){ console.warn(e); REPAIRS=[]; }
 }
 
+/* ══ I DAG · ÉT datalag, tre visninger ════════════════════════════
+   Returnerer RENE data. Ingen DOM, ingen farver, ingen HTML.
+
+   Det er med vilje: sidepanelet er den første forbruger, men en
+   infoskærm på lageret og en mobilside skal kunne bruge nøjagtig den
+   samme funktion, uden at datagrundlaget skal bygges om. Derfor er
+   svaret en liste af blokke med linjer, og hver linje har de samme
+   felter, uanset hvad den handler om:
+
+     {noegle, tekst, under, maerke, naar}
+
+   Den, der tegner, bestemmer hvordan det ser ud. Den, der henter,
+   bestemmer hvad der står. De to ting må ikke blandes sammen igen.
+
+   I_DAG_BLOKKE er listen over hvad der KAN vises, i rækkefølge. En
+   visning kan vælge fra, men ikke finde på nye blokke uden at de står
+   her — så har alle tre visninger det samme at vælge imellem. */
+var I_DAG_BLOKKE = [
+  {id:'ob',        titel:'OB-vogne ude'},
+  {id:'pak',       titel:'Pakkes til i morgen'},
+  {id:'hentes',    titel:'Indleje der skal hentes'},
+  {id:'retur',     titel:'Indleje der skal retur'},
+  {id:'noter',     titel:'Noter på indleje'},
+  {id:'vaerksted', titel:'På værksted'}
+];
+
+/* Dato plus/minus dage. Midt på dagen i UTC, så sommertid ikke kan
+   skubbe svaret en dag. */
+function iDagDage(dato, n){
+  var d = new Date(dato + 'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0,10);
+}
+
+function iDagData(dato){
+  var d       = dato || todayStr();
+  var iMorgen = iDagDage(d, 1);
+  var iGaar   = iDagDage(d, -1);
+  var J       = (typeof jobs    !== 'undefined' && jobs)    ? jobs    : [];
+  var IND     = (typeof INDLEJE !== 'undefined' && INDLEJE) ? INDLEJE : [];
+  var REP     = (typeof REPAIRS !== 'undefined' && REPAIRS) ? REPAIRS : [];
+  var OBB     = (typeof OB_BOOKINGER !== 'undefined' && OB_BOOKINGER) ? OB_BOOKINGER : [];
+  var EQ      = (typeof EQUIPMENT !== 'undefined' && EQUIPMENT) ? EQUIPMENT : [];
+  var blok    = {};
+
+  /* ── OB-vogne ude i dag ──────────────────────────────────────── */
+  blok.ob = OBB
+    .filter(function(b){ return b.start_date <= d && b.end_date >= d; })
+    .map(function(b){
+      var v = (typeof obVognById === 'function') ? obVognById(b.ob_vogn_id) : null;
+      return {noegle:'ob:'+b.id,
+              tekst:(v ? v.name : 'Ukendt vogn'),
+              under:b.name + (b.who ? ' · ' + b.who : ''),
+              maerke:(b.end_date === d ? 'hjem i dag' : 'ude'),
+              naar:b.start_date + ' → ' + b.end_date};
+    })
+    .sort(function(a,b){ return a.tekst < b.tekst ? -1 : (a.tekst > b.tekst ? 1 : 0); });
+
+  /* ── Pakkes til i morgen ─────────────────────────────────────────
+     Både almindelige job og OB-bookinger: det er det samme arbejde
+     på lageret dagen før. */
+  /* ⚠ To former side om side: OB_BOOKINGER er databasens rækker og
+     hedder start_date/end_date. jobs er lavet om af loadJobs() og
+     hedder start/end. Her stod start_date på begge, og så var hele
+     jobdelen tom uden at sige fra. */
+  var pak = J.filter(function(j){ return j.start === iMorgen; })
+    .map(function(j){
+      var n = (j.items||[]).length;
+      var pakket = (j.items||[]).filter(function(i){ return i.pakket; }).length;
+      return {noegle:'job:'+j.id, tekst:j.name,
+              under:(j.who || '') + (n ? ' · ' + pakket + ' af ' + n + ' pakket' : ''),
+              maerke:(j.status === 'tilbud' ? 'tilbud' : null),
+              naar:j.start};
+    });
+  OBB.filter(function(b){ return b.start_date === iMorgen; })
+    .forEach(function(b){
+      var v = (typeof obVognById === 'function') ? obVognById(b.ob_vogn_id) : null;
+      pak.push({noegle:'ob:'+b.id,
+                tekst:(v ? v.name + ' · ' : '') + b.name,
+                under:(b.who || ''),
+                maerke:(b.status === 'tilbud' ? 'tilbud' : 'OB'),
+                naar:b.start_date});
+    });
+  blok.pak = pak;
+
+  /* ── Indleje ─────────────────────────────────────────────────────
+     Indlejen har ingen datoer selv — den hænger på et job. Så det,
+     der skal hentes, er indleje til job, der begynder i dag eller i
+     morgen; og det, der skal retur, hørte til job, der sluttede i går
+     eller slutter i dag. */
+  function jobFor(r){ return J.find(function(j){ return j.id === r.job_id; }); }
+  function indlejeLinje(r, j, maerke){
+    return {noegle:'ind:'+r.id,
+            tekst:((+r.qty > 1) ? r.qty + ' × ' : '') + r.equipment_name,
+            under:(r.leverandoer || 'ukendt leverandør')
+                  + (j ? ' · ' + j.name : '')
+                  + (r.bestilt ? '' : ' · IKKE BESTILT'),
+            maerke:maerke,
+            naar:(j ? j.start + ' → ' + j.end : '')};
+  }
+  blok.hentes = []; blok.retur = []; blok.noter = [];
+  IND.forEach(function(r){
+    if(r.fra_lager) return;                 /* vores eget, ikke lejet ind */
+    var j = jobFor(r);
+    if(!j) return;
+    if(j.start === iMorgen)  blok.hentes.push(indlejeLinje(r, j, 'i morgen'));
+    else if(j.start === d)   blok.hentes.push(indlejeLinje(r, j, 'i dag'));
+    if(j.end === d)          blok.retur.push(indlejeLinje(r, j, 'i dag'));
+    else if(j.end === iGaar) blok.retur.push(indlejeLinje(r, j, 'i går'));
+    /* Noter vises for det, der er i gang eller lige om lidt — ikke for
+       alt, hvad der nogensinde har haft en note. */
+    if(String(r.note || '').trim()
+       && j.end >= iGaar && j.start <= iDagDage(d, 7)){
+      blok.noter.push({noegle:'note:'+r.id,
+                       tekst:r.equipment_name,
+                       under:r.note,
+                       maerke:(r.leverandoer || null),
+                       naar:j.start + ' → ' + j.end});
+    }
+  });
+
+  /* ── På værksted ─────────────────────────────────────────────── */
+  blok.vaerksted = REP.filter(function(r){ return r.status === 'fejlmeldt'; })
+    .map(function(r){
+      var e = EQ.find(function(x){ return x.id === r.equipment_id; });
+      return {noegle:'rep:'+r.id,
+              tekst:((e && e.name) || '(slettet udstyr)'),
+              under:(r.description || r.beskrivelse || (e && e.category) || ''),
+              maerke:(r.reported_by || null),
+              naar:(r.reported_date || '')};
+    });
+
+  return {
+    dato:d, iMorgen:iMorgen,
+    blokke:I_DAG_BLOKKE.map(function(b){
+      return {id:b.id, titel:b.titel, linjer:(blok[b.id] || [])};
+    }),
+    ialt:I_DAG_BLOKKE.reduce(function(t,b){ return t + (blok[b.id]||[]).length; }, 0)
+  };
+}
+
+/* ── Hvilke blokke vil brugeren se? ──────────────────────────────
+   Gemmes i browseren, ikke i databasen: det er en personlig
+   indstilling, og den skal ikke følge med over på en anden maskine. */
+var LS_IDAG = 'eastpro:idag-blokke';
+function iDagAlleIder(){ return I_DAG_BLOKKE.map(function(b){ return b.id; }); }
+function iDagValgte(){
+  try{
+    var r = localStorage.getItem(LS_IDAG);
+    if(!r) return iDagAlleIder();
+    var v = JSON.parse(r);
+    return Array.isArray(v) ? v : iDagAlleIder();
+  }catch(e){ return iDagAlleIder(); }
+}
+function iDagSaetValgte(ider){
+  try{ localStorage.setItem(LS_IDAG, JSON.stringify(ider)); }catch(e){}
+}
+
+function renderIDag(){
+  var ind = document.getElementById('idagIndhold');
+  if(!ind) return;
+  var data = iDagData(todayStr());
+  var valgte = iDagValgte();
+
+  var dt = document.getElementById('idagDato');
+  if(dt) dt.textContent = fmtDate(data.dato);
+
+  var h = '<details class="idag-vaelg"' + (IDAG_VAELGER_AABEN ? ' open' : '')
+        + '><summary>Vis blokke</summary><div>';
+  I_DAG_BLOKKE.forEach(function(b){
+    h += '<label><input type="checkbox" data-idagblok="' + escapeHtml(b.id) + '"'
+       + (valgte.indexOf(b.id) >= 0 ? ' checked' : '') + '><span>'
+       + escapeHtml(b.titel) + '</span></label>';
+  });
+  h += '</div></details>';
+
+  var vist = 0;
+  data.blokke.forEach(function(b){
+    if(valgte.indexOf(b.id) < 0) return;
+    vist++;
+    h += '<div class="idag-blok"><div class="idag-blok-titel">'
+       + escapeHtml(b.titel)
+       + '<span class="idag-tal">' + b.linjer.length + '</span></div>';
+    if(!b.linjer.length){
+      h += '<div class="idag-tom">Ingenting</div>';
+    }else{
+      b.linjer.forEach(function(l){
+        h += '<div class="idag-linje">'
+           + '<div class="idag-tekst">' + escapeHtml(l.tekst)
+           + (l.maerke ? '<span class="idag-maerke">' + escapeHtml(l.maerke) + '</span>' : '')
+           + '</div>'
+           + (l.under ? '<div class="idag-under">' + escapeHtml(l.under) + '</div>' : '')
+           + '</div>';
+      });
+    }
+    h += '</div>';
+  });
+  if(!vist) h += '<div class="idag-tom">Ingen blokke valgt.</div>';
+  ind.innerHTML = h;
+
+  /* Vælgeren må ikke klappe sammen, hver gang man sætter et flueben —
+     man vælger som regel flere ad gangen. */
+  var det = ind.querySelector('.idag-vaelg');
+  if(det) det.addEventListener('toggle', function(){ IDAG_VAELGER_AABEN = det.open; });
+  ind.querySelectorAll('[data-idagblok]').forEach(function(c){
+    c.addEventListener('change', function(){
+      IDAG_VAELGER_AABEN = true;
+      iDagSaetValgte([].slice.call(ind.querySelectorAll('[data-idagblok]'))
+        .filter(function(x){ return x.checked; })
+        .map(function(x){ return x.getAttribute('data-idagblok'); }));
+      renderIDag();
+    });
+  });
+}
+var IDAG_VAELGER_AABEN = false;
+
+function aabnIDag(){
+  var p = document.getElementById('idagPanel');
+  if(!p) return;
+  renderIDag();
+  p.classList.add('open');
+  var sk = document.getElementById('idagSkygge');
+  if(sk) sk.classList.add('open');
+}
+function lukIDag(){
+  var p = document.getElementById('idagPanel');
+  if(p) p.classList.remove('open');
+  var sk = document.getElementById('idagSkygge');
+  if(sk) sk.classList.remove('open');
+}
+
+
+/* I DAG-panelet: knappen i topbjælken, krydset, skyggen og Escape. */
+(function(){
+  var k = document.getElementById('idagKnap');
+  if(k) k.addEventListener('click', aabnIDag);
+  var km = document.getElementById('idagKnapM');
+  if(km) km.addEventListener('click', aabnIDag);
+  var l = document.getElementById('idagLuk');
+  if(l) l.addEventListener('click', lukIDag);
+  /* Klik udenfor lukker panelet, men klikket gaar VIDERE til det,
+     man ramte. Trykker man paa en fane, skifter den altsaa fane og
+     lukker panelet i samme bevaegelse. */
+  document.addEventListener('mousedown', function(e){
+    var pnl = document.getElementById('idagPanel');
+    if(!pnl || !pnl.classList.contains('open')) return;
+    if(pnl.contains(e.target)) return;
+    if(e.target.closest && e.target.closest('#idagKnap, #idagKnapM')) return;
+    lukIDag();
+  }, true);
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+      var p = document.getElementById('idagPanel');
+      if(p && p.classList.contains('open')) lukIDag();
+    }
+  });
+})();
+
 function activeRepair(equipId){
   return REPAIRS.find(function(r){ return r.equipment_id===equipId && r.status==='fejlmeldt'; });
 }
@@ -12285,5 +12634,22 @@ async function startProgram(){
 
 
 </script>
+
+<!-- ── I DAG ────────────────────────────────────────────────────────
+     Panelet er den FØRSTE forbruger af iDagData(), ikke den eneste.
+     Infoskærmen på lageret og en mobilside skal bruge den samme
+     funktion — derfor står der ikke ét tal og ingen regel her i
+     markuppen. Alt kommer fra datalaget. -->
+<div id="idagSkygge"></div>
+<aside id="idagPanel" aria-label="I dag">
+  <div class="idag-top">
+    <div>
+      <h2>I dag</h2>
+      <div id="idagDato"></div>
+    </div>
+    <button id="idagLuk" title="Luk">×</button>
+  </div>
+  <div id="idagIndhold"></div>
+</aside>
 </body>
 </html>
