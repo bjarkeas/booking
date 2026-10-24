@@ -3514,7 +3514,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_d2b4pWi-2jTYIeCAAUAQcA_0ygShdrH';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.24-a';
+const EP_VERSION = '2026.10.24-b';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -5076,7 +5076,23 @@ function iVogneFor(vogne, navn, start, slut){
       fandtBooking = true;
       sum += eq ? obReserveret(b.id, eq.id) : obReserveretPakke(b.id, pk.id);
     }
-    if(fandtBooking) return sum;
+    if(fandtBooking){
+      /* ── Loft: vognen har kun det, den har ──────────────────────
+         Summen går hen over ALLE overlappende bookinger på vognen.
+         Da en linje betød "denne booking tager N", gav det mening.
+         Nu tager hver booking hele vognen, og to overlappende
+         bookinger — fx et tilbud oven i en ordre — talte derfor det
+         samme ene rack to gange: "2 fra vognen" ved siden af ×1.
+
+         Et stykke udstyr, der står én gang i vognen, kan ikke køre
+         med to gange. Svaret kan aldrig være større end det, der
+         fysisk står der. */
+      var fysisk = eq
+        ? vogne.reduce(function(t,v){ return t + antalPaaVogn(eq, v); }, 0)
+        : ((pk && vogne.indexOf(pk.ob_vogn_id) >= 0)
+             ? Math.max(+pk.qty || 1, 1) : 0);
+      return Math.min(sum, fysisk);
+    }
   }
 
   /* Den gamle opførsel: hvad står der fysisk i vognene. */
