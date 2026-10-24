@@ -1331,6 +1331,18 @@ tr.imp-ingen td:first-child{border-left:2px solid #7a3b3b;padding-left:8px;color
     background:rgba(91,134,168,.18); color:var(--muted); }
   .idag-tom{ font-size:12px; color:var(--muted); padding:4px 2px 8px; }
   @media (max-width:620px){ #idagPanel{ width:100%; max-width:100%; } }
+  /* Vogn bundet til jobbet, men ikke booket i jobbets dage. */
+  .vogn-ubooket{ background:rgba(214,138,58,.12); border:1px solid rgba(214,138,58,.35);
+    color:var(--amber); border-radius:8px; padding:8px 11px; margin-bottom:8px;
+    font-size:12px; line-height:1.5; display:flex; flex-wrap:wrap;
+    align-items:center; gap:8px; }
+  .vogn-ubooket b{ color:var(--amber); }
+  .vogn-ubooket .btn{ margin-left:auto; }
+  .vogn-ubooket.delvis{ background:rgba(91,134,168,.12);
+    border-color:rgba(91,134,168,.35); color:var(--text); }
+  .vogn-ubooket.delvis b{ color:var(--text); }
+  .vogn-ubooket.delvis .btn:first-of-type{ margin-left:auto; }
+  .vogn-ubooket.delvis .btn+.btn{ margin-left:0; }
 </style>
 </head>
 <body>
@@ -3514,7 +3526,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_d2b4pWi-2jTYIeCAAUAQcA_0ygShdrH';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.24-b';
+const EP_VERSION = '2026.10.24-d';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -8414,15 +8426,20 @@ function renderObVogne(){
 }
 
 // OB Booking modal
-function openObModal(vognId,ob){
+/* forslag: {navn, hvem, start, slut} — bruges når bookingen oprettes
+   ud fra et job, så man ikke skal skrive navn og datoer igen. Den rører
+   kun et NYT vindue; redigerer man en booking, er det bookingens egne
+   værdier der gælder. */
+function openObModal(vognId,ob,forslag){
   currentObVognId=vognId;
   var vogn=obVognById(vognId);
+  var f=forslag||{};
   document.getElementById('obModalTitle').textContent=ob?'Rediger — '+vogn.name:'Ny booking — '+vogn.name;
   document.getElementById('obEditId').value=ob?ob.id:'';
-  document.getElementById('obName').value=ob?ob.name:'';
-  document.getElementById('obWho').value=ob?(ob.who||''):'';
-  document.getElementById('obStart').value=ob?ob.start_date:todayStr();
-  document.getElementById('obEnd').value=ob?ob.end_date:'';
+  document.getElementById('obName').value=ob?ob.name:(f.navn||'');
+  document.getElementById('obWho').value=ob?(ob.who||''):(f.hvem||'');
+  document.getElementById('obStart').value=ob?ob.start_date:(f.start||todayStr());
+  document.getElementById('obEnd').value=ob?ob.end_date:(f.slut||'');
   document.getElementById('obNotes').value=ob?(ob.notes||''):'';
   var st=ob?(ob.status||'ordre'):'ordre';
   document.getElementById('obStatusOrdre').checked=st==='ordre';
@@ -9689,6 +9706,97 @@ function jobVognGlemt(j){
 }
 /* Linjen på jobkortet: hvilke vogne jobbet kører med, og en knap til at
    rette det – uden at man først skal trykke Rediger. */
+/* ══ Er vognen booket i jobbets dage? ═════════════════════════════
+   Binder man et job til REMOTE 3, siger man at produktionen kører med
+   den vogn. Men vognen er først reserveret, når der står en booking på
+   DEN i de dage. Gør der ikke det, kan en kollega booke vognen til
+   noget andet samme dag, og ingen opdager det før vognen skal køre.
+
+   Returnerer én linje pr. bundet vogn:
+     {vognId, navn, farve, status, bookinger, mangler}
+
+   status:
+     'daekket' — bookinger dækker hele jobbets periode. Intet at sige.
+     'delvis'  — der ER booket, men ikke alle jobbets dage.
+     'ingen'   — ingen booking på vognen rører jobbets dage.
+
+   Flere bookinger kan dække i forlængelse af hinanden (11.-13. og
+   14.-15.), og dét skal ikke give en falsk advarsel. Derfor lægges
+   perioderne sammen, før der svares. */
+function jobVognBooking(j){
+  if(!j || !j.start || !j.end) return [];
+  return jobVogne(j).map(function(vognId){
+    var v = obVognById(vognId);
+    var navn = v ? v.name : 'Ukendt vogn';
+
+    var rammer = OB_BOOKINGER.filter(function(b){
+      return b.ob_vogn_id === vognId
+          && b.start_date <= j.end && b.end_date >= j.start;
+    }).sort(function(a,b){ return a.start_date < b.start_date ? -1 : 1; });
+
+    if(!rammer.length){
+      return {vognId:vognId, navn:navn, farve:(v?v.color:null),
+              status:'ingen', bookinger:[], mangler:[{fra:j.start, til:j.end}]};
+    }
+
+    /* Hvilke af jobbets dage er IKKE dækket? Gå perioden igennem og
+       flyt markøren frem forbi hver booking, der rører den. */
+    var huller = [], markoer = j.start;
+    rammer.forEach(function(b){
+      if(b.start_date > markoer){
+        huller.push({fra:markoer, til:iDagDage(b.start_date, -1)});
+      }
+      if(b.end_date >= markoer) markoer = iDagDage(b.end_date, 1);
+    });
+    if(markoer <= j.end) huller.push({fra:markoer, til:j.end});
+
+    return {vognId:vognId, navn:navn, farve:(v?v.color:null),
+            status: huller.length ? 'delvis' : 'daekket',
+            bookinger:rammer, mangler:huller};
+  });
+}
+
+/* Teksten på kortet. Ét sted, så forsiden og mobilen siger det samme. */
+function jobVognBookingHTML(j){
+  var linjer = jobVognBooking(j).filter(function(r){ return r.status !== 'daekket'; });
+  if(!linjer.length) return '';
+  return linjer.map(function(r){
+    var dage = r.mangler.map(function(h){
+      return h.fra === h.til ? fmtDate(h.fra)
+                             : fmtDate(h.fra) + ' → ' + fmtDate(h.til); }).join(', ');
+    if(r.status === 'ingen'){
+      return '<div class="vogn-ubooket">⚠ <b>' + escapeHtml(r.navn) + '</b> er '
+        + 'ikke booket i jobbets dage (' + escapeHtml(dage) + '). '
+        + 'Vognen kan blive booket til noget andet.'
+        + '<button class="btn small" onclick="event.stopPropagation();'
+        + 'bookVognTilJob(\'' + j.id + '\',\'' + r.vognId + '\')">🚐 Book '
+        + escapeHtml(r.navn) + '</button></div>';
+    }
+    var b = r.bookinger[0];
+    return '<div class="vogn-ubooket delvis">⚠ <b>' + escapeHtml(r.navn) + '</b> er '
+      + 'booket ' + escapeHtml(fmtDate(b.start_date) + ' → ' + fmtDate(b.end_date))
+      + ' ("' + escapeHtml(b.name || '') + '"), men jobbet mangler '
+      + escapeHtml(dage) + '. Måske skal datoerne rettes.'
+      + '<button class="btn small secondary" onclick="event.stopPropagation();'
+      + 'aabnVognBooking(\'' + r.vognId + '\',\'' + b.id + '\')">Åbn bookingen</button>'
+      + '<button class="btn small" onclick="event.stopPropagation();'
+      + 'bookVognTilJob(\'' + j.id + '\',\'' + r.vognId + '\')">🚐 Ny booking</button></div>';
+  }).join('');
+}
+
+/* Opret en booking ud fra jobbet: navn, initialer og datoer er allerede
+   skrevet ind, så man kun skal se dem efter og trykke gem. */
+function bookVognTilJob(jobId, vognId){
+  var j = jobs.find(function(x){ return x.id === jobId; });
+  if(!j) return;
+  openObModal(vognId, null, {navn:j.name || '', hvem:j.who || '',
+                             start:j.start, slut:j.end});
+}
+function aabnVognBooking(vognId, bookingId){
+  var b = OB_BOOKINGER.find(function(x){ return x.id === bookingId; });
+  if(b) openObModal(vognId, b);
+}
+
 function jobVogneHTML(j){
   var valgte=jobVogne(j);
   /* Advarslen: står der udstyr fra en booket vogn, og er jobbet ikke bundet
@@ -9705,7 +9813,9 @@ function jobVogneHTML(j){
       + 'bindJobVogn(\''+j.id+'\',\''+glemt.id+'\')">🚐 Bind til '
       + escapeHtml(glemt.navn)+'</button></div>'
     : '';
-  return advarsel+'<div class="job-vogne">'
+  /* Og: er de vogne, jobbet ER bundet til, overhovedet booket i
+     jobbets dage? En bundet vogn uden booking er ikke reserveret. */
+  return advarsel+jobVognBookingHTML(j)+'<div class="job-vogne">'
     + (valgte.length
         ? valgte.map(function(id){ return vognMaerkeHTML(id, "openJobVogne('"+j.id+"')"); }).join('')
         : '<span class="tom">Ingen OB-vogn bundet til jobbet</span>')
@@ -12011,8 +12121,15 @@ function lukIDag(){
   if(k) k.addEventListener('click', aabnIDag);
   var km = document.getElementById('idagKnapM');
   if(km) km.addEventListener('click', aabnIDag);
-  var l = document.getElementById('idagLuk');
-  if(l) l.addEventListener('click', lukIDag);
+  /* ⚠ Krydset kan IKKE bindes her med getElementById.
+     Panelets markup står til sidst i siden, efter dette script, så
+     elementet findes ikke endnu, når linjen her kører — og lytteren
+     blev aldrig sat. Knapperne i toppen virkede, fordi de står før
+     scriptet. Derfor en lytter på document, der spørger hvad man
+     ramte, i stedet for at pege på et element, der ikke er født. */
+  document.addEventListener('click', function(e){
+    if(e.target && e.target.closest && e.target.closest('#idagLuk')) lukIDag();
+  });
   /* Klik udenfor lukker panelet, men klikket gaar VIDERE til det,
      man ramte. Trykker man paa en fane, skifter den altsaa fane og
      lukker panelet i samme bevaegelse. */
