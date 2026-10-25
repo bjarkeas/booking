@@ -1343,6 +1343,152 @@ tr.imp-ingen td:first-child{border-left:2px solid #7a3b3b;padding-left:8px;color
   .vogn-ubooket.delvis b{ color:var(--text); }
   .vogn-ubooket.delvis .btn:first-of-type{ margin-left:auto; }
   .vogn-ubooket.delvis .btn+.btn{ margin-left:0; }
+  /* ══ FORSIDEN ═══════════════════════════════════════════════════
+     Et gitter man selv stiller op. Kortene har en tynd farvestribe
+     foroven i farven på det, de handler om — det er dét, der gør, at
+     man kan finde "vognene" uden at læse overskriften. */
+  .fs-top{ display:flex; align-items:baseline; gap:18px; flex-wrap:wrap;
+    margin:0 0 16px; }
+  .fs-hilsen{ font-size:21px; font-weight:600; letter-spacing:-.01em; }
+  .fs-dato{ font-family:var(--mono); font-size:11.5px; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.1em; }
+  .fs-topknap{ margin-left:auto; display:flex; gap:7px; }
+
+  .fs-gitter{ display:grid; grid-template-columns:repeat(12,1fr); gap:13px;
+    align-items:start; }
+  .fs-kort{ background:var(--panel); border:1px solid var(--border);
+    border-radius:12px; overflow:hidden; position:relative;
+    transition:border-color .12s, transform .12s; min-width:0; }
+  .fs-kort::before{ content:''; position:absolute; inset:0 0 auto 0; height:2px;
+    background:var(--fs-stribe,transparent); }
+  .fs-b3{ grid-column:span 3 } .fs-b4{ grid-column:span 4 }
+  .fs-b6{ grid-column:span 6 } .fs-b8{ grid-column:span 8 }
+  .fs-b12{ grid-column:span 12 }
+  .fs-khoved{ display:flex; align-items:center; gap:8px; padding:11px 14px 8px; }
+  .fs-ktitel{ font-family:var(--mono); font-size:10px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--muted); white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis; }
+  .fs-kkrop{ padding:0 14px 13px; }
+
+  /* Redigering: felterne sidder fast, indtil man beder om andet. Ellers
+     kommer man til at rode sin forside sammen, mens man læser den. */
+  .fs-greb{ display:none; color:var(--muted); font-size:13px; cursor:grab;
+    line-height:1; flex:none; }
+  .fs-vaerktoej{ display:none; gap:3px; margin-left:auto; flex:none; }
+  body.fs-ret .fs-greb, body.fs-ret .fs-vaerktoej{ display:flex; }
+  body.fs-ret .fs-kort{ cursor:grab; }
+  body.fs-ret .fs-kort:hover{ border-color:var(--amber); }
+  .fs-vaerktoej button{ padding:1px 6px; font-size:10px; font-family:var(--mono);
+    border-radius:4px; background:transparent; border:1px solid var(--border);
+    color:var(--text); cursor:pointer; line-height:1.6; }
+  .fs-vaerktoej button:hover{ border-color:var(--muted); }
+  .fs-kort.fs-traekkes{ opacity:.35; transform:scale(.98); }
+  .fs-kort.fs-maal{ border-color:var(--amber); border-style:dashed; }
+
+  .fs-vaelgerkort{ display:none; background:var(--panel);
+    border:1px dashed var(--border); border-radius:12px; padding:13px 15px;
+    margin:0 0 13px; }
+  body.fs-ret .fs-vaelgerkort{ display:block; }
+  .fs-vtitel{ font-family:var(--mono); font-size:10px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--muted); margin-bottom:9px; }
+  .fs-vliste{ display:flex; flex-wrap:wrap; gap:7px; }
+  .fs-vliste button{ font-size:12px; padding:5px 11px; border-radius:7px;
+    background:var(--panel-2); border:1px solid var(--border); color:var(--text);
+    cursor:pointer; }
+  .fs-vliste button:hover{ border-color:var(--muted); }
+  .fs-vliste button[disabled]{ opacity:.35; cursor:default; }
+
+  /* ── Nøgletal ────────────────────────────────────────────────── */
+  .fs-tal{ font-family:var(--mono); font-size:34px; font-weight:600;
+    letter-spacing:-.02em; line-height:1.05; }
+  .fs-tal.ok{ color:var(--green) } .fs-tal.obs{ color:var(--amber) }
+  .fs-tal.fejl{ color:var(--red) }
+  .fs-taldim{ font-size:17px; color:var(--muted); }
+  .fs-talunder{ font-size:12px; color:var(--muted); margin-top:3px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* ── Tidslinjen ──────────────────────────────────────────────── */
+  .fs-tl{ position:relative; }
+  .fs-tl-akse{ display:grid; font-family:var(--mono); font-size:9px;
+    color:var(--muted); border-bottom:1px solid var(--border);
+    padding-bottom:4px; margin-bottom:7px; }
+  .fs-tl-akse span{ text-align:center; }
+  .fs-tl-akse span.weekend{ opacity:.5 }
+  .fs-tl-akse span.idag{ color:var(--amber) }
+  .fs-tl-raekke{ display:flex; align-items:center; margin-bottom:5px;
+    position:relative; }
+  .fs-tl-navn{ flex:none; font-size:12px; padding-right:10px; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis; }
+  .fs-vognprik{ width:7px; height:7px; border-radius:50%; display:inline-block;
+    margin-right:6px; }
+  .fs-tl-spor{ flex:1; position:relative; height:24px; border-radius:6px;
+    background:linear-gradient(90deg,var(--panel-2) 0 1px,transparent 1px);
+    background-size:calc(100%/var(--fsdage)) 100%; }
+  .fs-bjaelke{ position:absolute; top:2px; height:20px; border-radius:5px;
+    font-size:11px; line-height:20px; padding:0 8px; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis; cursor:pointer;
+    border:1px solid transparent; }
+  .fs-bjaelke:hover{ filter:brightness(1.18) }
+  .fs-bjaelke.tilbud{ background-image:repeating-linear-gradient(45deg,
+    rgba(255,255,255,.07) 0 5px, transparent 5px 10px); }
+  .fs-bjaelke.konflikt{ border-color:var(--red);
+    box-shadow:0 0 0 1px var(--red) inset; }
+  .fs-tl-idag{ position:absolute; top:-6px; bottom:0; width:1px;
+    background:var(--amber); opacity:.6; pointer-events:none; z-index:3; }
+  .fs-tl-idag::before{ content:''; position:absolute; top:0; left:-2.5px;
+    width:6px; height:6px; border-radius:50%; background:var(--amber); }
+  .fs-prik{ position:absolute; top:9px; width:7px; height:7px; border-radius:50%;
+    background:var(--amber); border:1px solid var(--panel); z-index:2; }
+  .fs-dagevalg{ display:flex; gap:2px; margin-left:auto; flex:none; }
+  body.fs-ret .fs-dagevalg{ margin-left:10px; }
+  .fs-dagevalg button{ font-family:var(--mono); font-size:9.5px; padding:1px 6px;
+    border-radius:4px; background:transparent; border:1px solid var(--border);
+    color:var(--muted); cursor:pointer; line-height:1.7; }
+  .fs-dagevalg button.paa{ border-color:var(--amber); color:var(--amber); }
+
+  /* ── Linjer ──────────────────────────────────────────────────── */
+  .fs-linje{ display:flex; align-items:baseline; gap:8px; padding:6px 0;
+    border-bottom:1px solid var(--border); }
+  .fs-linje:last-child{ border-bottom:none }
+  .fs-klik{ cursor:pointer; }
+  .fs-klik:hover .fs-tekst{ color:var(--amber) }
+  .fs-tekst{ flex:1; min-width:0; font-size:13px; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis; }
+  .fs-under{ font-size:11px; color:var(--muted); white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis; max-width:48%; flex:none; }
+  .fs-intet{ color:var(--muted); opacity:.6 }
+  .fs-maerke{ font-family:var(--mono); font-size:9px; text-transform:uppercase;
+    letter-spacing:.08em; padding:1px 6px; border-radius:4px; flex:none;
+    background:var(--panel-2); color:var(--muted); }
+  .fs-maerke.nu{ background:var(--amber-dim); color:var(--amber) }
+  .fs-maerke.fejl{ background:#3a1f1d; color:var(--red) }
+  .fs-maerke.obs{ background:var(--amber-dim); color:var(--amber) }
+  .fs-maerke.ok{ background:#1d3028; color:var(--green) }
+  .fs-tom{ color:var(--muted); font-size:12.5px; padding:10px 0; font-style:italic; }
+  .fs-hint{ font-size:11.5px; color:var(--muted); opacity:.75; margin-top:9px;
+    line-height:1.6; }
+
+  /* ── Pakkestatus ─────────────────────────────────────────────── */
+  .fs-pak{ padding:7px 0; border-bottom:1px solid var(--border); }
+  .fs-pak:last-child{ border-bottom:none }
+  .fs-pakhoved{ display:flex; gap:8px; align-items:baseline; font-size:13px; }
+  .fs-pakhoved b{ font-weight:500; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; }
+  .fs-paktal{ margin-left:auto; font-family:var(--mono); font-size:10.5px;
+    color:var(--muted); flex:none; }
+  .fs-bar{ height:5px; border-radius:3px; background:var(--panel-2);
+    margin-top:5px; overflow:hidden; }
+  .fs-bar i{ display:block; height:100%; border-radius:3px; background:var(--green); }
+  .fs-bar i.lav{ background:var(--red) } .fs-bar i.halv{ background:var(--amber) }
+
+  /* På telefonen er der ikke plads til tolv spalter. Alt lægger sig
+     under hinanden i den rækkefølge, man selv har stillet op. */
+  @media(max-width:860px){
+    .fs-b3,.fs-b4,.fs-b6,.fs-b8,.fs-b12{ grid-column:span 12 }
+    .fs-tl-navn{ width:92px !important }
+    .fs-hilsen{ font-size:18px }
+  }
+
 </style>
 </head>
 <body>
@@ -1453,19 +1599,43 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
       <span id="miguser" title="Du er logget ind"></span>
       <button id="epversion" onclick="visDiagnose()" title="Version og hvad programmet mener om skærmen"></button>
       <button class="btn secondary" id="logoutBtn" title="Log ud – programmet låses, og data hentes ikke længere">Log ud</button>
-      <button class="btn secondary" id="idagKnap" title="Hvad sker der i dag — vogne ude, pakning i morgen, indleje og værksted">I dag</button>
+      <button class="btn secondary" id="idagKnap" title="Gå til forsiden — overblik over dagen">I dag</button>
       <button class="btn" id="newJobBtn" title="Opret et nyt job og vælg udstyr til det">+ Nyt job</button>
     </div>
   </header>
 
   <nav class="tabs">
-    <button class="active" data-tab="jobs" title="Produktioner der trækker på puljeudstyret">Produktioner</button>
+    <button class="active" data-tab="forside" title="Overblik over dagen — tal, tidslinjer og det der kræver dig">Forside</button>
+    <button data-tab="jobs" title="Produktioner der trækker på puljeudstyret">Produktioner</button>
     <button data-tab="obvogne" title="Bookinger af OB-vogne">OB Vogne</button>
     <button data-tab="avail" title="Se om bestemt udstyr er ledigt i en periode">Tjek ledighed</button>
     <button data-tab="lager" title="Alt udstyr, pakker og kategorier">Lager</button>
   </nav>
 
-  <div id="tab-jobs">
+  <div id="tab-forside">
+    <div class="fs-top">
+      <div>
+        <div class="fs-hilsen" id="forsideHilsen">Goddag</div>
+        <div class="fs-dato" id="forsideDato"></div>
+      </div>
+      <div class="fs-topknap">
+        <button class="btn small secondary" id="forsideRetBtn"
+          title="Stil forsiden op som du vil have den">&#9998; Ret forsiden</button>
+        <button class="btn small secondary" id="forsideNulstilBtn"
+          title="Sæt forsiden tilbage som den var fra start">Nulstil</button>
+      </div>
+    </div>
+    <div class="fs-vaelgerkort">
+      <div class="fs-vtitel">Tilføj et felt</div>
+      <div class="fs-vliste" id="forsideVaelger"></div>
+      <div class="fs-hint">Træk i et felt for at flytte det &middot; <b>&ndash;</b> og <b>+</b>
+        gør det smallere og bredere &middot; <b>&times;</b> fjerner det.
+        Din opstilling er din egen — kollegaerne har deres.</div>
+    </div>
+    <div class="fs-gitter" id="forsideGitter"></div>
+  </div>
+
+  <div id="tab-jobs" style="display:none;">
     <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:14px; background:var(--panel); border:1px solid var(--border); border-radius:9px; padding:12px 14px;">
       <div class="field" style="margin:0;"><label>Vis jobs fra</label><input type="date" id="filterStart" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;"></div>
       <div class="field" style="margin:0;"><label>til</label><input type="date" id="filterEnd" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:7px; font-size:13px;"></div>
@@ -3526,7 +3696,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_d2b4pWi-2jTYIeCAAUAQcA_0ygShdrH';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.24-d';
+const EP_VERSION = '2026.10.25-a';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -5276,11 +5446,12 @@ document.querySelectorAll('nav.tabs button').forEach(function(btn){
     btn.classList.add('active');
     var tab = btn.dataset.tab;
     try{ localStorage.setItem(LS_FANE, tab); }catch(e){}
-    ['jobs','avail','lager','stats','obvogne'].forEach(function(t){
+    ['forside','jobs','avail','lager','stats','obvogne'].forEach(function(t){
       var el=document.getElementById('tab-'+t); if(el) el.style.display='none';
     });
     var panel=document.getElementById('tab-'+tab);
     if(panel) panel.style.display='block';
+    if(tab==='forside') renderForside();
     if(tab==='lager') Promise.all([loadPackages(),loadEquipment()]).then(function(){ renderLager(document.getElementById('lagerSearch').value||''); });
     if(tab==='obvogne'){
       var obC=document.getElementById('obvogneContent');
@@ -11883,6 +12054,678 @@ async function loadRepairs(){
   }catch(e){ console.warn(e); REPAIRS=[]; }
 }
 
+/* ══ FORSIDEN ═════════════════════════════════════════════════════
+   Det, man ser når programmet åbnes. Før lå "I dag" som et sidepanel:
+   én smal spalte, seks blokke der så fuldstændig ens ud, og ingen tid
+   i billedet. Det der brændte lignede det der var i orden.
+
+   Her er det et gitter, man selv stiller op. Felterne kan trækkes
+   rundt, gøres bredere og smallere, fjernes og hentes ind igen.
+
+   Datalaget er det samme som før: iDagData() returnerer rene data uden
+   HTML, og de nye felter regner videre på det, der allerede er i
+   programmet — jobVognBooking til "job uden vognbooking" og
+   obBookingConflict til dobbeltbookinger. Ikke ny logik ved siden af
+   den gamle: så ville de to kunne blive uenige.
+   ════════════════════════════════════════════════════════════════ */
+
+var FS_BREDDER = [3,4,6,8,12];
+var FS_LS      = 'eastpro:forside';
+var FS_TAB     = 'forside_layout';      // tabellen, hvis den findes
+var FS_RET     = false;                 // står vi i redigeringstilstand?
+var FS_DAGE    = {};                    // dagvindue pr. tidslinjefelt
+var FS_LAYOUT  = null;
+var FS_TABEL   = false;                 // fandtes tabellen?
+
+/* ── Små hjælpere ─────────────────────────────────────────────── */
+var FS_UGEDAG = ['søn','man','tir','ons','tor','fre','lør'];
+function fsUgedag(d){ return FS_UGEDAG[new Date(d+'T12:00:00Z').getUTCDay()]; }
+function fsWeekend(d){ var n=new Date(d+'T12:00:00Z').getUTCDay(); return n===0||n===6; }
+function fsDagNr(d){ return +d.slice(8,10); }
+/* Hele dage mellem to datoer. Midt på dagen i UTC, så sommertid ikke
+   kan skubbe svaret en dag — samme greb som iDagDage. */
+function fsMellem(a,b){
+  return Math.round((new Date(b+'T12:00:00Z') - new Date(a+'T12:00:00Z'))/86400000);
+}
+
+/* ── Hvad forsiden ved ────────────────────────────────────────────
+   Regnes ÉN gang pr. optegning og deles af alle felter. Ellers ville
+   otte felter hver gå hele joblisten igennem. */
+function fsData(){
+  var d       = todayStr();
+  var iMorgen = iDagDage(d, 1);
+  var J   = (typeof jobs !== 'undefined' && jobs) ? jobs : [];
+  var OBB = (typeof OB_BOOKINGER !== 'undefined' && OB_BOOKINGER) ? OB_BOOKINGER : [];
+  var V   = (typeof OB_VOGNE !== 'undefined' && OB_VOGNE) ? OB_VOGNE : [];
+  var IND = (typeof INDLEJE !== 'undefined' && INDLEJE) ? INDLEJE : [];
+
+  var iGang    = J.filter(function(j){ return j.start<=d && j.end>=d; });
+  var starterIMorgen = J.filter(function(j){ return j.start===iMorgen; });
+  var vogneUde = OBB.filter(function(b){ return b.start_date<=d && b.end_date>=d; });
+  var hjemIDag = vogneUde.filter(function(b){ return b.end_date===d; });
+
+  /* ── Det der ikke hænger sammen ────────────────────────────────
+     Tre slags, og de bruger den logik, der allerede er i programmet.
+     Rækkefølgen er efter hvor hurtigt det haster. */
+  var konflikter = [];
+
+  /* 1. En vogn booket to gange samme dage. obBookingConflict svarer på
+        netop det spørgsmål ét sted, så advarslen her og advarslen i
+        bookingvinduet aldrig kan være uenige. */
+  var set = {};
+  OBB.forEach(function(b){
+    if(b.end_date < d) return;                       /* overstået */
+    var k = (typeof obBookingConflict==='function')
+          ? obBookingConflict(b.ob_vogn_id, b.start_date, b.end_date, b.id) : null;
+    if(!k) return;
+    var par = [b.id,k.id].sort().join('|');
+    if(set[par]) return;
+    set[par] = 1;
+    var v = obVognById(b.ob_vogn_id);
+    konflikter.push({haster:0, type:'overlap',
+      tekst:(v?v.name:'Ukendt vogn')+' er booket to gange',
+      under:(b.name||'')+' og '+(k.name||'')+' · '
+            +fmtDate(b.start_date>k.start_date?b.start_date:k.start_date),
+      maerke:'overlap', klasse:'fejl',
+      gaa:{slags:'ob', vogn:b.ob_vogn_id, booking:b.id}});
+  });
+
+  /* 2. Et job bundet til en vogn, der ikke er booket i jobbets dage.
+        jobVognBooking blev bygget til jobkortet; her læses den bare
+        forfra. */
+  if(typeof jobVognBooking === 'function'){
+    J.filter(function(j){ return j.end>=d; }).forEach(function(j){
+      jobVognBooking(j).forEach(function(r){
+        if(r.status==='daekket') return;
+        konflikter.push({haster:(j.start<=iDagDage(d,3)?1:2),
+          type:'vogn',
+          tekst:j.name+' · '+r.navn+(r.status==='ingen'?' er ikke booket':' mangler dage'),
+          under:fmtDate(j.start)+' → '+fmtDate(j.end)+(j.who?' · '+j.who:''),
+          maerke:(r.status==='ingen'?'ingen booking':'delvis'), klasse:'obs',
+          gaa:{slags:'job', job:j.id}});
+      });
+    });
+  }
+
+  /* 3. Indleje der ikke er bestilt, og som skal bruges snart. */
+  IND.forEach(function(r){
+    if(r.fra_lager || r.bestilt) return;
+    var j = J.find(function(x){ return x.id===r.job_id; });
+    if(!j || j.start > iDagDage(d,7) || j.end < d) return;
+    konflikter.push({haster:(j.start<=iMorgen?0:1), type:'indleje',
+      tekst:((+r.qty>1?r.qty+' × ':'')+r.equipment_name)+' er ikke bestilt',
+      under:(r.leverandoer||'ukendt leverandør')+' · '+j.name+' · '+fmtDate(j.start),
+      maerke:'ikke bestilt', klasse:'fejl',
+      gaa:{slags:'job', job:j.id}});
+  });
+  konflikter.sort(function(a,b){ return a.haster-b.haster; });
+
+  /* ── Pakkestatus ───────────────────────────────────────────────
+     Kun det, der faktisk skal pakkes: job der er i gang eller starter
+     inden for en uge, og som mangler noget. Er alt pakket, er der
+     ingenting at vise — og så skal feltet sige dét, ikke stå med en
+     fuld bjælke pr. job. */
+  var pak = J.filter(function(j){
+      return j.end>=d && j.start<=iDagDage(d,7) && (j.items||[]).length;
+    }).map(function(j){
+      var n = (j.items||[]).length;
+      var p = (j.items||[]).filter(function(i){ return i.pakket; }).length;
+      return {id:j.id, navn:j.name, hvem:j.who||'', pakket:p, ialt:n,
+              pct:Math.round(p/n*100), start:j.start};
+    }).filter(function(x){ return x.pakket < x.ialt; })
+      .sort(function(a,b){ return a.start<b.start?-1:(a.start>b.start?1:0); });
+
+  /* ── De næste syv dage ─────────────────────────────────────────── */
+  var agenda = [];
+  for(var i=0;i<7;i++){
+    var dag2 = iDagDage(d,i);
+    agenda.push({dato:dag2,
+      jobs:J.filter(function(j){ return j.start<=dag2 && j.end>=dag2; }),
+      starter:J.filter(function(j){ return j.start===dag2; }).length,
+      vogne:OBB.filter(function(b){ return b.start_date<=dag2 && b.end_date>=dag2; }).length});
+  }
+
+  /* ── Senest rettet ─────────────────────────────────────────────
+     Felterne ligger der allerede på jobbene; de har bare aldrig været
+     vist noget sted. */
+  var senest = J.filter(function(j){ return j.updated_at; })
+    .sort(function(a,b){ return a.updated_at<b.updated_at?1:-1; })
+    .slice(0,6)
+    .map(function(j){ return {navn:j.name, hvem:j.updated_by||'', naar:j.updated_at}; });
+
+  return {dato:d, iMorgen:iMorgen,
+          jobs:J, bookinger:OBB, vogne:V,
+          iGang:iGang, starterIMorgen:starterIMorgen,
+          vogneUde:vogneUde, hjemIDag:hjemIDag,
+          konflikter:konflikter, pak:pak, agenda:agenda, senest:senest,
+          idag:iDagData(d)};
+}
+
+/* ── Tidslinjen ───────────────────────────────────────────────────
+   Én maskine til begge linjer. Bjælkerne ligger i procent af vinduet,
+   så den kan være lige så bred, som feltet er — og feltet kan være alt
+   fra en tredjedel til hele siden.
+
+   Vinduet begynder to dage før i dag. Man skal kunne se, hvad der lige
+   er sket, uden at bladre tilbage. */
+function fsTidslinje(raekker, o){
+  o = o || {};
+  var dage  = o.dage || 14;
+  var start = iDagDage(todayStr(), -2);
+  var navn  = o.navn || 110;
+  var idag  = todayStr();
+  var pct   = function(n){ return (n/dage*100); };
+
+  var h = '<div class="fs-tl">';
+  /* i-dag-stregen ligger over det hele, midt i dagens søjle */
+  var iIdag = fsMellem(start, idag);
+  h += '<div class="fs-tl-idag" style="left:calc('+navn+'px + (100% - '+navn+'px) * '
+     + ((iIdag+0.5)/dage) + ')"></div>';
+
+  h += '<div class="fs-tl-akse" style="padding-left:'+navn+'px;'
+     + 'grid-template-columns:repeat('+dage+',1fr)">';
+  for(var i=0;i<dage;i++){
+    var dd = iDagDage(start,i);
+    h += '<span class="'+(dd===idag?'idag':(fsWeekend(dd)?'weekend':''))+'">'
+       + fsUgedag(dd).charAt(0).toUpperCase()+'<br>'+fsDagNr(dd)+'</span>';
+  }
+  h += '</div>';
+
+  if(!raekker.length){
+    h += '<div class="fs-tom">Ingenting i perioden.</div></div>';
+    return h;
+  }
+
+  raekker.forEach(function(r){
+    /* To bookinger paa samme vogn, der overlapper, laa oven i hinanden:
+       den sidste dakkede den foerste, og saa kunne man ikke se DET, der
+       var hele pointen. Derfor baner: hver bjaelke lagges i den foerste
+       bane, hvor der er plads, og raekken vokser efter behov. */
+    var baner = [];
+    var lagt = (r.bjaelker||[]).map(function(b){
+      var fra = Math.max(0, fsMellem(start, b.fra));
+      var til = Math.min(dage, fsMellem(start, b.til)+1);
+      if(til<=0 || fra>=dage) return null;
+      var bane = 0;
+      while(baner[bane] !== undefined && baner[bane] > fra) bane++;
+      baner[bane] = til;
+      return {b:b, fra:fra, til:til, bane:bane};
+    }).filter(Boolean);
+    var antalBaner = Math.max(1, baner.length);
+    var hoejde = antalBaner===1 ? 20 : 16;
+    var sporH  = antalBaner===1 ? 24 : (antalBaner*(hoejde+2)+4);
+    var bj = lagt.map(function(x){
+      var b = x.b;
+      return '<div class="fs-bjaelke '+(b.klasse||'')+'"'
+        + (b.gaa?' data-fsgaa="'+escapeHtml(JSON.stringify(b.gaa))+'"':'')
+        + ' style="left:'+pct(x.fra)+'%;width:'+pct(x.til-x.fra)+'%;'
+        + 'top:'+(2+x.bane*(hoejde+2))+'px;height:'+hoejde+'px;'
+        + 'line-height:'+hoejde+'px;'
+        + 'background:'+b.farve+'33;color:'+b.farve+';border-color:'+b.farve+'55"'
+        + ' title="'+escapeHtml(b.titel||b.tekst||'')+'">'
+        + escapeHtml(b.tekst||'')+'</div>';
+    }).join('');
+    var pr = (r.prikker||[]).map(function(p){
+      var i2 = fsMellem(start, p.dato);
+      if(i2<0||i2>=dage) return '';
+      return '<span class="fs-prik" style="top:calc(50% - 3.5px);left:calc('+pct(i2)+'% + '
+        + 'calc(100%/'+dage+'/2) - 3.5px)" title="'+escapeHtml(p.titel||'')+'"></span>';
+    }).join('');
+    h += '<div class="fs-tl-raekke">'
+       + '<div class="fs-tl-navn" style="width:'+navn+'px" title="'+escapeHtml(r.navn)+'">'
+       + (r.farve?'<span class="fs-vognprik" style="background:'+r.farve+'"></span>':'')
+       + escapeHtml(r.navn)+'</div>'
+       + '<div class="fs-tl-spor" style="--fsdage:'+dage+';height:'+sporH+'px">'
+         +bj+pr+'</div></div>';
+  });
+  h += '</div>';
+  return h;
+}
+/* Knapperne 7 / 14 / 30 på selve feltet. */
+function fsDageKnapper(id){
+  var nu = FS_DAGE[id] || 14;
+  return '<span class="fs-dagevalg">'
+    + [7,14,30].map(function(n){
+        return '<button data-fsdage="'+id+'|'+n+'" class="'+(n===nu?'paa':'')+'">'+n+'</button>';
+      }).join('')+'</span>';
+}
+
+/* ── Felterne ─────────────────────────────────────────────────────
+   Hvert felt er: en titel, en standardbredde, en farve på stregen
+   foroven, og en funktion der laver indholdet ud fra fsData().
+
+   Vil man have et felt mere, står det her — ét sted. Så får alle tre
+   steder (gitteret, katalogen og den gemte opstilling) det samme at
+   vide om det. */
+var FS_FELTER = {
+
+  /* ── Nøgletal ───────────────────────────────────────────────── */
+  kpi_jobs: {titel:'Job i dag', bred:3, stribe:'var(--green)', tegn:function(D){
+    var n = D.iGang.length;
+    var navne = D.iGang.slice(0,3).map(function(j){ return j.name; }).join(' · ');
+    return '<div class="fs-tal '+(n?'ok':'')+'">'+n+'</div>'
+      + '<div class="fs-talunder">'+(n?escapeHtml(navne)+(D.iGang.length>3?' …':'')
+                                     :'ingen i gang lige nu')+'</div>';
+  }},
+  kpi_pak: {titel:'Pakkes i morgen', bred:3, stribe:'var(--amber)', tegn:function(D){
+    var j = D.starterIMorgen;
+    var mangler = j.reduce(function(t,x){
+      return t + (x.items||[]).filter(function(i){ return !i.pakket; }).length; }, 0);
+    return '<div class="fs-tal '+(mangler?'obs':'ok')+'">'+j.length+'</div>'
+      + '<div class="fs-talunder">'
+      + (j.length ? (mangler ? mangler+(mangler===1?' stykke':' stykker')+' udstyr mangler'
+                              : 'alt er pakket')
+                  : 'ingen job starter i morgen')+'</div>';
+  }},
+  kpi_vogne: {titel:'Vogne ude', bred:3, stribe:'var(--blaa)', tegn:function(D){
+    return '<div class="fs-tal">'+D.vogneUde.length
+      + ' <span class="fs-taldim">af '+D.vogne.length+'</span></div>'
+      + '<div class="fs-talunder">'
+      + (D.hjemIDag.length ? D.hjemIDag.length+' kommer hjem i dag' : 'ingen hjem i dag')
+      + '</div>';
+  }},
+  kpi_obs: {titel:'Kræver dig', bred:3, stribe:'var(--red)', tegn:function(D){
+    var n = D.konflikter.length;
+    var slags = {};
+    D.konflikter.forEach(function(k){ slags[k.type]=(slags[k.type]||0)+1 });
+    var t = [];
+    if(slags.overlap) t.push(slags.overlap+' dobbeltbooking');
+    if(slags.vogn)    t.push(slags.vogn+' uden vognbooking');
+    if(slags.indleje) t.push(slags.indleje+' ubestilt indleje');
+    return '<div class="fs-tal '+(n?'fejl':'ok')+'">'+n+'</div>'
+      + '<div class="fs-talunder">'+(n?escapeHtml(t.join(' · ')):'alt hænger sammen')+'</div>';
+  }},
+
+  /* ── Tidslinjer ─────────────────────────────────────────────── */
+  vogntid: {titel:'Vognene', bred:12, stribe:'var(--blaa)',
+    hoved:function(){ return fsDageKnapper('vogntid'); },
+    tegn:function(D){
+      var dage = FS_DAGE.vogntid || 14;
+      var start = iDagDage(D.dato,-2), slut = iDagDage(start, dage-1);
+      var r = D.vogne.map(function(v){
+        return {navn:v.name, farve:v.color||'#8b8f9c',
+          bjaelker: D.bookinger.filter(function(b){
+              return b.ob_vogn_id===v.id && b.start_date<=slut && b.end_date>=start;
+            }).map(function(b){
+              var k = (typeof obBookingConflict==='function')
+                    ? obBookingConflict(v.id,b.start_date,b.end_date,b.id) : null;
+              return {fra:b.start_date, til:b.end_date, farve:v.color||'#8b8f9c',
+                tekst:b.name||'(uden navn)',
+                titel:(b.name||'')+(b.who?' · '+b.who:'')+' · '
+                      +fmtDate(b.start_date)+' → '+fmtDate(b.end_date)
+                      +(k?' · OVERLAPPER '+(k.name||''):''),
+                klasse:(b.status==='tilbud'?'tilbud ':'')+(k?'konflikt':''),
+                gaa:{slags:'ob', vogn:v.id, booking:b.id}};
+            })};
+      });
+      return fsTidslinje(r,{dage:dage})
+        + '<div class="fs-hint">Skravering = tilbud · rød ramme = vognen er booket '
+        + 'to gange samme dag · klik på en bjælke åbner bookingen</div>';
+    }},
+  jobtid: {titel:'Jobbene', bred:12, stribe:'var(--lilla)',
+    hoved:function(){ return fsDageKnapper('jobtid'); },
+    tegn:function(D){
+      var dage = FS_DAGE.jobtid || 14;
+      var start = iDagDage(D.dato,-2), slut = iDagDage(start, dage-1);
+      var r = D.jobs.filter(function(j){
+          return j.start && j.end && j.start<=slut && j.end>=start;
+        }).sort(function(a,b){ return a.start<b.start?-1:(a.start>b.start?1:0); })
+        .map(function(j){
+          var v = (j.ob_vogne&&j.ob_vogne.length) ? obVognById(j.ob_vogne[0]) : null;
+          var f = v ? (v.color||'#8b8f9c') : '#8b8f9c';
+          return {navn:j.name, farve:f,
+            bjaelker:[{fra:j.start, til:j.end, farve:f,
+              tekst:(j.who||'')+(v?' · '+v.name:' · ingen vogn'),
+              titel:j.name+' · '+fmtDate(j.start)+' → '+fmtDate(j.end),
+              klasse:(j.status==='tilbud'?'tilbud':''),
+              gaa:{slags:'job', job:j.id}}],
+            prikker:((j.items||[]).length?[{dato:iDagDage(j.start,-1),titel:'Pakkes'}]:[])};
+        });
+      return fsTidslinje(r,{dage:dage, navn:170})
+        + '<div class="fs-hint">Farven er vognens · grå = jobbet har ingen vogn · '
+        + 'den lille prik er pakkedagen</div>';
+    }},
+
+  /* ── Det der kræver en beslutning ───────────────────────────── */
+  konflikter: {titel:'Det der ikke hænger sammen', bred:6, stribe:'var(--red)',
+    tegn:function(D){
+      if(!D.konflikter.length)
+        return '<div class="fs-tom">Alting hænger sammen lige nu.</div>';
+      return D.konflikter.slice(0,8).map(function(k){
+        return '<div class="fs-linje'+(k.gaa?' fs-klik':'')+'"'
+          + (k.gaa?' data-fsgaa="'+escapeHtml(JSON.stringify(k.gaa))+'"':'')+'>'
+          + '<span class="fs-tekst">'+escapeHtml(k.tekst)+'</span>'
+          + '<span class="fs-under">'+escapeHtml(k.under)+'</span>'
+          + '<span class="fs-maerke '+k.klasse+'">'+escapeHtml(k.maerke)+'</span></div>';
+      }).join('')
+      + (D.konflikter.length>8
+         ? '<div class="fs-hint">+ '+(D.konflikter.length-8)+' mere</div>' : '');
+    }},
+  pakstatus: {titel:'Pakkestatus', bred:6, stribe:'var(--green)', tegn:function(D){
+    if(!D.pak.length) return '<div class="fs-tom">Der er pakket det, der skal pakkes.</div>';
+    return D.pak.slice(0,8).map(function(p){
+      var kl = p.pct<25?'lav':(p.pct<75?'halv':'');
+      return '<div class="fs-pak fs-klik" data-fsgaa="'
+        + escapeHtml(JSON.stringify({slags:'job',job:p.id}))+'">'
+        + '<div class="fs-pakhoved"><b>'+escapeHtml(p.navn)+'</b>'
+        + '<span class="fs-paktal">'+p.pakket+' af '+p.ialt+'</span></div>'
+        + '<div class="fs-bar"><i class="'+kl+'" style="width:'+p.pct+'%"></i></div></div>';
+    }).join('');
+  }},
+  agenda: {titel:'De næste 7 dage', bred:6, stribe:'var(--muted)', tegn:function(D){
+    return D.agenda.map(function(a,i){
+      var navne = a.jobs.map(function(j){ return escapeHtml(j.name); }).join(' · ');
+      return '<div class="fs-linje">'
+        + '<span class="fs-maerke '+(i===0?'nu':'')+'">'+fsUgedag(a.dato)+' '+fsDagNr(a.dato)+'</span>'
+        + '<span class="fs-tekst">'+(navne||'<span class="fs-intet">—</span>')+'</span>'
+        + (a.vogne?'<span class="fs-under">'+a.vogne+' vogne ude</span>':'')
+        + (a.starter?'<span class="fs-maerke ok">'+a.starter+' starter</span>':'')
+        + '</div>';
+    }).join('');
+  }},
+  senest: {titel:'Senest rettet', bred:4, stribe:'var(--muted)', tegn:function(D){
+    if(!D.senest.length) return '<div class="fs-tom">Ingenting endnu.</div>';
+    return D.senest.map(function(s){
+      var naar = '';
+      try{ naar = new Date(s.naar).toLocaleString('da-DK',
+        {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); }catch(e){}
+      return '<div class="fs-linje"><span class="fs-tekst">'+escapeHtml(s.navn)+'</span>'
+        + '<span class="fs-under">'+escapeHtml(naar)+'</span>'
+        + (s.hvem?'<span class="fs-maerke">'+escapeHtml(s.hvem)+'</span>':'')+'</div>';
+    }).join('');
+  }}
+};
+
+/* De blokke, "I dag" havde i forvejen, bliver felter på samme vilkår
+   som de nye. Samme data, ny opstilling — og så kan man selv vælge,
+   hvilke af dem der skal stå fremme. */
+var FS_IDAG_STRIBE = {ob:'var(--blaa)', pak:'var(--amber)', hentes:'var(--amber)',
+  retur:'var(--green)', noter:'var(--lilla)', vaerksted:'var(--red)'};
+/* FAELDE: det her koerte foer med det samme. Men min kode staar FOER
+   I_DAG_BLOKKE i filen, og en var-erklaering laengere nede er hejst med
+   vaerdien undefined - saa svarede typeof 'undefined', vagten vendte om
+   paa haelen, og de seks gamle blokke blev aldrig til felter. Forsiden
+   viste otte kort i stedet for elleve uden at sige fra.
+   Nu bygges de ved foerste opslag, hvor hele filen er laest. */
+var FS_IDAG_KLAR = false;
+function fsSikreFelter(){
+  if(FS_IDAG_KLAR) return;
+  if(typeof I_DAG_BLOKKE === 'undefined' || !I_DAG_BLOKKE) return;
+  FS_IDAG_KLAR = true;
+  I_DAG_BLOKKE.forEach(function(b){
+    FS_FELTER['idag_'+b.id] = {titel:b.titel, bred:4,
+      stribe:(FS_IDAG_STRIBE[b.id]||'var(--muted)'),
+      tegn:function(D){
+        var blok = D.idag.blokke.find(function(x){ return x.id===b.id; });
+        var l = (blok && blok.linjer) || [];
+        if(!l.length) return '<div class="fs-tom">Ingenting.</div>';
+        return l.slice(0,10).map(function(x){
+          return '<div class="fs-linje"><span class="fs-tekst">'+escapeHtml(x.tekst)+'</span>'
+            + (x.under?'<span class="fs-under">'+escapeHtml(x.under)+'</span>':'')
+            + (x.maerke?'<span class="fs-maerke'
+               +(/ikke bestilt|fejl/i.test(x.maerke)?' fejl':
+                 (/i dag|hjem/i.test(x.maerke)?' nu':''))+'">'
+               +escapeHtml(x.maerke)+'</span>':'')
+            + '</div>';
+        }).join('')
+        + (l.length>10 ? '<div class="fs-hint">+ '+(l.length-10)+' mere</div>' : '');
+      }};
+  });
+}
+
+/* Den opstilling, man møder første gang. Den skal være komplet: en ny
+   kollega åbner programmet og ser en færdig side, ikke et tomt gitter
+   med en opfordring til at bygge den selv. */
+var FS_STANDARD = ['kpi_jobs','kpi_pak','kpi_vogne','kpi_obs',
+                   'vogntid','jobtid','konflikter','pakstatus',
+                   'idag_ob','idag_hentes','idag_vaerksted'];
+function fsStandard(){
+  fsSikreFelter();
+  return FS_STANDARD.filter(function(id){ return FS_FELTER[id]; })
+    .map(function(id){ return {id:id, bred:FS_FELTER[id].bred}; });
+}
+
+/* ── Hvor layoutet bor ────────────────────────────────────────────
+   Hver kollega har sit eget. Det ligger i databasen, så det følger med
+   over på telefonen — og det ligger ALTID også lokalt, så forsiden
+   virker fra første åbning, før tabellen er oprettet, og når nettet er
+   væk. Findes tabellen ikke, siger programmet ikke fra: man har bare
+   sin opstilling på den maskine, man sidder ved. Samme greb som
+   loadIndleje bruger. */
+function fsLaesLokalt(){
+  try{
+    var r = JSON.parse(localStorage.getItem(FS_LS));
+    if(Array.isArray(r) && r.length) return fsRens(r);
+  }catch(e){}
+  return null;
+}
+/* Det, der kommer ind, har vi ikke nødvendigvis skrevet selv: det kan
+   være en ældre udgave af programmet eller en kollegas række. Derfor
+   kontrolleres hvert felt mod katalogen, og ukendte felter smides væk
+   i stedet for at vælte optegningen. */
+function fsRens(liste){
+  fsSikreFelter();
+  var ud = [];
+  (liste||[]).forEach(function(f){
+    if(!f || !FS_FELTER[f.id]) return;
+    if(ud.some(function(x){ return x.id===f.id; })) return;   /* ingen dubletter */
+    var b = FS_BREDDER.indexOf(+f.bred)>=0 ? +f.bred : FS_FELTER[f.id].bred;
+    ud.push({id:f.id, bred:b});
+  });
+  return ud;
+}
+function fsGemLokalt(){
+  try{ localStorage.setItem(FS_LS, JSON.stringify(FS_LAYOUT)); }catch(e){}
+}
+async function fsHentLayout(){
+  FS_LAYOUT = fsLaesLokalt() || fsStandard();
+  try{
+    /* Der spoerges eksplicit efter MIN raekke. Adgangsreglerne giver i
+       forvejen kun ens egen - men programmet skal ikke hvile paa, at
+       ingen nogensinde loesner dem. */
+    var sp = supa.from(FS_TAB).select('layout');
+    if(MIG && MIG.id) sp = sp.eq('bruger_id', MIG.id);
+    const {data,error} = await sp.limit(1);
+    if(error){ FS_TABEL=false; return; }        /* tabellen findes ikke endnu */
+    FS_TABEL = true;
+    if(data && data.length && Array.isArray(data[0].layout) && data[0].layout.length){
+      var r = fsRens(data[0].layout);
+      if(r.length){ FS_LAYOUT = r; fsGemLokalt(); }
+    }
+  }catch(e){ FS_TABEL=false; }
+}
+var fsGemTimer = null;
+function fsGem(){
+  fsGemLokalt();
+  if(!FS_TABEL) return;
+  /* Man flytter sjældent ét felt: man stiller siden op. Derfor skrives
+     der først, når hånden har været stille et øjeblik. */
+  if(!(MIG && MIG.id)) return;      /* uden en bruger er der ingen raekke at skrive */
+  clearTimeout(fsGemTimer);
+  fsGemTimer = setTimeout(async function(){
+    try{
+      await supa.from(FS_TAB).upsert(
+        {bruger_id:MIG.id, layout:FS_LAYOUT, opdateret_at:new Date().toISOString()},
+        {onConflict:'bruger_id'});
+    }catch(e){ console.warn('forside: kunne ikke gemme layout', e); }
+  }, 900);
+}
+
+/* ── Gitteret ─────────────────────────────────────────────────── */
+function renderForside(){
+  fsSikreFelter();
+  var ind = document.getElementById('forsideGitter');
+  if(!ind) return;
+  if(!FS_LAYOUT) FS_LAYOUT = fsLaesLokalt() || fsStandard();
+
+  var D;
+  try{ D = fsData(); }
+  catch(e){ console.error('forside: data', e);
+    ind.innerHTML='<div class="fs-tom">Kunne ikke hente data.</div>'; return; }
+
+  var h = '';
+  FS_LAYOUT.forEach(function(f,i){
+    var F = FS_FELTER[f.id];
+    if(!F) return;
+    var krop;
+    /* Ét felt der fejler må ikke tage hele forsiden med sig. */
+    try{ krop = F.tegn(D); }
+    catch(e){ console.error('forside: felt '+f.id, e);
+      krop = '<div class="fs-tom">Kunne ikke tegnes.</div>'; }
+    h += '<div class="fs-kort fs-b'+f.bred+'" data-fsi="'+i+'"'
+      + ' style="--fs-stribe:'+(F.stribe||'transparent')+'">'
+      + '<div class="fs-khoved"><span class="fs-greb" title="Træk for at flytte">⠿</span>'
+      + '<span class="fs-ktitel">'+escapeHtml(F.titel)+'</span>'
+      + (F.hoved?F.hoved():'')
+      + '<span class="fs-vaerktoej">'
+      + '<button data-fssmal="'+i+'" title="Smallere">–</button>'
+      + '<button data-fsbred="'+i+'" title="Bredere">+</button>'
+      + '<button data-fsvaek="'+i+'" title="Fjern feltet">✕</button></span>'
+      + '</div><div class="fs-kkrop">'+(krop||'<div class="fs-tom">Ingenting.</div>')+'</div></div>';
+  });
+  if(!h) h = '<div class="fs-tom">Ingen felter valgt. Tryk “Ret forsiden” og vælg nogle.</div>';
+  ind.innerHTML = h;
+
+  var d2 = document.getElementById('forsideDato');
+  if(d2) d2.textContent = fmtDate(D.dato);
+  var hil = document.getElementById('forsideHilsen');
+  if(hil) hil.textContent = fsHilsen();
+  fsTegnVaelger();
+  bindForside();
+}
+function fsHilsen(){
+  var t = new Date().getHours();
+  var h = t<10 ? 'God morgen' : (t<17 ? 'Goddag' : 'God aften');
+  var n = (typeof mineInitialer==='function') ? mineInitialer() : '';
+  return n ? h+', '+n : h;
+}
+function fsTegnVaelger(){
+  fsSikreFelter();
+  var el = document.getElementById('forsideVaelger');
+  if(!el) return;
+  var brugt = FS_LAYOUT.map(function(f){ return f.id; });
+  el.innerHTML = Object.keys(FS_FELTER).map(function(id){
+    var paa = brugt.indexOf(id)>=0;
+    return '<button data-fstilfoej="'+escapeHtml(id)+'"'+(paa?' disabled':'')+'>'
+      + (paa?'✓ ':'+ ')+escapeHtml(FS_FELTER[id].titel)+'</button>';
+  }).join('');
+}
+
+/* ── Træk, bredde og knapper ──────────────────────────────────── */
+var fsTraekFra = null;
+function bindForside(){
+  var g = document.getElementById('forsideGitter');
+  if(!g) return;
+
+  g.querySelectorAll('.fs-kort').forEach(function(k){
+    k.draggable = FS_RET;
+    k.ondragstart = function(e){
+      fsTraekFra = +k.dataset.fsi; k.classList.add('fs-traekkes');
+      try{ e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',''); }catch(x){}
+    };
+    k.ondragend = function(){
+      k.classList.remove('fs-traekkes');
+      g.querySelectorAll('.fs-maal').forEach(function(x){ x.classList.remove('fs-maal'); });
+      fsTraekFra = null;
+    };
+    k.ondragover = function(e){
+      if(fsTraekFra===null) return;
+      e.preventDefault();
+      if(+k.dataset.fsi !== fsTraekFra) k.classList.add('fs-maal');
+    };
+    k.ondragleave = function(){ k.classList.remove('fs-maal'); };
+    k.ondrop = function(e){
+      e.preventDefault();
+      var til = +k.dataset.fsi;
+      if(fsTraekFra===null || fsTraekFra===til) return;
+      var f = FS_LAYOUT.splice(fsTraekFra,1)[0];
+      FS_LAYOUT.splice(til,0,f);
+      fsTraekFra = null;
+      fsGem(); renderForside();
+    };
+  });
+
+  function bredde(i, retning){
+    var j = FS_BREDDER.indexOf(FS_LAYOUT[i].bred);
+    if(j<0) j = FS_BREDDER.indexOf(FS_FELTER[FS_LAYOUT[i].id].bred);
+    var ny = Math.max(0, Math.min(FS_BREDDER.length-1, j+retning));
+    FS_LAYOUT[i].bred = FS_BREDDER[ny];
+    fsGem(); renderForside();
+  }
+  g.querySelectorAll('[data-fsbred]').forEach(function(b){
+    b.onclick = function(e){ e.stopPropagation(); bredde(+b.dataset.fsbred, 1); }; });
+  g.querySelectorAll('[data-fssmal]').forEach(function(b){
+    b.onclick = function(e){ e.stopPropagation(); bredde(+b.dataset.fssmal, -1); }; });
+  g.querySelectorAll('[data-fsvaek]').forEach(function(b){
+    b.onclick = function(e){ e.stopPropagation();
+      FS_LAYOUT.splice(+b.dataset.fsvaek,1); fsGem(); renderForside(); }; });
+
+  /* 7 / 14 / 30 dage. Vinduet er en visning, ikke data — det følger
+     ikke med over på telefonen, og det skal det ikke. */
+  g.querySelectorAll('[data-fsdage]').forEach(function(b){
+    b.onclick = function(e){ e.stopPropagation();
+      var d = b.dataset.fsdage.split('|');
+      FS_DAGE[d[0]] = +d[1];
+      renderForside(); }; });
+
+  /* Klik på en bjælke eller en linje går DERHEN. Forsiden er et
+     overblik, ikke en blindgyde. */
+  g.querySelectorAll('[data-fsgaa]').forEach(function(el){
+    el.onclick = function(e){
+      if(FS_RET) return;                 /* man flytter felter, ikke åbner dem */
+      e.stopPropagation();
+      var g2; try{ g2 = JSON.parse(el.dataset.fsgaa); }catch(x){ return }
+      fsGaaTil(g2);
+    };
+  });
+
+  var v = document.getElementById('forsideVaelger');
+  if(v) v.querySelectorAll('[data-fstilfoej]').forEach(function(b){
+    b.onclick = function(){
+      var id = b.dataset.fstilfoej;
+      if(!FS_FELTER[id]) return;
+      FS_LAYOUT.push({id:id, bred:FS_FELTER[id].bred});
+      fsGem(); renderForside();
+    };
+  });
+}
+
+/* ── Derhen ───────────────────────────────────────────────────── */
+function fsGaaTil(g){
+  if(!g) return;
+  if(g.slags==='ob'){
+    if(typeof aabnVognBooking==='function') aabnVognBooking(g.vogn, g.booking);
+    return;
+  }
+  if(g.slags==='job'){
+    var knap = document.querySelector('nav.tabs button[data-tab="jobs"]');
+    if(knap) knap.click();
+    if(typeof aabneJob!=='undefined') aabneJob.add(g.job);
+    if(typeof renderJobs==='function') renderJobs();
+    setTimeout(function(){
+      var kort = document.querySelector('.job-card[data-id="'+g.job+'"]');
+      if(kort) kort.scrollIntoView({behavior:'smooth', block:'center'});
+    }, 80);
+  }
+}
+
+/* ── Redigeringstilstand ──────────────────────────────────────── */
+function fsSaetRet(paa){
+  FS_RET = !!paa;
+  document.body.classList.toggle('fs-ret', FS_RET);
+  var b = document.getElementById('forsideRetBtn');
+  if(b){
+    b.classList.toggle('primary', FS_RET);
+    b.textContent = FS_RET ? '✓ Færdig' : '✎ Ret forsiden';
+  }
+  renderForside();
+}
+function fsNulstil(){
+  if(!confirm('Sæt forsiden tilbage, som den var fra start?\nDin egen opstilling forsvinder.')) return;
+  FS_LAYOUT = fsStandard();
+  fsGem(); renderForside();
+}
+
 /* ══ I DAG · ÉT datalag, tre visninger ════════════════════════════
    Returnerer RENE data. Ingen DOM, ingen farver, ingen HTML.
 
@@ -12100,6 +12943,17 @@ function renderIDag(){
 var IDAG_VAELGER_AABEN = false;
 
 function aabnIDag(){
+  /* "I dag" er blevet til forsiden. Knappen foerer derhen i stedet for
+     at aabne sidepanelet - panelet staar tilbage, fordi telefonen og
+     infoskaermen stadig bruger renderIDag, og fordi det ikke koster
+     noget at lade det ligge. Paa telefonen er der ingen faner at gaa
+     til, saa dér aabner panelet som foer. */
+  var fane = document.querySelector('nav.tabs button[data-tab="forside"]');
+  if(fane && !document.body.classList.contains('show-mobile')){
+    fane.click();
+    window.scrollTo({top:0, behavior:'smooth'});
+    return;
+  }
   var p = document.getElementById('idagPanel');
   if(!p) return;
   renderIDag();
@@ -12525,6 +13379,11 @@ async function startProgram(){
   }catch(e){ console.warn('Init load fejl:',e); }
   try{ await loadJobs(); }catch(e){ console.error('loadJobs fejlede:',e); }
   renderJobs();
+  /* Forsiden er den, man moeder. Layoutet hentes foerst lokalt (saa der
+     er noget at tegne med det samme) og derefter fra databasen, hvis
+     tabellen findes - saa foelger opstillingen med over paa telefonen. */
+  try{ await fsHentLayout(); }catch(e){ console.warn('forside: layout', e); }
+  try{ renderForside(); }catch(e){ console.error('forside:', e); }
   initMobile();
   applyViewPreference();
 
@@ -12540,7 +13399,11 @@ async function startProgram(){
      hånden. Står der noget ukendt, bliver Produktioner stående. */
   try{
     var gemtFane = localStorage.getItem(LS_FANE);
-    if(gemtFane && gemtFane !== 'jobs'){
+    /* Forsiden er den, programmet aabner paa. Har man sidst staaet et
+       andet sted, kommer man derhen - men den gamle standard var
+       'jobs', og den maa ikke traekke forsiden vaek fra en, der aldrig
+       har valgt noget. */
+    if(gemtFane && gemtFane !== 'forside'){
       var knap = document.querySelector('nav.tabs button[data-tab="'+
                    (gemtFane.replace(/[^a-z]/g,'')) +'"]');
       if(knap) knap.click();
@@ -12550,6 +13413,10 @@ async function startProgram(){
   if(u) u.textContent = mineInitialer() || (MIG&&MIG.email ? MIG.email : '');
   const v=document.getElementById('epversion');
   if(v) v.textContent = EP_VERSION;
+  var fsR=document.getElementById('forsideRetBtn');
+  if(fsR) fsR.onclick=function(){ fsSaetRet(!FS_RET); };
+  var fsN=document.getElementById('forsideNulstilBtn');
+  if(fsN) fsN.onclick=fsNulstil;
   const lo=document.getElementById('logoutBtn');
   if(lo) lo.onclick=function(){ if(confirm('Log ud af East Production?')) logUd(); };
 
