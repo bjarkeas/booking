@@ -1343,6 +1343,46 @@ tr.imp-ingen td:first-child{border-left:2px solid #7a3b3b;padding-left:8px;color
   .vogn-ubooket.delvis b{ color:var(--text); }
   .vogn-ubooket.delvis .btn:first-of-type{ margin-left:auto; }
   .vogn-ubooket.delvis .btn+.btn{ margin-left:0; }
+  /* ══ BRUGERE OG ROLLER ══════════════════════════════════════════ */
+  .brg-forklar{ font-size:12.5px; color:var(--muted); line-height:1.65;
+    background:var(--panel); border:1px solid var(--border); border-radius:10px;
+    padding:11px 14px; margin-bottom:14px; }
+  .brg-tabel{ width:100%; border-collapse:collapse; background:var(--panel);
+    border:1px solid var(--border); border-radius:10px; overflow:hidden;
+    font-size:13px; }
+  .brg-tabel th{ text-align:left; font-family:var(--mono); font-size:9.5px;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
+    padding:9px 12px; border-bottom:1px solid var(--border); font-weight:400; }
+  .brg-tabel td{ padding:8px 12px; border-bottom:1px solid var(--border);
+    vertical-align:middle; }
+  .brg-tabel tr:last-child td{ border-bottom:none; }
+  .brg-tabel tr.brg-uden td{ opacity:.72; }
+  .brg-mail{ font-family:var(--mono); font-size:11px; color:var(--muted); }
+  .brg-sidst{ font-family:var(--mono); font-size:11px; color:var(--muted);
+    white-space:nowrap; }
+  .brg-mig{ font-family:var(--mono); font-size:9px; text-transform:uppercase;
+    letter-spacing:.08em; background:var(--amber-dim); color:var(--amber);
+    padding:1px 5px; border-radius:4px; }
+  .brg-init{ width:64px; background:var(--panel-2); border:1px solid var(--border);
+    color:var(--text); padding:4px 7px; border-radius:6px; font-family:var(--mono);
+    font-size:11.5px; text-transform:uppercase; }
+  .brg-tabel select{ background:var(--panel-2); border:1px solid var(--border);
+    color:var(--text); padding:5px 8px; border-radius:6px; font-size:12.5px; }
+  .brg-giver{ display:flex; flex-wrap:wrap; gap:4px; }
+  .brg-ret{ font-family:var(--mono); font-size:9.5px; background:var(--panel-2);
+    color:var(--muted); padding:2px 6px; border-radius:4px; white-space:nowrap; }
+  .brg-intet{ font-size:11.5px; color:var(--muted); font-style:italic; }
+  .brg-roller{ margin-top:18px; }
+  .brg-roller h3{ font-family:var(--mono); font-size:10px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--muted); font-weight:400; margin-bottom:9px; }
+  .brg-rollekort{ background:var(--panel); border:1px solid var(--border);
+    border-radius:10px; padding:11px 14px; margin-bottom:8px; }
+  .brg-rollenavn{ font-size:14px; font-weight:600; margin-bottom:2px; }
+  .brg-rollebesk{ font-size:12px; color:var(--muted); margin-bottom:7px; }
+  @media(max-width:860px){
+    .brg-tabel{ display:block; overflow-x:auto; white-space:nowrap; }
+  }
+
   /* ══ FORSIDEN ═══════════════════════════════════════════════════
      Et gitter man selv stiller op. Kortene har en tynd farvestribe
      foroven i farven på det, de handler om — det er dét, der gør, at
@@ -1610,6 +1650,7 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
     <button data-tab="obvogne" title="Bookinger af OB-vogne">OB Vogne</button>
     <button data-tab="avail" title="Se om bestemt udstyr er ledigt i en periode">Tjek ledighed</button>
     <button data-tab="lager" title="Alt udstyr, pakker og kategorier">Lager</button>
+    <button data-tab="brugere" style="display:none" title="Hvem må se hvad">Brugere</button>
   </nav>
 
   <div id="tab-forside">
@@ -1676,6 +1717,10 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
     </div>
   </div>
 
+
+  <div id="tab-brugere" style="display:none;">
+    <div id="brugereIndhold"></div>
+  </div>
 
   <div id="tab-lager" style="display:none;">
     <div class="panel">
@@ -1937,6 +1982,7 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
       <div class="field"><label>Att. / mail / telefon</label>
         <input type="text" id="indlejKontakt" placeholder="Til printet du sender dem"></div>
     </div>
+    <div id="indlejPrisDel">
     <div class="field"><label>Pris</label>
       <div class="indlej-prisform">
         <label><input type="radio" name="indlejPrisType" value="dag" checked> Dagspris</label>
@@ -1950,6 +1996,7 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
     </div>
     <div class="field" id="indlejFastRaekke" style="display:none;"><label>Aftalt pris i alt</label>
       <input type="number" id="indlejFastpris" min="0" step="0.01" placeholder="0"></div>
+    </div><!-- /indlejPrisDel -->
     <div id="indlejSum" class="indlej-sum"></div>
     <div class="field"><label>Bemærkning (valgfri)</label>
       <input type="text" id="indlejNote" placeholder="f.eks. hentes fredag, retur mandag"></div>
@@ -3696,7 +3743,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_d2b4pWi-2jTYIeCAAUAQcA_0ygShdrH';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.25-a';
+const EP_VERSION = '2026.10.25-b';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -5327,15 +5374,100 @@ function bookedQty(name,start,end,excludeJobId){
    der ganges op, eller én aftalt sum for hele linjen. `pris_type` siger
    hvilken af dem der gælder, så der aldrig står et tal, ingen har aftalt. */
 let INDLEJE = [];
+/* ══ RETTIGHEDER ══════════════════════════════════════════════════
+   Hvem må se hvad. Det rigtige værn står i databasen — her handler
+   det om ikke at vise folk felter, de alligevel ikke kan få fyldt.
+
+   ⚠ Det her er IKKE sikkerheden. Skjuler man bare et felt i
+   programmet, kan enhver indlogget åbne konsollen og hente tallet
+   alligevel. Derfor er priskolonnerne lukket med rettigheder PR.
+   KOLONNE i databasen, og hentes gennem en funktion med en vagt ved.
+   Koden herunder gør kun brugerfladen ærlig.
+
+   Køres SQL'en ikke, opfører programmet sig som før: alle ser alt.
+   Det er med vilje. Uden SQL'en er der heller ingen begrænsning i
+   databasen, og så ville en brugerflade, der lod som om, være en
+   løgn — man ville tro, priserne var skjult. */
+
+var MINE_RETTIGHEDER = null;     // null = vi har ikke spurgt endnu
+var RETTIGHEDER_SAT_OP = false;  // fandtes funktionerne i databasen?
+
+/* Må jeg det her? Før rettighedssystemet er sat op, er svaret ja til
+   alt — ellers ville programmet låse sig selv, fordi noget, der
+   endnu ikke findes, ikke kan svare. */
+function maaJeg(noegle){
+  if(!RETTIGHEDER_SAT_OP) return true;
+  return (MINE_RETTIGHEDER || []).indexOf(noegle) >= 0;
+}
+
+async function hentMineRettigheder(){
+  try{
+    const {data,error} = await supa.rpc('ep_mine_rettigheder');
+    if(error){ RETTIGHEDER_SAT_OP=false; MINE_RETTIGHEDER=null; return; }
+    RETTIGHEDER_SAT_OP = true;
+    MINE_RETTIGHEDER = (data||[]).map(function(r){
+      return (typeof r === 'string') ? r : r.rettighed;
+    }).filter(Boolean);
+  }catch(e){
+    /* Funktionen findes ikke endnu. Ikke en fejl brugeren skal se. */
+    RETTIGHEDER_SAT_OP = false; MINE_RETTIGHEDER = null;
+  }
+}
+
+/* ── Priserne ─────────────────────────────────────────────────────
+   Kolonnerne dagspris og fastpris er lukket i databasen. De hentes
+   derfor for sig, gennem en funktion der spørger om man må.
+
+   To veje, fordi filen skal virke både før og efter SQL'en er kørt:
+   findes funktionen, bruges den; findes den ikke, læses kolonnerne
+   som før. Så er det ligegyldigt, om du lægger programmet ud før
+   eller efter du kører SQL'en. */
+async function hentIndlejePriser(){
+  try{
+    const {data,error} = await supa.rpc('ep_indleje_priser');
+    if(!error && Array.isArray(data)) return data;
+  }catch(e){}
+  if(RETTIGHEDER_SAT_OP) return [];      /* funktionen sagde nej */
+  try{
+    const {data,error} = await supa.from('indleje').select('id,dagspris,fastpris');
+    if(!error && Array.isArray(data)) return data;
+  }catch(e){}
+  return [];
+}
+
+/* Kolonnerne uden beløb. De staar ved navn, fordi select('*') fejler
+   for ALLE, naar en enkelt kolonne er lukket — PostgREST beder om
+   stjernen, og databasen siger nej til hele kaldet. */
+var INDLEJE_KOLONNER =
+  'id,job_id,equipment_name,fra_lager,qty,leverandoer,kontakt,'
+  + 'pris_type,dage,valuta,bestilt,note,oprettet_af,created_at,updated_at';
+
 async function loadIndleje(){
   try{
-    const {data,error} = await supa.from('indleje').select('*').order('created_at');
+    /* Kolonnerne staar ved navn. select('*') ville fejle for ALLE,
+       saa snart én kolonne er lukket: PostgREST beder om stjernen, og
+       databasen siger nej til hele kaldet - ogsaa for dem, der maa se
+       priserne. */
+    const {data,error} = await supa.from('indleje')
+      .select(INDLEJE_KOLONNER).order('created_at');
     if(error){
       /* Tabellen findes ikke endnu – så er der ingen indleje, og alt det
          andet skal stadig virke. Ikke en fejl brugeren skal se. */
       console.warn('loadIndleje:', error.message); INDLEJE=[]; return;
     }
     INDLEJE = data || [];
+    /* Beloebene ligger bag en doer med en vagt ved. Maa man ikke se dem,
+       kommer der ingen raekker - og saa staar dagspris og fastpris slet
+       ikke paa linjen. Det er forskellen paa "skjult" og "ikke der". */
+    try{
+      var priser = await hentIndlejePriser();
+      var efterId = {};
+      priser.forEach(function(p){ efterId[p.id] = p; });
+      INDLEJE.forEach(function(l){
+        var p = efterId[l.id];
+        if(p){ l.dagspris = p.dagspris; l.fastpris = p.fastpris; }
+      });
+    }catch(e){ console.warn('priser:', e); }
   }catch(e){ console.warn(e); INDLEJE=[]; }
 }
 function indlejForJob(jobId){
@@ -5446,12 +5578,17 @@ document.querySelectorAll('nav.tabs button').forEach(function(btn){
     btn.classList.add('active');
     var tab = btn.dataset.tab;
     try{ localStorage.setItem(LS_FANE, tab); }catch(e){}
-    ['forside','jobs','avail','lager','stats','obvogne'].forEach(function(t){
+    ['forside','jobs','avail','lager','stats','obvogne','brugere'].forEach(function(t){
       var el=document.getElementById('tab-'+t); if(el) el.style.display='none';
     });
     var panel=document.getElementById('tab-'+tab);
     if(panel) panel.style.display='block';
     if(tab==='forside') renderForside();
+    if(tab==='brugere'){
+      var bi=document.getElementById('brugereIndhold');
+      if(bi) bi.innerHTML='<div class="loading">Henter brugere...</div>';
+      Promise.all([loadRoller(), loadBrugere()]).then(renderBrugere);
+    }
     if(tab==='lager') Promise.all([loadPackages(),loadEquipment()]).then(function(){ renderLager(document.getElementById('lagerSearch').value||''); });
     if(tab==='obvogne'){
       var obC=document.getElementById('obvogneContent');
@@ -10091,31 +10228,37 @@ function indlejBlokHTML(j){
   var sum = grupper.reduce(function(a,g){ return a+g.sum; }, 0);
   var stk = grupper.reduce(function(a,g){
     return a + g.linjer.reduce(function(b,l){ return b+(l.qty||0); }, 0); }, 0);
+  /* Uden retten til priser staar beloebene slet ikke paa linjen - og
+     de er heller ikke hentet. Det er forskellen paa at skjule et tal og
+     paa ikke at have det. */
+  var maaPris = (typeof maaJeg==='function') ? maaJeg('priser') : true;
   var krop = grupper.map(function(g){
     var linjer = g.linjer.map(function(l){
-      var pris = l.pris_type==='fast'
-        ? kr(l.fastpris) + ' kr. fast'
-        : kr(l.dagspris) + ' kr./dag × ' + (l.dage||1) + ' dag' + ((l.dage||1)===1?'':'e');
+      var pris = !maaPris ? ''
+        : (l.pris_type==='fast'
+            ? kr(l.fastpris) + ' kr. fast'
+            : kr(l.dagspris) + ' kr./dag × ' + (l.dage||1) + ' dag' + ((l.dage||1)===1?'':'e'));
       return '<button class="indlej-linje" title="Ret linjen"'
         + ' onclick="event.stopPropagation();openIndlej(\''+j.id+'\',null,\''+l.id+'\')">'
         + '<span class="il-antal">'+(l.qty||1)+' ×</span>'
         + '<span class="il-navn">'+escapeHtml(l.equipment_name)
         + (l.fra_lager===false?' <em style="color:var(--amber);font-style:normal;">· har vi ikke</em>':'')
         + '</span>'
-        + '<span class="il-pris">'+pris+'</span>'
-        + '<span class="il-pris" style="color:#7fc9e8;font-weight:700;">'+kr(indlejPris(l))+' kr.</span>'
+        + (maaPris ? '<span class="il-pris">'+pris+'</span>'
+             + '<span class="il-pris" style="color:#7fc9e8;font-weight:700;">'
+             + kr(indlejPris(l))+' kr.</span>' : '')
         + '</button>';
     }).join('');
     return '<div class="indlej-lev">'
       + '<div class="indlej-lev-navn"><span>'+escapeHtml(g.navn)
       + (g.bestilt?'':' <span class="indlej-forespurgt">· ikke bestilt endnu</span>')+'</span>'
-      + '<span class="indlej-lev-sum">'+kr(g.sum)+' kr.</span></div>'
+      + (maaPris ? '<span class="indlej-lev-sum">'+kr(g.sum)+' kr.</span>' : '')+'</div>'
       + linjer + '</div>';
   }).join('');
   return '<div class="indlej-blok">'
     + '<div class="indlej-blok-top"><span>🚚 Indleje · '+stk+' stk. hos '
     + grupper.length+' leverandør'+(grupper.length===1?'':'er')+'</span>'
-    + '<span>'+kr(sum)+' kr.</span></div>'
+    + (maaPris ? '<span>'+kr(sum)+' kr.</span>' : '')+'</div>'
     + krop + '</div>';
 }
 
@@ -10183,6 +10326,11 @@ function openIndlej(jobId, navn, lineId, antal){
   document.getElementById('indlejQty').value  = l ? (l.qty||1) : (antal||1);
   document.getElementById('indlejLev').value  = l ? (l.leverandoer||'') : '';
   document.getElementById('indlejKontakt').value = l ? (l.kontakt||'') : '';
+  /* Uden retten til priser staar felterne der slet ikke. At vise dem
+     tomme ville faa det til at ligne, at der ikke VAR en pris. */
+  var prisDel = document.getElementById('indlejPrisDel');
+  if(prisDel) prisDel.style.display =
+    ((typeof maaJeg==='function') && !maaJeg('priser')) ? 'none' : '';
   document.getElementById('indlejDagspris').value = l && l.dagspris!=null ? l.dagspris : '';
   document.getElementById('indlejFastpris').value = l && l.fastpris!=null ? l.fastpris : '';
   document.getElementById('indlejDage').value  = l ? (l.dage||jobDageAntal(j)) : jobDageAntal(j);
@@ -10233,8 +10381,9 @@ async function indlejGem(){
     leverandoer: lev,
     kontakt: (document.getElementById('indlejKontakt').value||'').trim(),
     pris_type: pt,
-    dagspris: pt==='dag' ? (Number(document.getElementById('indlejDagspris').value)||0) : null,
-    fastpris: pt==='fast'? (Number(document.getElementById('indlejFastpris').value)||0) : null,
+    /* dagspris og fastpris staar IKKE her. De er lukkede kolonner og
+       skrives gennem ep_indleje_saet_pris lige nedenfor - ellers ville
+       hele gemningen fejle for en, der ikke maa saette priser. */
     dage: pt==='dag' ? Math.max(1, parseInt(document.getElementById('indlejDage').value,10)||1) : null,
     bestilt: document.getElementById('indlejBestilt').checked,
     note: (document.getElementById('indlejNote').value||'').trim(),
@@ -10243,13 +10392,34 @@ async function indlejGem(){
   var btn=document.getElementById('indlejSaveBtn');
   btn.disabled=true; btn.textContent='Gemmer...';
   try{
+    var gemtId = id;
     if(id){
       var r1 = await supa.from('indleje').update(raekke).eq('id', id);
       if(r1.error) throw r1.error;
     }else{
       raekke.oprettet_af = mineInitialer();
-      var r2 = await supa.from('indleje').insert(raekke);
+      var r2 = await supa.from('indleje').insert(raekke).select('id');
       if(r2.error) throw r2.error;
+      gemtId = (r2.data && r2.data[0] && r2.data[0].id) || null;
+    }
+    /* Beloebene for sig. Maa man ikke, svarer funktionen nej, og der
+       sker ingenting - uden at resten af gemningen gaar tabt. */
+    if(gemtId && maaJeg('priser')){
+      var dag  = pt==='dag'  ? (Number(document.getElementById('indlejDagspris').value)||0) : null;
+      var fast = pt==='fast' ? (Number(document.getElementById('indlejFastpris').value)||0) : null;
+      try{
+        var rp = await supa.rpc('ep_indleje_saet_pris',
+          {p_id:gemtId, p_dagspris:dag, p_fastpris:fast});
+        if(rp.error && !RETTIGHEDER_SAT_OP){
+          /* Funktionen findes ikke endnu - saa skrives beloebene som foer. */
+          await supa.from('indleje').update({dagspris:dag, fastpris:fast}).eq('id', gemtId);
+        }
+      }catch(e){
+        if(!RETTIGHEDER_SAT_OP){
+          try{ await supa.from('indleje')
+                 .update({dagspris:dag, fastpris:fast}).eq('id', gemtId); }catch(x){}
+        }
+      }
     }
     await loadIndleje();
     lukIndlej();
@@ -12054,6 +12224,161 @@ async function loadRepairs(){
   }catch(e){ console.warn(e); REPAIRS=[]; }
 }
 
+
+/* ══ BRUGERE OG ROLLER ════════════════════════════════════════════
+   Siden hvor en administrator giver kollegaerne en rolle.
+
+   Den viser ALLE, der har logget ind — også dem uden rolle. Det er
+   med vilje: en kollega, der lige har fået en konto, skal kunne ses
+   og tildeles noget. Står man kun med dem, der allerede har en
+   rolle, kan man aldrig give den første. */
+
+var BRUGERE = [], ROLLER = [], RETTIGHEDER = [], ROLLE_RET = [];
+
+async function loadRoller(){
+  try{
+    var a = await supa.from('ep_roller').select('*').order('sort');
+    var b = await supa.from('ep_rettigheder').select('*').order('sort');
+    var c = await supa.from('ep_rolle_rettigheder').select('*');
+    ROLLER      = (a.error ? [] : (a.data||[]));
+    RETTIGHEDER = (b.error ? [] : (b.data||[]));
+    ROLLE_RET   = (c.error ? [] : (c.data||[]));
+  }catch(e){ ROLLER=[]; RETTIGHEDER=[]; ROLLE_RET=[]; }
+}
+async function loadBrugere(){
+  try{
+    const {data,error} = await supa.rpc('ep_alle_brugere');
+    BRUGERE = (error || !Array.isArray(data)) ? [] : data;
+  }catch(e){ BRUGERE = []; }
+}
+function rolleGiver(noegle){
+  return ROLLE_RET.filter(function(r){ return r.rolle===noegle; })
+                  .map(function(r){ return r.rettighed; });
+}
+function rettighedNavn(noegle){
+  var r = RETTIGHEDER.find(function(x){ return x.noegle===noegle; });
+  return r ? r.navn : noegle;
+}
+
+async function saetRolle(brugerId, rolle, navn, initialer){
+  try{
+    const {error} = await supa.from('ep_brugere').upsert({
+      bruger_id: brugerId,
+      navn: navn || null,
+      initialer: initialer || null,
+      rolle: rolle || null,
+      aktiv: !!rolle,
+      opdateret_af: mineInitialer(),
+      opdateret_at: new Date().toISOString()
+    }, {onConflict:'bruger_id'});
+    if(error) throw error;
+    await loadBrugere();
+    /* Har man ændret sin EGEN rolle, skal ens egne rettigheder hentes
+       forfra — ellers går man rundt med de gamle, indtil man opdaterer
+       siden, og brugerfladen viser noget andet end databasen svarer. */
+    if(MIG && MIG.id === brugerId){
+      await hentMineRettigheder();
+      renderJobs();
+      if(typeof renderForside==='function') renderForside();
+      opdaterRettighedsVisning();
+    }
+    renderBrugere();
+  }catch(e){ sigFejl(e, 'sætte rollen'); }
+}
+
+function renderBrugere(){
+  var el = document.getElementById('brugereIndhold');
+  if(!el) return;
+  if(!maaJeg('brugere')){
+    el.innerHTML = '<div class="empty"><div class="big">🔒</div>'
+      + 'Du har ikke adgang til at tildele roller.</div>';
+    return;
+  }
+  if(!RETTIGHEDER_SAT_OP){
+    el.innerHTML = '<div class="empty"><div class="big">⚙️</div>'
+      + 'Rettighedssystemet er ikke sat op i databasen endnu.<br>'
+      + '<small>Kør rettigheder.sql, så kommer listen her.</small></div>';
+    return;
+  }
+
+  var h = '<div class="brg-forklar">Alle, der har logget ind, står her — også dem '
+    + 'uden rolle. <b>Uden rolle</b> betyder ingen særlige rettigheder: man kan se '
+    + 'det, alle kan se, og hverken priser eller andet lukket.</div>';
+
+  h += '<table class="brg-tabel"><thead><tr>'
+    + '<th>Navn</th><th>E-mail</th><th>Initialer</th><th>Rolle</th>'
+    + '<th>Giver adgang til</th><th>Sidst set</th></tr></thead><tbody>';
+  BRUGERE.forEach(function(b){
+    var giver = b.rolle ? rolleGiver(b.rolle) : [];
+    var sidst = '';
+    try{ if(b.sidst_set) sidst = new Date(b.sidst_set)
+      .toLocaleDateString('da-DK',{day:'numeric',month:'short'}); }catch(e){}
+    h += '<tr class="'+(b.rolle?'':'brg-uden')+'">'
+      + '<td>'+escapeHtml(b.navn||'')+(MIG&&MIG.id===b.bruger_id
+          ? ' <span class="brg-mig">dig</span>':'')+'</td>'
+      + '<td class="brg-mail">'+escapeHtml(b.email||'')+'</td>'
+      + '<td><input class="brg-init" value="'+escapeHtml(b.initialer||'')
+      +   '" data-brginit="'+b.bruger_id+'" maxlength="6" placeholder="—"></td>'
+      + '<td><select data-brgrolle="'+b.bruger_id+'">'
+      +   '<option value="">(ingen rolle)</option>'
+      +   ROLLER.map(function(r){
+             return '<option value="'+escapeHtml(r.noegle)+'"'
+               + (b.rolle===r.noegle?' selected':'')+'>'+escapeHtml(r.navn)+'</option>';
+           }).join('')
+      + '</select></td>'
+      + '<td class="brg-giver">'+(giver.length
+          ? giver.map(function(g){ return '<span class="brg-ret">'
+              + escapeHtml(rettighedNavn(g))+'</span>'; }).join('')
+          : '<span class="brg-intet">ingenting særligt</span>')+'</td>'
+      + '<td class="brg-sidst">'+escapeHtml(sidst)+'</td>'
+      + '</tr>';
+  });
+  h += '</tbody></table>';
+
+  h += '<div class="brg-roller"><h3>Hvad hver rolle giver</h3>'
+    + ROLLER.map(function(r){
+        var g = rolleGiver(r.noegle);
+        return '<div class="brg-rollekort"><div class="brg-rollenavn">'
+          + escapeHtml(r.navn)+'</div>'
+          + '<div class="brg-rollebesk">'+escapeHtml(r.beskrivelse||'')+'</div>'
+          + '<div class="brg-giver">'+(g.length
+              ? g.map(function(x){ return '<span class="brg-ret">'
+                  + escapeHtml(rettighedNavn(x))+'</span>'; }).join('')
+              : '<span class="brg-intet">ingenting særligt</span>')+'</div></div>';
+      }).join('')
+    + '</div>';
+
+  h += '<div class="brg-forklar" style="margin-top:14px">'
+    + '<b>Det her er ikke værnet.</b> Rollerne styrer, hvad databasen svarer på — '
+    + 'ikke bare hvad der vises. En bruger uden <em>Se priser</em> kan ikke hente '
+    + 'et beløb, heller ikke uden om programmet.</div>';
+
+  el.innerHTML = h;
+
+  el.querySelectorAll('[data-brgrolle]').forEach(function(s){
+    s.onchange = function(){
+      var id = s.dataset.brgrolle;
+      var b = BRUGERE.find(function(x){ return x.bruger_id===id; }) || {};
+      var ini = el.querySelector('[data-brginit="'+id+'"]');
+      saetRolle(id, s.value, b.navn, ini ? ini.value : b.initialer);
+    };
+  });
+  el.querySelectorAll('[data-brginit]').forEach(function(i){
+    i.onchange = function(){
+      var id = i.dataset.brginit;
+      var b = BRUGERE.find(function(x){ return x.bruger_id===id; }) || {};
+      saetRolle(id, b.rolle, b.navn, i.value);
+    };
+  });
+}
+
+/* Fanen findes kun for den, der må bruge den. Den skjules også, hvis
+   rettighedssystemet slet ikke er sat op — så er der ingenting at se. */
+function opdaterRettighedsVisning(){
+  var kn = document.querySelector('nav.tabs button[data-tab="brugere"]');
+  if(kn) kn.style.display = (RETTIGHEDER_SAT_OP && maaJeg('brugere')) ? '' : 'none';
+}
+
 /* ══ FORSIDEN ═════════════════════════════════════════════════════
    Det, man ser når programmet åbnes. Før lå "I dag" som et sidepanel:
    én smal spalte, seks blokke der så fuldstændig ens ud, og ingen tid
@@ -13377,6 +13702,11 @@ async function startProgram(){
          ledighed, indtil man tilfældigvis klikker på OB Vogne. */
       loadObJobUdstyr(),loadObJobFrigivet(),loadObSkabeloner(),loadObSkabelonLinjer()]);
   }catch(e){ console.warn('Init load fejl:',e); }
+  /* Rettighederne FOERST. Alt det, der tegnes bagefter, skal vide,
+     hvad der maa vises - ellers blinker priserne frem og forsvinder
+     igen, naar svaret kommer. */
+  try{ await hentMineRettigheder(); }catch(e){ console.warn('rettigheder:', e); }
+  try{ opdaterRettighedsVisning(); }catch(e){}
   try{ await loadJobs(); }catch(e){ console.error('loadJobs fejlede:',e); }
   renderJobs();
   /* Forsiden er den, man moeder. Layoutet hentes foerst lokalt (saa der
