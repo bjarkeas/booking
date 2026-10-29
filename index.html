@@ -319,6 +319,58 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
   .conflict-box .ok{ color:var(--green); }
 
   .modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+/* ── Bookingens art ────────────────────────────────────────────
+   Et serviceophold må ikke ligne et job. Det er ikke en produktion,
+   det kommer ikke på joblisten, og det tæller ikke med i statistikken
+   — men det spærrer bilen, og derfor skal det kunne ses med ét blik i
+   kalenderen. Egen farve og et værktøjsmærke; ikke en grå bjælke, man
+   overser. */
+.artvaelg{display:flex;gap:0;margin-top:6px;border:1px solid var(--border);
+  border-radius:8px;overflow:hidden;width:fit-content}
+.artvaelg button{background:none;border:none;border-left:1px solid var(--border);
+  color:var(--muted);font:600 13px/1 inherit;padding:9px 18px;cursor:pointer;
+  display:flex;align-items:center;gap:7px;transition:background .15s,color .15s}
+.artvaelg button:first-child{border-left:none}
+.artvaelg button:hover{color:var(--fg)}
+.artvaelg button.valgt{color:#0d1117;font-weight:700}
+.artmaerke{display:inline-flex;align-items:center;gap:4px;font-size:10px;
+  font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;
+  padding:2px 6px;border-radius:4px;font-weight:700}
+
+/* ── Køretøjer ────────────────────────────────────────────────
+   En OB-vogn er ikke altid ét køretøj. Listen står inde i vognens kort,
+   hvor vognen er — ikke på en indstillingsside, man skal lede efter. */
+.ktliste{display:flex;flex-direction:column;gap:6px}
+.ktrk{display:flex;align-items:center;gap:10px;padding:8px 10px;
+  border:1px solid var(--border);border-radius:8px;background:var(--bg2)}
+.ktrk .ktnavn{font-weight:600;font-size:13px}
+.ktrk .ktrolle{font-family:var(--mono);font-size:10px;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--muted);padding:2px 6px;border:1px solid var(--border);
+  border-radius:4px}
+.ktrk .ktplade{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.ktrk .ktspacer{flex:1}
+/* Fluebenskasser i en .field bliver 100% brede af ".field input{width:100%}".
+   Derfor står vælgeren uden for en .field, præcis som udstyrslisten. */
+.ktvis{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.ktvis label{display:flex;align-items:center;gap:7px;padding:8px 12px;
+  border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px;
+  background:var(--bg2)}
+.ktvis label.valgt{border-color:var(--accent);background:rgba(95,184,138,.10)}
+.ktvis input{width:auto!important;margin:0}
+
+/* ── Datoer der udløber ───────────────────────────────────────
+   Syn, forsikring, takograf og vejskat. Det er den slags, der koster en
+   bøde, når den bliver glemt — så den skal råbe op FØR dagen, ikke
+   bagefter. Gul en måned før, rød når den er passeret. */
+.ktdato{font-family:var(--mono);font-size:11px;padding:2px 6px;border-radius:4px;
+  border:1px solid transparent}
+.ktdato.snart{color:#e0a33e;border-color:rgba(224,163,62,.45);
+  background:rgba(224,163,62,.10)}
+.ktdato.udloebet{color:#e2685f;border-color:rgba(226,104,95,.5);
+  background:rgba(226,104,95,.12);font-weight:700}
+.ktadvarsel{display:inline-flex;align-items:center;gap:5px;font-size:11px;
+  color:#e2685f;font-weight:600;margin-left:8px}
+
 
   /* Availability tab */
   .avail-result{ margin-top:16px; }
@@ -1306,6 +1358,44 @@ tr.imp-ingen td:first-child{border-left:2px solid #7a3b3b;padding-left:8px;color
   #idagLuk{ margin-left:auto; background:none; border:0; color:var(--muted);
     font-size:20px; cursor:pointer; line-height:1; padding:2px 6px; }
   #idagIndhold{ overflow:auto; padding:12px 16px 24px; flex:1; }
+/* ── I DAG på telefonen: tal og tidslinje ─────────────────────
+   Striberne er lavet til en telefon og ikke til en skrumpet forside.
+   De står øverst i panelet, så det, man står og skal bruge, er det
+   første man ser — ikke noget man skal rulle ned til. */
+.idag-tal-stribe{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;
+  margin:0 0 14px}
+.idag-tal-kort{background:var(--bg2);border:1px solid var(--border);
+  border-radius:10px;padding:9px 6px;display:flex;flex-direction:column;
+  align-items:center;gap:2px;cursor:pointer;color:inherit;font:inherit}
+.idag-tal-kort .n{font-size:21px;font-weight:800;line-height:1;
+  font-family:var(--mono)}
+.idag-tal-kort .k{font-size:10px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.05em}
+.idag-tal-kort.tom .n{color:var(--muted);font-weight:600}
+.idag-tal-kort.advarsel{border-color:rgba(226,104,95,.5)}
+.idag-tal-kort.advarsel .n{color:#e2685f}
+.idag-tal-kort:active{transform:scale(.97)}
+
+.idag-tl{margin:0 0 16px;font-family:var(--mono)}
+.idag-tl-dage,.idag-tl-raekke{display:grid;
+  grid-template-columns:62px repeat(10,1fr);gap:2px;align-items:center}
+.idag-tl-raekke{margin-top:3px}
+.idag-tl-navn{font-size:10px;font-weight:700;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;padding-right:4px;
+  border-left:3px solid var(--vf,transparent);padding-left:5px}
+.idag-tl-dag{font-size:9.5px;color:var(--muted);text-align:center}
+.idag-tl-dag.weekend{color:var(--muted);opacity:.55}
+/* I dag skal kunne findes uden at tælle. */
+.idag-tl-dag.idag{color:var(--fg);font-weight:800}
+.idag-tl-celle{height:16px;border-radius:3px;background:var(--bg2);
+  border:1px solid var(--border)}
+.idag-tl-celle.optaget{border-color:transparent}
+/* En service er ikke et job. Stribet, så den kan ses uden farvesyn. */
+.idag-tl-celle.service{background-image:repeating-linear-gradient(
+  45deg,rgba(255,255,255,.22) 0 2px,transparent 2px 5px)}
+.idag-tl-celle.transport{background-image:repeating-linear-gradient(
+  -45deg,rgba(255,255,255,.22) 0 2px,transparent 2px 5px)}
+
   .idag-vaelg{ margin-bottom:12px; font-size:12px; }
   .idag-vaelg summary{ cursor:pointer; color:var(--muted); padding:4px 0; }
   .idag-vaelg > div{ display:flex; flex-direction:column; gap:2px;
@@ -2063,6 +2153,79 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
   </div>
 </div>
 
+<!-- ── Et køretøj ────────────────────────────────────────────────
+     Rolle og slags er to felter og ikke ét, fordi de ikke følges ad:
+     OB4's følgevogn er en trailer, Remote 2's følgevogn er en lastbil,
+     og begge er «følgevogn» i rollen. -->
+<div class="overlay" id="ktOverlay">
+  <div class="modal" style="max-width:760px">
+    <h2 id="ktTitel">Nyt køretøj</h2>
+    <input type="hidden" id="ktVognId">
+    <div class="row2">
+      <div class="field"><label>Navn</label>
+        <input type="text" id="ktNavn" placeholder="f.eks. OB4 · Følgevogn"></div>
+      <div class="field"><label>Nummerplade</label>
+        <input type="text" id="ktPlade" placeholder="f.eks. AB 12 345"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Rolle — hvad den gør i enheden</label>
+        <select id="ktRolle">
+          <option value="enhed">Enhed — står alene</option>
+          <option value="obvogn">OB-vogn</option>
+          <option value="foelgevogn">Følgevogn</option>
+        </select></div>
+      <div class="field"><label>Slags — hvad den fysisk er</label>
+        <select id="ktSlags">
+          <option value="lastbil">Lastbil</option>
+          <option value="trailer">Trailer</option>
+          <option value="flightpack">Flightpack</option>
+          <option value="bil">Bil</option>
+        </select></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Tankkort</label>
+        <input type="text" id="ktTankkort" placeholder="kortnummer"></div>
+      <div class="field"><label>Kørekort der skal til</label>
+        <select id="ktKoerekort">
+          <option value="">—</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="C+E">C+E</option>
+        </select></div>
+    </div>
+    <div class="felt-overskrift" style="margin-top:6px">Datoer der udløber</div>
+    <div style="font-size:11.5px;color:var(--muted);margin:-4px 0 8px;">
+      Markeres gult en måned før og rødt, når dagen er passeret. Det er den
+      slags, der koster en bøde, når den bliver glemt.</div>
+    <div class="row2">
+      <div class="field"><label>Syn til</label><input type="date" id="ktSyn"></div>
+      <div class="field"><label>Forsikring til</label><input type="date" id="ktForsikring"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Takograf til</label><input type="date" id="ktTakograf"></div>
+      <div class="field"><label>Vejskat betalt til</label><input type="date" id="ktVejskat"></div>
+    </div>
+    <div class="felt-overskrift" style="margin-top:6px">Mål og vægt</div>
+    <div class="row2">
+      <div class="field"><label>Længde (cm)</label><input type="number" id="ktLaengde"></div>
+      <div class="field"><label>Bredde (cm)</label><input type="number" id="ktBredde"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Højde (cm)</label><input type="number" id="ktHoejde"></div>
+      <div class="field"><label>Totalvægt (kg)</label><input type="number" id="ktVaegt"></div>
+    </div>
+    <div class="field"><label>Note</label><textarea id="ktNote" style="min-height:50px;"></textarea></div>
+    <div class="field"><label>Billede (adresse)</label>
+      <input type="text" id="ktBillede" placeholder="https://…"></div>
+    <div class="modal-actions" style="justify-content:space-between;">
+      <button class="btn small secondary" id="ktSletBtn" style="display:none;">Slet køretøjet</button>
+      <span style="flex:1"></span>
+      <button class="btn secondary" id="ktAnnullerBtn">Annuller</button>
+      <button class="btn" id="ktGemBtn">Gem køretøj</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="obOverlay">
   <div class="modal">
     <h2 id="obModalTitle">Book OB vogn</h2>
@@ -2076,7 +2239,7 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
       <div class="field"><label>Slut dato</label><input type="date" id="obEnd"></div>
     </div>
     <div class="field"><label>Noter</label><textarea id="obNotes" style="min-height:50px;"></textarea></div>
-    <div class="field">
+    <div class="field" id="obStatusField">
       <label>Status</label>
       <div style="display:flex;gap:0;margin-top:6px;border:1px solid var(--border);border-radius:8px;overflow:hidden;width:fit-content;">
         <label id="obLabelTilbud" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 18px;font-size:13px;font-weight:600;transition:background .15s;" onclick="document.getElementById('obStatusTilbud').checked=true;updateObStatusStyle();">
@@ -2087,6 +2250,23 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
         </label>
       </div>
     </div>
+    <!-- ── Hvad er det for en booking? ─────────────────────────
+         Samme vindue til alle tre arter. Tre vinduer ville betyde tre
+         steder at rette den samme fejl, og to af dem ville blive glemt.
+         Feltet skjules helt, hvis SQL'en ikke er koert: et valg, der
+         ikke kan gemmes, er en faelde. -->
+    <div class="field" id="obArtField" style="display:none;">
+      <label>Hvad er det?</label>
+      <div class="artvaelg" id="obArtVaelg"></div>
+    </div>
+
+    <!-- IKKE en .field: reglen ".field input{width:100%}" gaelder ogsaa
+         fluebenskasser, og saa bliver hver kasse 632px bred. -->
+    <div id="obKtField" style="display:none;margin-bottom:14px;">
+      <div class="felt-overskrift">Hvilke køretøjer spærrer den?</div>
+      <div class="ktvis" id="obKtBox"></div>
+    </div>
+
     <div id="obConflictBox"></div>
 
     <!-- ── Udstyr på dette OB-job ──────────────────────────────────
@@ -2099,8 +2279,8 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
          kasse 632 px bred og skubbede navnet ud til højre. Derfor en
          almindelig div med en overskrift, der ligner et feltnavn. -->
     <div id="obUdstyrField" style="margin-top:14px;margin-bottom:14px;">
-      <div class="felt-overskrift">Udstyr på dette OB-job</div>
-      <div style="font-size:11.5px;color:var(--muted);margin:-4px 0 8px;">Alt i vognen er valgt. Fjern fluebenet ved det, jobbet ikke skal bruge — så kan andre booke det i perioden.</div>
+      <div class="felt-overskrift" id="obUdstyrOverskrift">Udstyr på dette OB-job</div>
+      <div id="obUdstyrUnder" style="font-size:11.5px;color:var(--muted);margin:-4px 0 8px;">Alt i vognen er valgt. Fjern fluebenet ved det, jobbet ikke skal bruge — så kan andre booke det i perioden.</div>
       <div id="obUdstyrBox"></div>
     </div>
 
@@ -2201,6 +2381,11 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
     <div class="modal-actions">
       <button class="btn secondary" id="cancelBtn">Annuller</button>
       <button class="btn small secondary" id="impAabnBtn" title="Hent en udstyrsliste fra det gamle system – indsæt fra Excel eller vælg en csv-fil">⤒ Importér liste</button>
+      <!-- Et job, der er oprettet forkert: vaerkstedsopholdet, nogen kom
+           til at skrive som en produktion. Knappen staar kun frem, naar
+           jobbet ER gemt og bundet til en vogn. -->
+      <button class="btn small secondary" id="jobServiceBtn" style="display:none;"
+        title="Gør jobbet til et serviceophold på vognen. Udstyret bliver frit i perioden.">🔧 Flyt til service</button>
       <button class="btn" id="saveJobBtn">Gem job</button>
     </div>
   </div>
@@ -3743,7 +3928,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_d2b4pWi-2jTYIeCAAUAQcA_0ygShdrH';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.25-b';
+const EP_VERSION = '2026.10.29-a';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -5303,6 +5488,24 @@ function iVogneFor(vogne, navn, start, slut){
       if(vogne.indexOf(b.ob_vogn_id) < 0) continue;
       if(!datesOverlap(start, slut, b.start_date, b.end_date)) continue;
       fandtBooking = true;
+      /* ── En service tager BILEN, ikke udstyret ──────────────────
+         Står følgevognen på værksted, skal et kamera stadig kunne
+         lånes ud af den. Det er hele grunden til, at service findes
+         som sin egen art.
+
+         Det kan ikke overlades til reservationslinjerne alene, for
+         modellen er VENDT: tabellen gemmer hvad der er FRIGIVET, så
+         «ingen linjer» betyder «intet frigivet» — altså hele vognen
+         taget. En service oprettet uden linjer (fra SQL, fra en
+         import, fra «flyt job til service») ville derfor spærre alt
+         udstyret, og det modsatte af det, der var meningen.
+
+         Derfor står reglen her, hvor den kan læses: har en service
+         eller en transport ingen linjer, tager den intet. Har den
+         linjer — nogen skal servicere netop dét udstyr — gælder de
+         som på et job. */
+      if(typeof obArt==='function' && obArt(b)!=='job'
+         && !obFrigivetFor(b.id).length && !obLinjerFor(b.id).length) continue;
       sum += eq ? obReserveret(b.id, eq.id) : obReserveretPakke(b.id, pk.id);
     }
     if(fandtBooking){
@@ -5597,7 +5800,7 @@ document.querySelectorAll('nav.tabs button').forEach(function(btn){
          bookingslinje bygger på dem, og skabelonvælgeren i vinduet
          gør det samme. Uden dem ville fanen vise, at ingenting er
          frigivet, indtil noget andet tilfældigvis hentede dem. */
-      Promise.all([loadObVogne(),loadObBookinger(),loadObJobUdstyr(),loadObJobFrigivet(),
+      Promise.all([loadObVogne(),loadKoeretoejer(),loadObBookinger(),loadObJobUdstyr(),loadObJobFrigivet(),
                    loadObSkabeloner(),loadObSkabelonLinjer()]).then(function(){
         try{ renderObVogne(); }
         catch(e){ console.error('renderObVogne fejl:',e); if(obC) obC.innerHTML='<div class="empty"><div class="big">⚠️</div>Fejl: '+e.message+'<br><small>Tjek F12 Console</small></div>'; }
@@ -6055,6 +6258,7 @@ const overlay=document.getElementById('overlay');
 
 function openNew(){
   editingJobId=null; selectedItems={};
+  setTimeout(function(){ if(typeof jobServiceKnap==='function') jobServiceKnap(); },0);
   document.getElementById('modalTitle').textContent='Nyt job';
   document.getElementById('jobName').value='';
   /* Initialerne står i din bruger – dem skal du ikke taste hver gang. */
@@ -6083,6 +6287,7 @@ async function openEdit(id){
   if(!j){ alert('Jobbet findes ikke længere – en anden har måske slettet det.'); renderJobs(); return; }
   window.__redigerStart = new Set((j.items||[]).map(function(i){ return i.name; }));
   editingJobId=id; selectedItems={};
+  setTimeout(function(){ if(typeof jobServiceKnap==='function') jobServiceKnap(); },0);
   (j.items||[]).forEach(function(it){
     if(it.isPkg){ const p=PACKAGES.find(function(p){return p.name===it.name;}); if(p) selectedItems['PKG:'+p.id]=it.qty; else selectedItems[it.name]=it.qty; }
     else selectedItems[it.name]=it.qty;
@@ -6103,6 +6308,7 @@ async function openEdit(id){
 function openCopy(id){
   const j=jobs.find(function(x){return x.id===id;}); if(!j) return;
   editingJobId=null; selectedItems={};
+  setTimeout(function(){ if(typeof jobServiceKnap==='function') jobServiceKnap(); },0);
   (j.items||[]).forEach(function(it){
     if(it.isPkg){ const p=PACKAGES.find(function(p){return p.name===it.name;}); if(p) selectedItems['PKG:'+p.id]=it.qty; else selectedItems[it.name]=it.qty; }
     else selectedItems[it.name]=it.qty;
@@ -8612,6 +8818,28 @@ function renderObVogne(){
     (function(v){ bb.addEventListener('click',function(e){e.stopPropagation();openObModal(v.id,null);}); })(vogn);
     head.appendChild(bb);
 
+    /* Service ved siden af Book. Den spaerrer bilerne, men reserverer
+       intet udstyr - saa et kamera kan stadig laanes ud af foelgevognen,
+       mens den staar inde. */
+    if(typeof ktFindes==='function' && ktFindes()){
+      var sb=document.createElement('button');
+      sb.className='btn small secondary'; sb.textContent='🔧 Service';
+      sb.title='Vaerksted. Spaerrer de valgte koeretoejer, men ikke udstyret.';
+      (function(v){ sb.addEventListener('click',function(e){e.stopPropagation();obNyService(v.id);}); })(vogn);
+      head.appendChild(sb);
+
+      /* Kun paa vogne der HAR en lastbil. Remote 2's lastbil koerer som
+         ren transport uden flightpacken; OB4 har ingen lastbil, og saa
+         er knappen stoej. */
+      if(ktLastbilerFor(vogn.id).length){
+        var tb2=document.createElement('button');
+        tb2.className='btn small secondary'; tb2.textContent='🚚 Book lastbil';
+        tb2.title='Lastbilen koerer noget andet. Vognen er ikke med.';
+        (function(v){ tb2.addEventListener('click',function(e){e.stopPropagation();obNyTransport(v.id);}); })(vogn);
+        head.appendChild(tb2);
+      }
+    }
+
     /* Ret navn og farve på vognen selv. Den står her, hvor vognen er – ikke
        inde i en indstillingsside, man skal lede efter. */
     var rv=document.createElement('button');
@@ -8645,6 +8873,7 @@ function renderObVogne(){
       var isTilbud=b.status==='tilbud';
       var left=document.createElement('div');
       left.innerHTML=(isAct?'<span style="color:var(--red);">● </span>':'')
+        +((typeof obArtMaerke==='function')?obArtMaerke(b)+' ':'')
         +(isTilbud?'<span style="background:#5c4521;color:var(--amber);font-size:9.5px;padding:1px 6px;border-radius:8px;font-family:var(--mono);font-weight:700;margin-right:5px;">TILBUD</span>':'')
         +escapeHtml(b.name)+(b.who?'<span style="color:var(--muted);"> · '+escapeHtml(b.who)+'</span>':'');
       /* ── Hvor meget af vognen kører med? ──────────────────────
@@ -8709,6 +8938,7 @@ function renderObVogne(){
       right.appendChild(bd2); brow.appendChild(right); bs.appendChild(brow);
     });
     body.appendChild(bs);
+    if(typeof ktSektion==='function' && ktFindes()) body.appendChild(ktSektion(vogn));
 
     // Contents section
     var cs=document.createElement('div'); cs.className='ob-section';
@@ -8758,6 +8988,10 @@ function openObModal(vognId,ob,forslag){
      Har en kollega frigivet et kamera, siden man sidst kiggede, skal man
      se dét og ikke en gammel kopi. */
   obByggKladde(vognId, ob?ob.id:null);
+  /* Arten foerst: den afgoer, om udstyret er valgt eller fravalgt fra
+     start, og renderObUdstyr skal tegne det rigtige med det samme. */
+  if(typeof ktAabnBooking==='function') ktAabnBooking(ob);
+  if(typeof obKladdeEfterArt==='function') obKladdeEfterArt();
   renderObUdstyr();
   document.getElementById('obOverlay').classList.add('open');
 }
@@ -9198,7 +9432,8 @@ function renderObConflicts(){
   var start=document.getElementById('obStart').value,end=document.getElementById('obEnd').value;
   var excl=document.getElementById('obEditId').value||null;
   if(!start||!end||!currentObVognId){box.innerHTML='';return;}
-  var c=obBookingConflict(currentObVognId,start,end,excl);
+  var c=obBookingConflict(currentObVognId,start,end,excl,
+          (typeof OB_KT_VALGT!=='undefined')?OB_KT_VALGT:[]);
   box.innerHTML=c?'<div class="conflict-box">⚠ Overlapper: <strong>'+escapeHtml(c.name)+'</strong> ('+fmtDate(c.start_date)+' → '+fmtDate(c.end_date)+')</div>'
     :'<div class="conflict-box"><span class="ok">✓ Ingen konflikter.</span></div>';
 }
@@ -9287,6 +9522,13 @@ document.getElementById('obSaveBtn').addEventListener('click', async function(){
   btn.disabled=true; btn.textContent='Gemmer...';
   try{
     var row={ob_vogn_id:currentObVognId,name,who,start_date:start,end_date:end,notes,status};
+    /* Kun hvis SQL'en er koert. Sender vi felter, tabellen ikke har,
+       fejler hele gemningen - og saa kan man ikke engang gemme et
+       almindeligt job. */
+    if(typeof ktFindes==='function' && ktFindes()){
+      row.art = (typeof OB_ART_VALGT!=='undefined') ? OB_ART_VALGT : 'job';
+      row.koeretoejer = (typeof OB_KT_VALGT!=='undefined') ? OB_KT_VALGT : [];
+    }
     var bookingId = editId;
     if(editId){
       var {error}=await supa.from('ob_bookinger').update(row).eq('id',editId);
@@ -13070,6 +13312,10 @@ function fsNulstil(){
    her — så har alle tre visninger det samme at vælge imellem. */
 var I_DAG_BLOKKE = [
   {id:'ob',        titel:'OB-vogne ude'},
+  /* Syn, forsikring, takograf og vejskat. Den slags koster en boede,
+     naar den bliver glemt - og den bliver glemt, fordi den ikke staar
+     noget sted, man kigger hver dag. Nu goer den. */
+  {id:'koeretoej', titel:'Papirer der udløber'},
   {id:'pak',       titel:'Pakkes til i morgen'},
   {id:'hentes',    titel:'Indleje der skal hentes'},
   {id:'retur',     titel:'Indleje der skal retur'},
@@ -13183,6 +13429,17 @@ function iDagData(dato){
               naar:(r.reported_date || '')};
     });
 
+  /* ── Papirer der udløber ─────────────────────────────────────── */
+  blok.koeretoej = (typeof ktAlleAdvarsler === 'function' ? ktAlleAdvarsler() : [])
+    .map(function(a){
+      return {noegle:'kt:'+a.koeretoej.id+':'+a.navn,
+              tekst:a.koeretoej.navn,
+              under:a.navn + ' udløber ' + a.dato
+                  + (a.koeretoej.nummerplade ? ' · ' + a.koeretoej.nummerplade : ''),
+              maerke:(a.stand === 'udloebet' ? 'UDLØBET' : 'snart'),
+              naar:a.dato};
+    });
+
   return {
     dato:d, iMorgen:iMorgen,
     blokke:I_DAG_BLOKKE.map(function(b){
@@ -13218,7 +13475,14 @@ function renderIDag(){
   var dt = document.getElementById('idagDato');
   if(dt) dt.textContent = fmtDate(data.dato);
 
-  var h = '<details class="idag-vaelg"' + (IDAG_VAELGER_AABEN ? ' open' : '')
+  /* Tallene og tidslinjen oeverst - det man staar og skal bruge, foer
+     man ruller. Kun paa telefonen: paa skaermen er forsiden der. */
+  var h = '';
+  if(document.body.classList.contains('show-mobile')){
+    if(typeof iDagTalHTML === 'function')       h += iDagTalHTML(data);
+    if(typeof iDagTidslinjeHTML === 'function') h += iDagTidslinjeHTML(data.dato);
+  }
+  h += '<details class="idag-vaelg"' + (IDAG_VAELGER_AABEN ? ' open' : '')
         + '><summary>Vis blokke</summary><div>';
   I_DAG_BLOKKE.forEach(function(b){
     h += '<label><input type="checkbox" data-idagblok="' + escapeHtml(b.id) + '"'
@@ -13255,6 +13519,22 @@ function renderIDag(){
      man vælger som regel flere ad gangen. */
   var det = ind.querySelector('.idag-vaelg');
   if(det) det.addEventListener('toggle', function(){ IDAG_VAELGER_AABEN = det.open; });
+  /* Et tal, man ikke kan trykke paa, er en oplysning. Et tal, der
+     foerer hen til det, det taeller, er en genvej. */
+  ind.querySelectorAll('[data-idaghop]').forEach(function(k){
+    k.addEventListener('click', function(){
+      var id = k.getAttribute('data-idaghop');
+      var valgte = iDagValgte();
+      if(valgte.indexOf(id) < 0){
+        /* Blokken er fravalgt - saa taender vi den, i stedet for at
+           lade knappen gaa ingen steder. */
+        iDagSaetValgte(valgte.concat([id])); renderIDag();
+        setTimeout(function(){ iDagRulTil(id); }, 60);
+        return;
+      }
+      iDagRulTil(id);
+    });
+  });
   ind.querySelectorAll('[data-idagblok]').forEach(function(c){
     c.addEventListener('change', function(){
       IDAG_VAELGER_AABEN = true;
@@ -13695,7 +13975,7 @@ async function startProgram(){
   initFilterDates();
   document.getElementById('availStart').value=todayStr();
   try{
-    await Promise.all([loadCategories(),loadObVogne(),loadObBookinger(),loadPackages(),loadEquipment(),loadRepairs(),loadIndleje(),
+    await Promise.all([loadCategories(),loadObVogne(),loadKoeretoejer(),loadObBookinger(),loadPackages(),loadEquipment(),loadRepairs(),loadIndleje(),
       /* Reservationerne SKAL med i opstarten og ikke kun når nogen
          åbner OB-fanen: det er dem, der afgør om et almindeligt job
          har en konflikt. Hentes de for sent, viser jobbene forkert
@@ -13962,6 +14242,702 @@ async function startProgram(){
   });
 })();
 
+
+/* ══ KØRETØJER, SERVICE OG TRANSPORT ═══════════════════════════════════
+   En OB-vogn er ikke altid ÉT køretøj. OB4 er en OB-vogn og en følgevogn
+   — to trailere, der kan køre hver for sig. Remote 2 er en flightpack
+   plus en lastbil, der også køres alene som ren transport. Indtil nu
+   kendte programmet kun «vognen», og derfor kunne man ikke sende
+   følgevognen på værksted uden at spærre hele OB4.
+
+   Og en booking er ikke altid et job:
+
+     job        en produktion. Tager vognen OG det udstyr, der er valgt.
+     service    værksted. Spærrer de valgte køretøjer, men reserverer
+                INTET udstyr — så et kamera kan fint lånes ud af
+                følgevognen, mens den står inde. Skal der serviceres PÅ
+                udstyret, vælger man netop det udstyr på servicen.
+     transport  lastbilen kører noget andet. Vognen er ikke med.
+
+   Det virker uden et nyt bookingsystem, fordi regnestykket allerede
+   siger: har en booking på vognen en reservationsliste, er det LISTEN
+   der gælder — ikke «alt i vognen». En service er derfor bare en booking
+   uden reservationer. To bookingsystemer, der kan modsige hinanden, er
+   præcis det, vi ikke vil have.                                        */
+
+/* ⚠ IKKE «= []».
+   Blokken her staar NEDERST i filen, men opstarten kalder
+   loadKoeretoejer() langt hoejere oppe. Et «var X = []» her koerer
+   derfor EFTER hentningen og nulstiller den - listen var hentet, og saa
+   var den tom igen. Det er samme faelde som med forsidens kort, og den
+   staar i FAELDER.txt: en var-erklaering laengere nede i filen hejses
+   som undefined, men TILDELINGEN sker paa sin plads.
+
+   Med «|| []» overlever det, der allerede er hentet. */
+var KOERETOEJER = KOERETOEJER || [];
+
+async function loadKoeretoejer(){
+  try{
+    var r = await supa.from('koeretoejer').select('*').order('sorter');
+    if(r.error){ console.warn('loadKoeretoejer:', r.error.message); KOERETOEJER=[]; return; }
+    KOERETOEJER = r.data || [];
+  }catch(e){ console.warn(e); KOERETOEJER=[]; }
+}
+
+/* Er SQL'en kørt? Er den ikke, må programmet opføre sig præcis som før:
+   ingen køretøjer, ingen arter, intet nyt. Et halvt bygget register er
+   værre end intet, fordi det ser rigtigt ud. */
+function ktFindes(){ return KOERETOEJER.length > 0; }
+
+function ktForVogn(vognId){
+  return KOERETOEJER.filter(function(k){ return k.ob_vogn_id === vognId; })
+    .sort(function(a,b){
+      return (a.sorter||0)-(b.sorter||0)
+          || (a.navn||'').localeCompare(b.navn||'','da');
+    });
+}
+function ktById(id){ return KOERETOEJER.find(function(k){ return k.id===id; }); }
+function ktNavn(id){ var k=ktById(id); return k ? k.navn : '(slettet køretøj)'; }
+
+var OB_ARTER = {
+  job:       {navn:'Job',       maerke:'',   farve:'',        tip:'En produktion, der kører med vognen'},
+  service:   {navn:'Service',   maerke:'🔧', farve:'#8c98a6', tip:'Værksted. Spærrer bilerne, men ikke udstyret'},
+  transport: {navn:'Transport', maerke:'🚚', farve:'#6aa9e0', tip:'Lastbilen kører noget andet. Vognen er ikke med'}
+};
+var OB_ART_ORDEN = ['job','service','transport'];
+
+/* En række uden art er et job. Gamle rækker får den uden at nogen skal
+   røre dem — og en art, vi ikke kender, læses også som job, så en
+   fremtidig art ikke får en gammel udgave til at skjule bookingen. */
+function obArt(b){
+  var a = (b && b.art) || 'job';
+  return OB_ARTER[a] ? a : 'job';
+}
+function obErService(b){ return obArt(b)==='service'; }
+function obKt(b){
+  var v = b && b.koeretoejer;
+  return Array.isArray(v) ? v.filter(Boolean) : [];
+}
+
+/* Tom liste betyder HELE vognen. Det er med vilje: alle bookinger fra
+   før køretøjerne fandtes har tom liste og skal blive ved med at spærre
+   det hele. To bookinger støder derfor kun sammen, hvis de deler mindst
+   ét køretøj — eller hvis en af dem tager hele vognen. */
+function ktStoeder(a, b){
+  if(!a.length || !b.length) return true;
+  return a.some(function(x){ return b.indexOf(x) >= 0; });
+}
+
+function ktTekst(liste, vognId){
+  if(!liste || !liste.length){
+    var alle = ktForVogn(vognId);
+    return alle.length > 1 ? 'hele vognen' : '';
+  }
+  return liste.map(ktNavn).join(' + ');
+}
+
+/* ── Datoer der udløber ────────────────────────────────────────
+   Syn, forsikring, takograf og vejskat. Den slags koster en bøde, når
+   den bliver glemt, så den skal råbe op FØR dagen og ikke bagefter.
+   Tredive dage er valgt, fordi det er tid nok til at bestille en tid. */
+var KT_DATOER = [
+  {k:'syn_til',        navn:'Syn'},
+  {k:'forsikring_til', navn:'Forsikring'},
+  {k:'takograf_til',   navn:'Takograf'},
+  {k:'vejskat_til',    navn:'Vejskat'}
+];
+function ktDatoStand(dato){
+  if(!dato) return '';
+  var i_dag = todayStr();
+  if(dato < i_dag) return 'udloebet';
+  var om = new Date(dato+'T00:00:00') - new Date(i_dag+'T00:00:00');
+  return (om <= 30*24*3600*1000) ? 'snart' : '';
+}
+function ktAdvarsler(k){
+  var ud = [];
+  KT_DATOER.forEach(function(d){
+    var s = ktDatoStand(k[d.k]);
+    if(s) ud.push({navn:d.navn, dato:k[d.k], stand:s});
+  });
+  return ud;
+}
+/* Hele flåden under ét, til forsiden og til mærket på fanen. */
+function ktAlleAdvarsler(){
+  var ud=[];
+  KOERETOEJER.forEach(function(k){
+    ktAdvarsler(k).forEach(function(a){
+      ud.push({koeretoej:k, navn:a.navn, dato:a.dato, stand:a.stand});
+    });
+  });
+  return ud.sort(function(a,b){ return (a.dato||'').localeCompare(b.dato||''); });
+}
+
+/* ══ KØRETØJSREGISTRET ═════════════════════════════════════════════════
+   Listen står inde i vognens eget kort, hvor vognen er — ikke på en
+   indstillingsside, man skal lede efter. Det er samme valg som «ret
+   vognens navn og farve», der også står der. */
+
+var KT_RET_ID = null;
+
+function ktRaekke(k){
+  var adv = ktAdvarsler(k);
+  var rk = document.createElement('div');
+  rk.className = 'ktrk';
+  var maal = [k.laengde_cm, k.bredde_cm, k.hoejde_cm].filter(Boolean);
+  rk.innerHTML =
+      '<span class="ktrolle" title="Hvad den gør i enheden">'+escapeHtml(k.rolle||'')+'</span>'
+    + '<span class="ktnavn">'+escapeHtml(k.navn||'')+'</span>'
+    + (k.nummerplade ? '<span class="ktplade">'+escapeHtml(k.nummerplade)+'</span>' : '')
+    + '<span class="ktrolle" title="Hvad den fysisk er">'+escapeHtml(k.slags||'')+'</span>'
+    + (maal.length===3 ? '<span class="ktplade" title="Længde × bredde × højde i cm">'
+        +maal.join('×')+'</span>' : '')
+    + (k.totalvaegt_kg ? '<span class="ktplade" title="Totalvægt">'+k.totalvaegt_kg+' kg</span>' : '')
+    + '<span class="ktspacer"></span>'
+    + adv.map(function(a){
+        return '<span class="ktdato '+a.stand+'" title="'+escapeHtml(a.navn)
+             + (a.stand==='udloebet'?' er udløbet':' udløber snart')+'">'
+             + escapeHtml(a.navn)+' '+escapeHtml(a.dato)+'</span>';
+      }).join('');
+  var ret = document.createElement('button');
+  ret.className='btn small secondary';
+  ret.textContent='✎';
+  ret.title='Ret køretøjet';
+  ret.style.cssText='font-size:12px;padding:4px 9px;min-height:26px;';
+  ret.addEventListener('click', function(e){ e.stopPropagation(); openKt(k.id, k.ob_vogn_id); });
+  rk.appendChild(ret);
+  return rk;
+}
+
+function ktSektion(vogn){
+  var liste = ktForVogn(vogn.id);
+  var s = document.createElement('div');
+  s.className = 'ob-section';
+  var adv = liste.reduce(function(n,k){ return n + ktAdvarsler(k).length; }, 0);
+  s.innerHTML = '<div class="ob-section-title">Køretøjer ('+liste.length+')'
+    + (adv ? '<span class="ktadvarsel">⚠ '+adv+(adv===1?' dato udløber':' datoer udløber')+'</span>' : '')
+    + '</div>';
+  var box = document.createElement('div');
+  box.className = 'ktliste';
+  if(!liste.length){
+    var tom = document.createElement('div');
+    tom.style.cssText='font-size:12px;color:var(--muted);';
+    tom.textContent='Ingen køretøjer på denne vogn endnu.';
+    box.appendChild(tom);
+  } else {
+    liste.forEach(function(k){ box.appendChild(ktRaekke(k)); });
+  }
+  s.appendChild(box);
+  var ny = document.createElement('button');
+  ny.className='btn small secondary';
+  ny.textContent='+ Køretøj';
+  ny.style.marginTop='8px';
+  ny.addEventListener('click', function(e){ e.stopPropagation(); openKt(null, vogn.id); });
+  s.appendChild(ny);
+  return s;
+}
+
+/* ── Vinduet ───────────────────────────────────────────────────
+   Alle felterne på ét sted. Rolle og slags er to felter og ikke ét,
+   fordi de ikke følges ad: OB4's følgevogn er en trailer, Remote 2's
+   følgevogn er en lastbil, og begge er «følgevogn» i rollen. */
+function openKt(id, vognId){
+  KT_RET_ID = id || null;
+  var k = id ? (ktById(id)||{}) : {};
+  var v = obVognById(vognId);
+  var s = function(felt, vaerdi){
+    var n = document.getElementById(felt);
+    if(n) n.value = (vaerdi===null||vaerdi===undefined) ? '' : vaerdi;
+  };
+  document.getElementById('ktTitel').textContent =
+    id ? ('Ret køretøj — ' + (k.navn||'')) : ('Nyt køretøj' + (v ? ' på ' + v.name : ''));
+  document.getElementById('ktVognId').value = vognId || '';
+  s('ktNavn', k.navn);
+  s('ktRolle', k.rolle || 'enhed');
+  s('ktSlags', k.slags || 'lastbil');
+  s('ktPlade', k.nummerplade);
+  s('ktTankkort', k.tankkort);
+  s('ktKoerekort', k.koerekort || '');
+  s('ktVejskat', k.vejskat_til);
+  s('ktSyn', k.syn_til);
+  s('ktForsikring', k.forsikring_til);
+  s('ktTakograf', k.takograf_til);
+  s('ktLaengde', k.laengde_cm);
+  s('ktBredde', k.bredde_cm);
+  s('ktHoejde', k.hoejde_cm);
+  s('ktVaegt', k.totalvaegt_kg);
+  s('ktNote', k.note);
+  s('ktBillede', k.billede_url);
+  var sl = document.getElementById('ktSletBtn');
+  if(sl) sl.style.display = id ? '' : 'none';
+  document.getElementById('ktOverlay').classList.add('open');
+}
+
+function ktTal(felt){
+  var n = document.getElementById(felt);
+  var v = n ? n.value.trim() : '';
+  if(v === '') return null;
+  var t = parseInt(v, 10);
+  return isNaN(t) ? null : t;
+}
+function ktTekstFelt(felt){
+  var n = document.getElementById(felt);
+  var v = n ? n.value.trim() : '';
+  return v === '' ? null : v;
+}
+
+async function ktGem(){
+  var btn = document.getElementById('ktGemBtn');
+  var navn = (document.getElementById('ktNavn').value||'').trim();
+  if(!navn){ alert('Giv køretøjet et navn.'); return; }
+  var vognId = document.getElementById('ktVognId').value || null;
+  var row = {
+    ob_vogn_id: vognId || null,
+    navn: navn,
+    rolle: document.getElementById('ktRolle').value || 'enhed',
+    slags: document.getElementById('ktSlags').value || 'lastbil',
+    nummerplade: ktTekstFelt('ktPlade'),
+    tankkort: ktTekstFelt('ktTankkort'),
+    koerekort: ktTekstFelt('ktKoerekort'),
+    vejskat_til: ktTekstFelt('ktVejskat'),
+    syn_til: ktTekstFelt('ktSyn'),
+    forsikring_til: ktTekstFelt('ktForsikring'),
+    takograf_til: ktTekstFelt('ktTakograf'),
+    laengde_cm: ktTal('ktLaengde'),
+    bredde_cm: ktTal('ktBredde'),
+    hoejde_cm: ktTal('ktHoejde'),
+    totalvaegt_kg: ktTal('ktVaegt'),
+    note: ktTekstFelt('ktNote'),
+    billede_url: ktTekstFelt('ktBillede'),
+    updated_at: new Date().toISOString()
+  };
+  btn.disabled = true; btn.textContent = 'Gemmer…';
+  try{
+    if(KT_RET_ID){
+      var r1 = await supa.from('koeretoejer').update(row).eq('id', KT_RET_ID);
+      if(r1.error) throw r1.error;
+    }else{
+      row.oprettet_af = (typeof mineInitialer==='function' ? mineInitialer() : '') || '';
+      var r2 = await supa.from('koeretoejer').insert(row);
+      if(r2.error) throw r2.error;
+    }
+    await loadKoeretoejer();
+    document.getElementById('ktOverlay').classList.remove('open');
+    renderObVogne();
+  }catch(e){
+    alert('Kunne ikke gemme køretøjet: ' + (e.message||e));
+  }finally{
+    btn.disabled = false; btn.textContent = 'Gem køretøj';
+  }
+}
+
+async function ktSlet(){
+  if(!KT_RET_ID) return;
+  var k = ktById(KT_RET_ID);
+  /* Peger en booking på køretøjet, forsvinder bookingens afgrænsning
+     med det — og så spærrer den pludselig hele vognen. Det skal stå der
+     FØR man trykker, ikke opdages ugen efter. */
+  var brugt = (OB_BOOKINGER||[]).filter(function(b){
+    return obKt(b).indexOf(KT_RET_ID) >= 0;
+  }).length;
+  var sp = 'Slet "' + (k?k.navn:'køretøjet') + '"?';
+  if(brugt) sp += '\n\n' + brugt + (brugt===1?' booking peger':' bookinger peger')
+    + ' på det. De kommer til at gælde hele vognen i stedet.';
+  if(!confirm(sp)) return;
+  try{
+    var r = await supa.from('koeretoejer').delete().eq('id', KT_RET_ID);
+    if(r.error) throw r.error;
+    await loadKoeretoejer();
+    document.getElementById('ktOverlay').classList.remove('open');
+    renderObVogne();
+  }catch(e){ alert('Kunne ikke slette: ' + (e.message||e)); }
+}
+
+/* ══ ARTEN OG KØRETØJERNE I BOOKINGVINDUET ═════════════════════════════
+   Samme vindue til alle tre arter. Tre vinduer ville betyde tre steder
+   at rette den samme fejl, og to af dem ville blive glemt. */
+
+var OB_ART_VALGT = 'job';
+var OB_KT_VALGT  = [];
+
+function obArtVaelgTegn(){
+  var box = document.getElementById('obArtVaelg');
+  if(!box) return;
+  box.innerHTML = '';
+  OB_ART_ORDEN.forEach(function(a){
+    var d = OB_ARTER[a];
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'artvaelg-knap' + (OB_ART_VALGT===a ? ' valgt' : '');
+    b.title = d.tip;
+    b.innerHTML = (d.maerke ? '<span>'+d.maerke+'</span>' : '') + '<span>'+d.navn+'</span>';
+    if(OB_ART_VALGT===a) b.style.background = d.farve || 'var(--accent)';
+    b.addEventListener('click', function(){ obSaetArt(a); });
+    box.appendChild(b);
+  });
+}
+
+function obSaetArt(a){
+  OB_ART_VALGT = OB_ARTER[a] ? a : 'job';
+  obArtVaelgTegn();
+  obKtTegn();
+
+  /* Status er en sælgerting: et tilbud bliver til en ordre. Et
+     serviceophold er hverken — værkstedet har tiden eller ikke. */
+  var sf = document.getElementById('obStatusField');
+  if(sf) sf.style.display = (OB_ART_VALGT==='job') ? '' : 'none';
+  if(OB_ART_VALGT!=='job'){
+    var o = document.getElementById('obStatusOrdre');
+    if(o){ o.checked = true; if(typeof updateObStatusStyle==='function') updateObStatusStyle(); }
+  }
+
+  /* Udstyrslisten skifter BETYDNING med arten, og derfor skifter
+     teksten over den også. På et job er alt valgt, og man fjerner det,
+     jobbet ikke skal bruge. På en service er intet valgt — det er hele
+     pointen, at udstyret bliver frit — og man vælger kun det, der
+     faktisk skal serviceres. Samme liste, modsat udgangspunkt. */
+  var o1 = document.getElementById('obUdstyrOverskrift');
+  var o2 = document.getElementById('obUdstyrUnder');
+  if(o1 && o2){
+    if(OB_ART_VALGT==='job'){
+      o1.textContent = 'Udstyr på dette OB-job';
+      o2.textContent = 'Alt i vognen er valgt. Fjern fluebenet ved det, jobbet ikke skal bruge — så kan andre booke det i perioden.';
+    }else if(OB_ART_VALGT==='service'){
+      o1.textContent = 'Udstyr der IKKE kan bookes i perioden';
+      o2.textContent = 'Intet er valgt: bilerne står inde, men udstyret er frit og kan lånes ud. Skal der serviceres på noget af det, så vælg netop dét her.';
+    }else{
+      o1.textContent = 'Udstyr der følger med på turen';
+      o2.textContent = 'Intet er valgt: lastbilen kører noget andet. Skal der udstyr med fra vognen, så vælg det her.';
+    }
+  }
+  if(typeof renderObConflicts==='function') renderObConflicts();
+}
+
+/* ── Hvilke køretøjer spærrer bookingen? ──────────────────────
+   Vælgeren vises kun, når vognen HAR flere køretøjer. Har den ét, er
+   der intet at vælge imellem, og et felt med ét valg er støj. */
+function obKtTegn(){
+  var felt = document.getElementById('obKtField');
+  var box  = document.getElementById('obKtBox');
+  if(!felt || !box) return;
+  var liste = ktForVogn(currentObVognId);
+  if(liste.length < 2){ felt.style.display = 'none'; box.innerHTML=''; return; }
+  felt.style.display = '';
+  box.innerHTML = '';
+  liste.forEach(function(k){
+    var valgt = OB_KT_VALGT.indexOf(k.id) >= 0;
+    var l = document.createElement('label');
+    l.className = valgt ? 'valgt' : '';
+    var i = document.createElement('input');
+    i.type = 'checkbox'; i.checked = valgt;
+    i.addEventListener('change', function(){
+      if(i.checked){ if(OB_KT_VALGT.indexOf(k.id)<0) OB_KT_VALGT.push(k.id); }
+      else OB_KT_VALGT = OB_KT_VALGT.filter(function(x){ return x!==k.id; });
+      obKtTegn();
+      if(typeof renderObConflicts==='function') renderObConflicts();
+    });
+    l.appendChild(i);
+    var t = document.createElement('span');
+    t.innerHTML = escapeHtml(k.navn) + ' <span style="color:var(--muted);font-size:11px">'
+      + escapeHtml(k.rolle||'') + '</span>';
+    l.appendChild(t);
+    box.appendChild(l);
+  });
+  var hj = document.createElement('div');
+  hj.style.cssText = 'font-size:11.5px;color:var(--muted);width:100%;margin-top:2px;';
+  hj.textContent = OB_KT_VALGT.length
+    ? ('Spærrer: ' + OB_KT_VALGT.map(ktNavn).join(' + ') + '. Resten af vognen er fri.')
+    : 'Intet valgt betyder HELE vognen.';
+  box.appendChild(hj);
+}
+
+/* Kaldes af openObModal, når vinduet åbnes. */
+function ktAabnBooking(ob){
+  OB_ART_VALGT = obArt(ob);
+  OB_KT_VALGT  = obKt(ob).slice();
+  var felt = document.getElementById('obArtField');
+  /* Er SQL'en ikke kørt, findes arterne ikke i basen — og så må vinduet
+     se ud præcis som før. Et valg, der ikke kan gemmes, er en fælde. */
+  if(felt) felt.style.display = ktFindes() ? '' : 'none';
+  obSaetArt(OB_ART_VALGT);
+  obKtTegn();
+}
+
+/* En ny booking, der er en service fra starten: knappen ved siden af Book. */
+function obNyService(vognId){
+  openObModal(vognId, null);
+  obSaetArt('service');
+  /* Hele vognen som udgangspunkt — man fravælger de køretøjer, der ikke
+     skal med. Det er den vej rundt, fordi en service oftest tager det
+     hele, og det modsatte ville kræve to klik hver gang. */
+  OB_KT_VALGT = [];
+  obKtTegn();
+  var n = document.getElementById('obName');
+  if(n && !n.value) n.value = 'Service';
+}
+
+/* «Book lastbil kun»: Remote 2's lastbil kører som ren transport, uden
+   flightpacken. Knappen findes kun, når vognen HAR en lastbil. */
+function ktLastbilerFor(vognId){
+  return ktForVogn(vognId).filter(function(k){ return k.slags === 'lastbil'; });
+}
+function obNyTransport(vognId){
+  var biler = ktLastbilerFor(vognId);
+  openObModal(vognId, null);
+  obSaetArt('transport');
+  OB_KT_VALGT = biler.map(function(k){ return k.id; });
+  obKtTegn();
+  var n = document.getElementById('obName');
+  if(n && !n.value) n.value = 'Transport';
+}
+
+/* ══ FLYT ET JOB OVER I SERVICE ════════════════════════════════════════
+   Et job, der er oprettet forkert — værkstedsopholdet, nogen kom til at
+   skrive som en produktion. Datoer, navn og vogn følger med, og jobbet
+   forsvinder fra joblisten. ÉN ting, der skifter art; ikke to ting, hvor
+   den ene er en død kopi, nogen skal huske at slette.
+
+   Kører jobbet med to vogne, bliver det til to serviceophold — ét pr.
+   vogn, fordi en booking hører til én vogn. Det står i spørgsmålet, så
+   man ved det, før man trykker. */
+function jobKanBlivService(j){
+  return !!(j && jobVogne(j).length);
+}
+
+async function jobTilService(jobId){
+  var j = jobs.find(function(x){ return x.id === jobId; });
+  if(!j) return;
+  var vogne = jobVogne(j);
+  if(!vogne.length){
+    alert('Jobbet er ikke bundet til en OB-vogn.\n\n'
+        + 'Et serviceophold hører til en vogn, så vælg vognen på jobbet først.');
+    return;
+  }
+  var navne = vogne.map(function(v){ var o=obVognById(v); return o?o.name:'?'; }).join(' og ');
+  var sp = 'Gør "' + (j.name||'jobbet') + '" til et serviceophold på ' + navne + '?\n\n'
+         + (vogne.length>1 ? 'Det bliver til ' + vogne.length + ' serviceophold, ét pr. vogn.\n\n' : '')
+         + 'Jobbet forsvinder fra joblisten. Udstyret bliver frit i perioden, '
+         + 'så det kan lånes ud, mens bilerne står inde.';
+  if(!confirm(sp)) return;
+
+  try{
+    var raekker = vogne.map(function(v){
+      return {ob_vogn_id: v, name: j.name || 'Service', who: j.who || '',
+              start_date: j.start_date, end_date: j.end_date,
+              notes: (j.notes || ''), status: 'ordre',
+              art: 'service', koeretoejer: []};
+    });
+    var sv = await supa.from('ob_bookinger').insert(raekker);
+    if(sv.error) throw sv.error;
+    /* Jobbet slettes FØRST når servicen er oprettet. Går det galt
+       undervejs, står jobbet der endnu — og så har man ikke mistet
+       noget, man kun har fået en fejl at prøve igen på. */
+    var d = await supa.from('jobs').delete().eq('id', jobId);
+    if(d.error) throw d.error;
+    await Promise.all([loadJobs(), loadObBookinger()]);
+    /* Jobvinduet lukkes paa sin egen overlay. «lukModal» og «render»
+       stod her foerst - to navne, der ikke findes i programmet. Den
+       statiske gennemgang fangede dem, foer de naaede en skaerm. */
+    var ov = document.getElementById('overlay');
+    if(ov) ov.classList.remove('open');
+    renderJobs();
+    renderObVogne();
+  }catch(e){
+    alert('Kunne ikke flytte jobbet til service: ' + (e.message||e));
+  }
+}
+
+/* ══ MÆRKET PÅ BOOKINGEN ═══════════════════════════════════════════════
+   En service må ikke ligne et job. Den står i OB-kalenderen med sin egen
+   farve og et værktøjsmærke, så man kan se med ét blik, at det ikke er
+   en produktion. Joblisten, forsiden og statistikken rører den ikke. */
+function obArtMaerke(b){
+  var a = obArt(b);
+  if(a === 'job') return '';
+  var d = OB_ARTER[a];
+  var kt = obKt(b);
+  var tip = d.tip + (kt.length ? ' · ' + kt.map(ktNavn).join(' + ') : '');
+  return '<span class="artmaerke" style="background:' + d.farve + '22;color:' + d.farve
+       + ';border:1px solid ' + d.farve + '66" title="' + escapeHtml(tip) + '">'
+       + d.maerke + ' ' + d.navn + '</span>';
+}
+function obArtFarve(b, standard){
+  var a = obArt(b);
+  return (a === 'job') ? standard : OB_ARTER[a].farve;
+}
+
+/* ── Støder to bookinger sammen? ──────────────────────────────
+   Samme vogn er ikke nok mere. OB4's følgevogn kan stå på værksted,
+   mens OB-vognen kører et job — det er hele grunden til, at køretøjerne
+   findes. De støder kun sammen, hvis de deler mindst ét køretøj, eller
+   hvis en af dem tager hele vognen. */
+function obBookingConflict(obVognId, start, end, excludeId, koeretoejer){
+  if(!obVognId || !start || !end) return null;
+  var mine = Array.isArray(koeretoejer) ? koeretoejer.filter(Boolean) : [];
+  return OB_BOOKINGER.find(function(b){
+    if(b.id === excludeId) return false;
+    if(b.ob_vogn_id !== obVognId) return false;
+    if(!(b.start_date <= end && b.end_date >= start)) return false;
+    return ktStoeder(mine, obKt(b));
+  }) || null;
+}
+
+
+/* ══ RESTEN AF LEDNINGERNE ═════════════════════════════════════════════ */
+
+/* Udstyrslistens udgangspunkt afhænger af arten.
+   Et job tager hele vognen, og man fravælger det, det ikke skal bruge.
+   En service tager INTET — det er hele pointen, at udstyret bliver frit
+   — og man vælger kun det, der faktisk skal serviceres. Samme liste,
+   modsat udgangspunkt. Kaldes efter obByggKladde, så den almindelige
+   opbygning ikke skal kende til arter. */
+function obKladdeEfterArt(){
+  if(typeof OB_KLADDE === 'undefined' || !OB_KLADDE || !OB_KLADDE.linjer) return;
+  if(OB_ART_VALGT === 'job') return;
+  /* Retter man en service, der ER gemt, skal dens egne valg blive
+     stående — ellers ville et åbent vindue tømme listen, hver gang man
+     kiggede på den. Kun en NY service starter tom. */
+  if(OB_KLADDE.bookingId) return;
+  OB_KLADDE.linjer.forEach(function(l){ l.valgt = false; });
+}
+
+/* ── Vinduet til et køretøj ───────────────────────────────── */
+(function(){
+  var g = document.getElementById('ktGemBtn');
+  if(g) g.addEventListener('click', ktGem);
+  var a = document.getElementById('ktAnnullerBtn');
+  if(a) a.addEventListener('click', function(){
+    document.getElementById('ktOverlay').classList.remove('open');
+  });
+  var s = document.getElementById('ktSletBtn');
+  if(s) s.addEventListener('click', ktSlet);
+  if(typeof lukVedKlikUdenfor === 'function'){
+    lukVedKlikUdenfor(document.getElementById('ktOverlay'), function(){
+      document.getElementById('ktOverlay').classList.remove('open');
+    });
+  }
+})();
+
+/* ── «Flyt til service» i jobvinduet ──────────────────────────
+   Knappen står kun frem, når jobbet ER gemt og bundet til en vogn. Et
+   nyt, ugemt job har ingen datoer at flytte med, og et job uden vogn
+   har ingen vogn at sætte på værksted — en knap, der altid er der og
+   altid siger nej, lærer én at lade være med at trykke. */
+function jobServiceKnap(){
+  var b = document.getElementById('jobServiceBtn');
+  if(!b) return;
+  var id = (typeof editingJobId !== 'undefined') ? editingJobId : null;
+  var j  = id && (typeof jobs !== 'undefined')
+             ? jobs.find(function(x){ return x.id === id; }) : null;
+  var vis = !!(j && ktFindes() && jobVogne(j).length);
+  b.style.display = vis ? '' : 'none';
+  b.onclick = vis ? function(){ jobTilService(id); } : null;
+}
+
+
+/* ══ I DAG PÅ TELEFONEN ════════════════════════════════════════════════
+   Forsiden er kun på computeren — den bygger på at kunne trække kort
+   rundt på et lærred, og det giver ingen mening på en telefon. Men
+   panelet, telefonen har i stedet, er en ren liste, og så mangler man de
+   to ting forsiden giver med ét blik: TALLENE og HVORNÅR.
+
+   Derfor to striber øverst i panelet, begge lavet til en telefon og
+   ikke til en skrumpet forside:
+
+     · tallene — hvor mange vogne er ude, hvor meget skal pakkes, hvad
+       står på værksted. Tryk på et tal, og panelet ruller til blokken.
+     · tidslinjen — ti dage frem, én linje pr. OB-vogn. Det er dét, man
+       står og skal bruge, når nogen spørger «er OB4 ledig på torsdag».
+
+   Begge læser den SAMME iDagData(), som panelet og infoskærmen bruger.
+   Et andet regnestykke ville før eller siden sige noget andet end
+   forsiden, og så ved man ikke hvilken af dem man skal tro på.        */
+
+var IDAG_DAGE = 10;
+
+function iDagTalHTML(data){
+  var tal = [
+    {id:'ob',        kort:'Vogne ude',  n:(data.blokke.find(function(b){return b.id==='ob';})||{linjer:[]}).linjer.length},
+    {id:'pak',       kort:'Pakkes',     n:(data.blokke.find(function(b){return b.id==='pak';})||{linjer:[]}).linjer.length},
+    {id:'hentes',    kort:'Hentes',     n:(data.blokke.find(function(b){return b.id==='hentes';})||{linjer:[]}).linjer.length},
+    {id:'retur',     kort:'Retur',      n:(data.blokke.find(function(b){return b.id==='retur';})||{linjer:[]}).linjer.length},
+    {id:'vaerksted', kort:'Værksted',   n:(data.blokke.find(function(b){return b.id==='vaerksted';})||{linjer:[]}).linjer.length}
+  ];
+  var kt = (data.blokke.find(function(b){return b.id==='koeretoej';})||{linjer:[]}).linjer.length;
+  if(kt) tal.push({id:'koeretoej', kort:'Papirer', n:kt, advarsel:true});
+  return '<div class="idag-tal-stribe">' + tal.map(function(t){
+    return '<button class="idag-tal-kort' + (t.advarsel && t.n ? ' advarsel' : '')
+         + (t.n ? '' : ' tom') + '" data-idaghop="' + t.id + '">'
+         + '<span class="n">' + t.n + '</span>'
+         + '<span class="k">' + escapeHtml(t.kort) + '</span></button>';
+  }).join('') + '</div>';
+}
+
+/* ── Tidslinjen ───────────────────────────────────────────────
+   Ti dage, fordi det er så meget, der kan være på en telefon uden at
+   en dag bliver smallere end en finger. Går en booking ud over
+   stribens kant, får bjælken en pil — ellers ville den se ud som om
+   den sluttede, hvor skærmen gør. */
+function iDagTidslinjeHTML(dato){
+  var OBB = (typeof OB_BOOKINGER !== 'undefined' && OB_BOOKINGER) ? OB_BOOKINGER : [];
+  var VOGNE = (typeof OB_VOGNE !== 'undefined' && OB_VOGNE) ? OB_VOGNE : [];
+  if(!VOGNE.length) return '';
+  var dage = [];
+  for(var i=0;i<IDAG_DAGE;i++) dage.push(iDagDage(dato, i));
+  var sidste = dage[dage.length-1];
+
+  var h = '<div class="idag-tl">';
+  h += '<div class="idag-tl-dage"><span class="idag-tl-navn"></span>';
+  dage.forEach(function(d, i){
+    var dd = new Date(d+'T00:00:00');
+    var weekend = (dd.getDay()===0 || dd.getDay()===6);
+    h += '<span class="idag-tl-dag' + (i===0?' idag':'') + (weekend?' weekend':'') + '">'
+       + dd.getDate() + '</span>';
+  });
+  h += '</div>';
+
+  VOGNE.forEach(function(v){
+    var mine = OBB.filter(function(b){
+      return b.ob_vogn_id === v.id && b.end_date >= dato && b.start_date <= sidste;
+    });
+    h += '<div class="idag-tl-raekke">'
+       + '<span class="idag-tl-navn" style="--vf:' + (v.color||'#888') + '">'
+       + escapeHtml(v.name) + '</span>';
+    dage.forEach(function(d, i){
+      var paa = mine.filter(function(b){ return b.start_date <= d && b.end_date >= d; });
+      var b = paa[0];
+      var kl = 'idag-tl-celle';
+      var stil = '';
+      var tip = '';
+      if(b){
+        var art = (typeof obArt==='function') ? obArt(b) : 'job';
+        var farve = (art==='job') ? (v.color||'#888')
+                  : ((typeof OB_ARTER!=='undefined' && OB_ARTER[art]) ? OB_ARTER[art].farve : '#888');
+        kl += ' optaget' + (art!=='job' ? ' ' + art : '');
+        stil = 'background:' + farve + (b.status==='tilbud' ? '55' : 'cc');
+        tip = b.name + ' · ' + b.start_date + ' → ' + b.end_date
+            + (art!=='job' ? ' · ' + OB_ARTER[art].navn : '');
+      }
+      h += '<span class="' + kl + '"' + (stil?' style="'+stil+'"':'')
+         + (tip?' title="'+escapeHtml(tip)+'"':'') + '></span>';
+    });
+    h += '</div>';
+  });
+  h += '</div>';
+  return h;
+}
+
+/* Rul til en blok i panelet. Titlerne er de eneste faste holdepunkter,
+   saa der ledes efter titlen og ikke efter et id, der ikke findes i
+   det tegnede. */
+function iDagRulTil(id){
+  var b = I_DAG_BLOKKE.find(function(x){ return x.id === id; });
+  if(!b) return;
+  var ind = document.getElementById('idagIndhold');
+  if(!ind) return;
+  var t = [].slice.call(ind.querySelectorAll('.idag-blok-titel'))
+            .find(function(n){ return n.textContent.indexOf(b.titel) === 0; });
+  if(t && t.scrollIntoView) t.scrollIntoView({behavior:'smooth', block:'start'});
+}
 
 </script>
 
