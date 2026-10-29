@@ -1381,7 +1381,12 @@ tr.imp-ingen td:first-child{border-left:2px solid #7a3b3b;padding-left:8px;color
   grid-template-columns:62px repeat(10,1fr);gap:2px;align-items:center}
 .idag-tl-raekke{margin-top:3px}
 .idag-tl-raekke.under .idag-tl-navn{font-weight:600;font-size:9px;
-  color:var(--muted);padding-left:12px}
+  color:var(--muted);padding-left:12px;border-left-color:transparent}
+/* Deles raekken mellem to koeretoejer, deles hoejden ogsaa - saa fylder
+   en vogn med foelgevogn det samme som en uden. */
+.idag-tl-raekke.delt{margin-top:2px}
+.idag-tl-raekke.delt .idag-tl-celle{height:9px}
+.idag-tl-raekke.under{margin-top:1px}
 .idag-tl-navn{font-size:10px;font-weight:700;overflow:hidden;
   text-overflow:ellipsis;white-space:nowrap;padding-right:4px;
   border-left:3px solid var(--vf,transparent);padding-left:5px}
@@ -3930,7 +3935,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_d2b4pWi-2jTYIeCAAUAQcA_0ygShdrH';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.29-c';
+const EP_VERSION = '2026.10.29-d';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -8652,45 +8657,85 @@ function renderGantt(containerEl){
      Kun når den HAR flere. DNK131 er ét køretøj, og en underlinje med
      præcis det samme navn ville være en linje mere at læse uden en
      eneste oplysning i. */
+  /* ⚠ RETTET 29.10.2026, anden gang.
+     Første udgave lavede KUN underlinjer for en vogn med flere
+     køretøjer — og så forsvandt vognens eget navn. OB4's to linjer hed
+     «OB-vogn» og «Følgevogn» og stod lige under DNK131, så det så ud,
+     som om DNK131 havde en følgevogn. Et navn, der mangler, bliver til
+     en oplysning, der er forkert.
+
+     Og højden: to linjer pr. vogn gjorde tidslinjen dobbelt så høj for
+     halvdelen af vognene. Nu DELES rækkens højde mellem køretøjerne, så
+     en vogn med en følgevogn fylder præcis det samme som en uden. Det
+     er samlet set lige så stort som før — og man kan stadig se, hvilket
+     køretøj der er i brug. */
   var ganttLinjer = [];
   OB_VOGNE.forEach(function(vogn){
     var kt = (typeof ktForVogn === 'function') ? ktForVogn(vogn.id) : [];
-    if(kt.length > 1) kt.forEach(function(k){ ganttLinjer.push({vogn:vogn, kt:k}); });
-    else ganttLinjer.push({vogn:vogn, kt:null});
+    if(kt.length > 1){
+      kt.forEach(function(k,i){
+        ganttLinjer.push({vogn:vogn, kt:k, antal:kt.length, foerste:(i===0),
+                          sidste:(i===kt.length-1)});
+      });
+    }else{
+      ganttLinjer.push({vogn:vogn, kt:null, antal:1, foerste:true, sidste:true});
+    }
   });
 
   // Rows
   ganttLinjer.forEach(function(linje,ri){
     var vogn = linje.vogn, mitKt = linje.kt;
     var isLast=ri===ganttLinjer.length-1;
-    var border=isLast?'none':'1px solid var(--border)';
+    /* En streg mellem to VOGNE, men kun en antydning mellem to køretøjer
+       i den samme vogn — ellers ser de to ud som to vogne. */
+    var border = isLast ? 'none'
+      : (linje.sidste ? '1px solid var(--border)'
+                      : '1px solid rgba(255,255,255,.05)');
+    var hoejde = Math.max(14, Math.round(MAAL.raekke / linje.antal)) + 'px';
     var lc=document.createElement('div');
     /* Navnet skal kunne læses, også når man er rullet langt ud i november.
        Derfor klæber den første søjle til venstre kant. */
     lc.className='gantt-navn';
-    lc.style.cssText='padding:6px 10px;border-bottom:'+border+';display:flex;align-items:center;gap:7px;'
-      +'background:var(--panel);position:sticky;left:0;z-index:3;min-height:var(--gantt-raekke);';
+    lc.style.cssText='padding:2px 10px;border-bottom:'+border+';display:flex;align-items:center;gap:6px;'
+      +'background:var(--panel);position:sticky;left:0;z-index:3;'
+      +'height:'+hoejde+';min-height:'+hoejde+';';
+    /* Prikken står kun på vognens første linje. To prikker under
+       hinanden i den samme farve ser ud som to vogne. */
     var dot=document.createElement('span');
-    dot.style.cssText='width:'+(mitKt?'6px':'9px')+';height:'+(mitKt?'6px':'9px')
-      +';border-radius:50%;background:'+vogn.color+';flex-shrink:0;'
-      +(mitKt?'margin-left:5px;opacity:.75;':'box-shadow:0 0 5px '+vogn.color+'88;');
+    dot.style.cssText='width:8px;height:8px;border-radius:50%;flex-shrink:0;'
+      + (linje.foerste
+          ? 'background:'+vogn.color+';box-shadow:0 0 5px '+vogn.color+'88;'
+          : 'background:transparent;');
     lc.appendChild(dot);
+
     var nm=document.createElement('span');
-    nm.style.cssText='font-weight:'+(mitKt?'600':'700')+';font-size:'+(mitKt?'11px':'12px')
-      +';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
-      +(mitKt?'color:var(--muted);':'');
-    if(mitKt){
-      /* Køretøjet hedder «Remote 2 · Lastbil», og vognen står allerede i
-         linjen ovenfor. Her vises kun det, der skiller dem — ellers er
-         halvdelen af en smal søjle det samme ord to gange. */
-      var kort = String(mitKt.navn||'').split('·').pop().trim() || mitKt.navn;
-      nm.textContent = kort;
-      nm.title = mitKt.navn + ' · ' + (mitKt.rolle||'')
-               + (mitKt.nummerplade ? ' · ' + mitKt.nummerplade : '');
-    }else{
-      nm.textContent = vogn.name;
-      nm.title = vogn.name;
+    nm.style.cssText='white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
+      + 'display:flex;align-items:baseline;gap:5px;min-width:0;';
+    if(linje.foerste){
+      /* Vognens navn SKAL stå der. Uden det hænger køretøjerne i luften
+         under den forrige vogn og ser ud som dens. */
+      var vn=document.createElement('b');
+      vn.style.cssText='font-weight:700;font-size:'+(mitKt?'10.5px':'12px')+';';
+      vn.textContent=vogn.name;
+      nm.appendChild(vn);
     }
+    /* Mærkatet står KUN på de linjer, der ikke er den første.
+       Den første linje ER vognen — den står med vognens navn, og
+       «REMOTE 2 Flightpack» fyldte mere, end søjlen har, så den blev
+       klippet til «REMOTE 2 Flig…». Et navn, der er klippet midt over,
+       oplyser ikke noget. Nu læses det som: «REMOTE 2» og under den
+       «Lastbil». Hele navnet står som museover-tekst på begge. */
+    if(mitKt && !linje.foerste){
+      var kort = String(mitKt.navn||'').split('·').pop().trim() || mitKt.navn;
+      var kn=document.createElement('span');
+      kn.style.cssText='font-size:9.5px;color:var(--muted);font-weight:600;'
+        + 'overflow:hidden;text-overflow:ellipsis;';
+      kn.textContent=kort;
+      nm.appendChild(kn);
+    }
+    nm.title = (mitKt ? mitKt.navn + (mitKt.rolle?' · '+mitKt.rolle:'')
+                       + (mitKt.nummerplade?' · '+mitKt.nummerplade:'')
+                      : vogn.name);
     lc.appendChild(nm);
     table.appendChild(lc);
 
@@ -8731,10 +8776,10 @@ function renderGantt(containerEl){
             + obFarve(color,.05)+' 5px 11px)'
           : obFarve(color,.20);
         block.style.cssText='grid-column:span '+span+';border-bottom:'+border
-          +';min-height:var(--gantt-raekke)'
+          +';height:'+hoejde+';min-height:'+hoejde
           +';background:'+bund
           +';border-left:3px '+(isTilbud?'dashed':'solid')+' '+color
-          +';padding:3px 5px;display:flex;align-items:center;cursor:pointer;overflow:hidden;';
+          +';padding:0 5px;display:flex;align-items:center;cursor:pointer;overflow:hidden;';
         block.title=(isTilbud?'TILBUD: ':'')
           +((art!=='job'&&typeof OB_ARTER!=='undefined'&&OB_ARTER[art])?OB_ARTER[art].navn.toUpperCase()+': ':'')
           +booking.name+(booking.who?' ('+booking.who+')':'')
@@ -8751,7 +8796,7 @@ function renderGantt(containerEl){
         table.appendChild(block); i+=Math.max(span,1);
       } else {
         var c=document.createElement('div');
-        c.style.cssText='border-bottom:'+border+';min-height:var(--gantt-raekke);border-left:1px solid '+(isT?'var(--amber)':'var(--border)')+';background:'+(isT?'rgba(232,163,61,.04)':isWE?'rgba(255,255,255,.01)':'transparent')+';';
+        c.style.cssText='border-bottom:'+border+';height:'+hoejde+';min-height:'+hoejde+';border-left:1px solid '+(isT?'var(--amber)':'var(--border)')+';background:'+(isT?'rgba(232,163,61,.04)':isWE?'rgba(255,255,255,.01)':'transparent')+';';
         table.appendChild(c); i++;
       }
     }
@@ -15007,8 +15052,13 @@ function iDagTidslinjeHTML(dato){
   var linjer = [];
   VOGNE.forEach(function(v){
     var kt = (typeof ktForVogn === 'function') ? ktForVogn(v.id) : [];
-    if(kt.length > 1) kt.forEach(function(k){ linjer.push({v:v, kt:k}); });
-    else linjer.push({v:v, kt:null});
+    if(kt.length > 1){
+      kt.forEach(function(k,i){
+        linjer.push({v:v, kt:k, antal:kt.length, foerste:(i===0)});
+      });
+    }else{
+      linjer.push({v:v, kt:null, antal:1, foerste:true});
+    }
   });
 
   linjer.forEach(function(L){
@@ -15020,10 +15070,15 @@ function iDagTidslinjeHTML(dato){
       var liste = (typeof obKt==='function') ? obKt(b) : [];
       return !liste.length || liste.indexOf(mitKt.id) >= 0;
     });
-    var navn = mitKt
-      ? (String(mitKt.navn||'').split('·').pop().trim() || mitKt.navn)
-      : v.name;
-    h += '<div class="idag-tl-raekke' + (mitKt ? ' under' : '') + '">'
+    /* Vognens navn paa foerste linje - den ER vognen. Underlinjerne
+       baerer koeretoejets korte navn. Foerst stod der kun koeretoejerne,
+       og saa havde Remote 2 ingen navn i tidslinjen overhovedet.
+       Hoejden deles, saa en vogn med foelgevogn fylder det samme som en
+       uden. */
+    var navn = L.foerste ? v.name
+      : (String(mitKt.navn||'').split('·').pop().trim() || mitKt.navn);
+    h += '<div class="idag-tl-raekke' + (L.foerste ? '' : ' under')
+       + (L.antal > 1 ? ' delt' : '') + '">'
        + '<span class="idag-tl-navn" style="--vf:' + (v.color||'#888') + '"'
        + (mitKt ? ' title="' + escapeHtml(mitKt.navn) + '"' : '') + '>'
        + escapeHtml(navn) + '</span>';
