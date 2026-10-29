@@ -331,7 +331,7 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
   color:var(--muted);font:600 13px/1 inherit;padding:9px 18px;cursor:pointer;
   display:flex;align-items:center;gap:7px;transition:background .15s,color .15s}
 .artvaelg button:first-child{border-left:none}
-.artvaelg button:hover{color:var(--fg)}
+.artvaelg button:hover{color:var(--text)}
 .artvaelg button.valgt{color:#0d1117;font-weight:700}
 .artmaerke{display:inline-flex;align-items:center;gap:4px;font-size:10px;
   font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;
@@ -342,7 +342,7 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
    hvor vognen er — ikke på en indstillingsside, man skal lede efter. */
 .ktliste{display:flex;flex-direction:column;gap:6px}
 .ktrk{display:flex;align-items:center;gap:10px;padding:8px 10px;
-  border:1px solid var(--border);border-radius:8px;background:var(--bg2)}
+  border:1px solid var(--border);border-radius:8px;background:var(--panel-2)}
 .ktrk .ktnavn{font-weight:600;font-size:13px}
 .ktrk .ktrolle{font-family:var(--mono);font-size:10px;text-transform:uppercase;
   letter-spacing:.05em;color:var(--muted);padding:2px 6px;border:1px solid var(--border);
@@ -354,8 +354,8 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
 .ktvis{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
 .ktvis label{display:flex;align-items:center;gap:7px;padding:8px 12px;
   border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px;
-  background:var(--bg2)}
-.ktvis label.valgt{border-color:var(--accent);background:rgba(95,184,138,.10)}
+  background:var(--panel-2)}
+.ktvis label.valgt{border-color:var(--amber);background:rgba(95,184,138,.10)}
 .ktvis input{width:auto!important;margin:0}
 
 /* ── Datoer der udløber ───────────────────────────────────────
@@ -1364,7 +1364,7 @@ tr.imp-ingen td:first-child{border-left:2px solid #7a3b3b;padding-left:8px;color
    første man ser — ikke noget man skal rulle ned til. */
 .idag-tal-stribe{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;
   margin:0 0 14px}
-.idag-tal-kort{background:var(--bg2);border:1px solid var(--border);
+.idag-tal-kort{background:var(--panel-2);border:1px solid var(--border);
   border-radius:10px;padding:9px 6px;display:flex;flex-direction:column;
   align-items:center;gap:2px;cursor:pointer;color:inherit;font:inherit}
 .idag-tal-kort .n{font-size:21px;font-weight:800;line-height:1;
@@ -1386,8 +1386,8 @@ tr.imp-ingen td:first-child{border-left:2px solid #7a3b3b;padding-left:8px;color
 .idag-tl-dag{font-size:9.5px;color:var(--muted);text-align:center}
 .idag-tl-dag.weekend{color:var(--muted);opacity:.55}
 /* I dag skal kunne findes uden at tælle. */
-.idag-tl-dag.idag{color:var(--fg);font-weight:800}
-.idag-tl-celle{height:16px;border-radius:3px;background:var(--bg2);
+.idag-tl-dag.idag{color:var(--text);font-weight:800}
+.idag-tl-celle{height:16px;border-radius:3px;background:var(--panel-2);
   border:1px solid var(--border)}
 .idag-tl-celle.optaget{border-color:transparent}
 /* En service er ikke et job. Stribet, så den kan ses uden farvesyn. */
@@ -3928,7 +3928,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_d2b4pWi-2jTYIeCAAUAQcA_0ygShdrH';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.29-a';
+const EP_VERSION = '2026.10.29-b';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -8814,9 +8814,15 @@ function renderObVogne(){
       +'<div style="font-size:11px;color:var(--muted);">'+(equip.length+pkgs.length)+' stk. udstyr/pakker'
       +(active.length?'<span style="color:var(--red);margin-left:8px;">● BOOKET: '+escapeHtml(active[0].name)+'</span>':'')+'</div>';
     head.appendChild(tw);
-    var bb=document.createElement('button'); bb.className='btn small'; bb.textContent='+ Book '+vogn.name;
+    var bb=document.createElement('button'); bb.className='btn small'; bb.textContent='+ Book';
+    bb.title='Book '+vogn.name;
     (function(v){ bb.addEventListener('click',function(e){e.stopPropagation();openObModal(v.id,null);}); })(vogn);
-    head.appendChild(bb);
+    /* IKKE appendChild her. Den gule skal staa YDERST til højre, så den
+       står samme sted på hver eneste vogn. Knapperne før den kommer og
+       går — «Book lastbil» findes kun på vogne med en lastbil — og
+       vognens navn gjorde knappen selv forskellig i bredde. Begge dele
+       fik rækken til at rage. Navnet står i mærket og i overskriften en
+       håndsbredde til venstre, så det er ikke væk, bare ikke tre gange. */
 
     /* Service ved siden af Book. Den spaerrer bilerne, men reserverer
        intet udstyr - saa et kamera kan stadig laanes ud af foelgevognen,
@@ -8848,6 +8854,10 @@ function renderObVogne(){
     rv.style.cssText='font-size:12px;padding:5px 10px;min-height:28px;';
     (function(v){ rv.addEventListener('click',function(e){e.stopPropagation();openVogn(v.id);}); })(vogn);
     head.appendChild(rv);
+
+    /* Og så den gule, yderst. Alt det, der skifter fra vogn til vogn,
+       ligger til venstre for den. */
+    head.appendChild(bb);
 
     var obChev=document.createElement('span');
     obChev.id='ob-chev-'+vogn.id;
@@ -14300,7 +14310,13 @@ function ktById(id){ return KOERETOEJER.find(function(k){ return k.id===id; }); 
 function ktNavn(id){ var k=ktById(id); return k ? k.navn : '(slettet køretøj)'; }
 
 var OB_ARTER = {
-  job:       {navn:'Job',       maerke:'',   farve:'',        tip:'En produktion, der kører med vognen'},
+  /* Job har sin EGEN farve og ikke en tom streng med «eller en variabel»
+     bagved. Først stod her farve:'' og «d.farve || var(--amber)» i
+     tegningen — og --accent findes ikke i East Production, den hedder
+     --amber her. Baggrunden blev derfor aldrig sat, teksten er næsten
+     sort, og knappen var sort på sort. En farve, der skal slås op to
+     steder for at virke, er en farve, der før eller siden ikke gør. */
+  job:       {navn:'Job',       maerke:'',   farve:'#e8a33d', tip:'En produktion, der kører med vognen'},
   service:   {navn:'Service',   maerke:'🔧', farve:'#8c98a6', tip:'Værksted. Spærrer bilerne, men ikke udstyret'},
   transport: {navn:'Transport', maerke:'🚚', farve:'#6aa9e0', tip:'Lastbilen kører noget andet. Vognen er ikke med'}
 };
@@ -14570,7 +14586,7 @@ function obArtVaelgTegn(){
     b.className = 'artvaelg-knap' + (OB_ART_VALGT===a ? ' valgt' : '');
     b.title = d.tip;
     b.innerHTML = (d.maerke ? '<span>'+d.maerke+'</span>' : '') + '<span>'+d.navn+'</span>';
-    if(OB_ART_VALGT===a) b.style.background = d.farve || 'var(--accent)';
+    if(OB_ART_VALGT===a) b.style.background = d.farve;
     b.addEventListener('click', function(){ obSaetArt(a); });
     box.appendChild(b);
   });
@@ -14677,8 +14693,21 @@ function obNyService(vognId){
 
 /* «Book lastbil kun»: Remote 2's lastbil kører som ren transport, uden
    flightpacken. Knappen findes kun, når vognen HAR en lastbil. */
+/* ⚠ RETTET 29.10.2026.
+   Her stod «slags === 'lastbil'» alene, og saa fik DNK131 og DNK83 en
+   «Book lastbil»-knap. De ER lastbiler - men de er OB-VOGNEN selv, og
+   en OB-vogn kan ikke laanes ud som transport, for saa er der ingen
+   OB-vogn.
+
+   Det, der afgoer det, er altsaa ROLLEN og ikke slagsen: kun en
+   foelgevogn koerer noget andet end sin egen vogn. Remote 2's lastbil
+   er en foelgevogn - den baerer flightpacken - og den kan koere alene.
+   Reglen stod paa den forkerte af de to felter, og det var praecis
+   derfor, de blev to felter. */
 function ktLastbilerFor(vognId){
-  return ktForVogn(vognId).filter(function(k){ return k.slags === 'lastbil'; });
+  return ktForVogn(vognId).filter(function(k){
+    return k.slags === 'lastbil' && k.rolle === 'foelgevogn';
+  });
 }
 function obNyTransport(vognId){
   var biler = ktLastbilerFor(vognId);
