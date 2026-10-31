@@ -283,6 +283,15 @@ var __Html5QrcodeLibrary__;(()=>{var t={449:function(t,e,r){!function(t){"use st
   .fil-status.fejl{ color:var(--red); }
 
   /* ── Historik pr. job ── */
+  /* ── Udstyrsfotos ─────────────────────────────────────────
+     Billederne af udstyret er PNG'er med gennemsigtig baggrund —
+     alle 64 er RGB + alfa. Et sort apparat på gennemsigtig bund
+     vist på et mørkt panel er en sort firkant: billedet går i ét
+     med baggrunden. Derfor en lys bund bag dem.
+     Og «contain» frem for «cover»: et apparat er bredt og lavt
+     (201×43 for de smalleste), og «cover» skar midten ud, så man
+     så et stykke af forpladen uden at kunne se hvad det var. */
+  .udstyrsfoto{ background:#f1f2f4; object-fit:contain; }
   .hist-linje{ display:flex; align-items:baseline; gap:10px; padding:9px 2px;
     border-bottom:1px solid var(--border); font-size:13px; }
   .hist-hvem{ font-family:var(--mono); font-size:11px; color:var(--amber);
@@ -2555,7 +2564,7 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
     <input type="hidden" id="equipDetailIdx">
     <div style="display:flex; gap:16px; margin-bottom:14px; flex-wrap:wrap;">
       <div style="flex:0 0 120px;">
-        <img id="equipImgPreview" src="" style="width:120px;height:120px;border-radius:9px;object-fit:cover;background:var(--panel-2);border:1px solid var(--border);display:none;">
+        <img id="equipImgPreview" class="udstyrsfoto" src="" style="width:120px;height:120px;border-radius:9px;padding:4px;border:1px solid var(--border);display:none;">
         <div id="equipImgPlaceholder" style="width:120px;height:120px;border-radius:9px;background:var(--panel-2);border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;text-align:center;">Intet billede</div>
         <input type="file" id="equipImgFile" accept="image/*" style="margin-top:8px;font-size:11px;width:120px;">
         <div id="equipImgStatus" style="font-size:10.5px;color:var(--muted);margin-top:4px;font-family:var(--mono);"></div>
@@ -3935,7 +3944,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_d2b4pWi-2jTYIeCAAUAQcA_0ygShdrH';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.29-e';
+const EP_VERSION = '2026.10.31-c';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -7994,7 +8003,7 @@ function renderLager(filter){
       const contents=EQUIPMENT.filter(function(e){return e.package_id===pkg.id;});
       const card=document.createElement('div'); card.className='pkg-card'; card.style.marginBottom='6px';
       const head=document.createElement('div'); head.className='pkg-head'; head.style.borderRadius='8px';
-      head.innerHTML=(pkg.image_url?'<img src="'+escapeHtml(pkg.image_url)+'" style="width:28px;height:28px;border-radius:4px;object-fit:cover;flex-shrink:0;">':'')
+      head.innerHTML=(pkg.image_url?'<img class="udstyrsfoto" src="'+escapeHtml(pkg.image_url)+'" style="width:28px;height:28px;border-radius:4px;padding:1px;flex-shrink:0;">':'')
         +'<span style="font-size:15px;flex-shrink:0;">📦</span>'
         +'<div style="flex:1;"><div style="font-weight:700;font-size:13.5px;">'+escapeHtml(pkg.name)+'</div>'
         +'<div style="font-size:10.5px;color:var(--muted);">'+contents.length+' stk.'+(pkg.tv2_number?' · TV2: '+escapeHtml(pkg.tv2_number):'')+'</div></div>'
@@ -8059,7 +8068,7 @@ function renderLager(filter){
       const equip=item.obj;
       const realIdx=EQUIPMENT.indexOf(equip);
       const row=document.createElement('div'); row.className='equip-item';
-      if(equip.image_url){ const img=document.createElement('img'); img.src=equip.image_url; img.style.cssText='width:30px;height:30px;border-radius:5px;object-fit:cover;flex-shrink:0;'; row.appendChild(img); }
+      if(equip.image_url){ const img=document.createElement('img'); img.className='udstyrsfoto'; img.src=equip.image_url; img.style.cssText='width:30px;height:30px;border-radius:5px;padding:1px;flex-shrink:0;'; row.appendChild(img); }
       const ne=document.createElement('div'); ne.className='name';
       ne.textContent=equip.name;
       /* Er de fordelt på flere vogne, skal man kunne se det på linjen –
@@ -8377,6 +8386,46 @@ function renderCustomFields(){
   });
 }
 document.getElementById('addCustomFieldBtn').addEventListener('click', function(){ detailCustomFields.push({label:'',value:''}); renderCustomFields(); });
+/* ── Læg et billede op, og sig til hvis det ikke går ───────────
+   Før stod der kort og godt:
+
+       if(!ue){ ...hent adressen... }
+
+   Gik uploaden galt, blev den linje bare sprunget over. Resten blev
+   gemt, billedet manglede, og forhåndsvisningen stod tilbage som en
+   mørk firkant — fordi et <img>, der ikke kan hente sit billede,
+   viser sin egen baggrundsfarve. Ingen fik at vide hvorfor.
+
+   Og der er en fejl mere, der ser nøjagtig ligesådan ud: filen
+   KOMMER op, men adressen fra getPublicUrl virker kun, hvis spanden
+   er offentlig. Er den ikke, er der ingen fejl at fange — browseren
+   får bare et afslag, når den henter. Derfor prøves adressen af her,
+   med det samme, mens nogen står og kigger. */
+async function laegBilledeOp(fil, sti){
+  const {error:ue} = await supa.storage.from('udstyr-billeder')
+    .upload(sti, fil, {upsert:true});
+  if(ue){
+    throw new Error('Billedet kunne ikke lægges op: '
+      + (ue.message || ue.error || 'ukendt fejl')
+      + '\n\nIntet er gemt. Prøv igen, eller fjern billedet og gem resten.');
+  }
+  const {data:pub} = supa.storage.from('udstyr-billeder').getPublicUrl(sti);
+  const adresse = pub.publicUrl;
+  const kanHentes = await new Promise(function(svar){
+    const im = new Image();
+    im.onload  = function(){ svar(true) };
+    im.onerror = function(){ svar(false) };
+    im.src = adresse;
+    setTimeout(function(){ svar(false) }, 8000);
+  });
+  if(!kanHentes){
+    throw new Error('Billedet blev lagt op, men adressen kan ikke hentes.\n\n'
+      + 'Spanden «udstyr-billeder» er efter alt at dømme ikke offentlig. '
+      + 'Åbn Storage → udstyr-billeder → Settings og slå «Public bucket» til. '
+      + 'Det er udstyrsfotos, ikke noget hemmeligt.\n\nIntet er gemt.');
+  }
+  return adresse;
+}
 document.getElementById('equipImgFile').addEventListener('change', function(e){
   const file=e.target.files[0]; if(!file) return; detailPendingFile=file;
   const reader=new FileReader(); reader.onload=function(){
@@ -8401,8 +8450,7 @@ document.getElementById('equipDetailSaveBtn').addEventListener('click', async fu
     if(detailPendingFile){
       const ext=detailPendingFile.name.split('.').pop();
       const path='equip_'+it.id+'_'+Date.now()+'.'+ext;
-      const {error:ue}=await supa.storage.from('udstyr-billeder').upload(path,detailPendingFile,{upsert:true});
-      if(!ue){ const {data:pub}=supa.storage.from('udstyr-billeder').getPublicUrl(path); image_url=pub.publicUrl; }
+      image_url=await laegBilledeOp(detailPendingFile,path);
     }
     const name=document.getElementById('dName').value.trim();
     const category=document.getElementById('dCategory').value||'Diverse';
@@ -8411,7 +8459,24 @@ document.getElementById('equipDetailSaveBtn').addEventListener('click', async fu
     /* Fordelingen: ryd op, læg sammen pr. vogn, og sig fra hvis der er
        fordelt flere ud, end der findes. */
     const samlet={};
-    (qty>1 ? dPlacering : []).forEach(function(pl){
+    /* ── Her stod (qty>1 ? dPlacering : []) ────────────────────
+       Fordelingen vises ikke, når der kun er ét stykke — der er jo
+       ikke noget at fordele. Men «intet at fordele» blev læst som
+       «hører ingen steder til», og så skrev HVER gemning
+       placering:[] og ob_vogn_id:null.
+
+       Lagde man bare et billede på et enkeltstykke, hoppede det ud
+       af sin OB-vogn, uden at nogen fik besked.
+
+       Et enkeltstykke bor stadig et sted. Er der ikke noget at
+       fordele, beholdes det, der stod i forvejen — og antallet
+       skæres til, hvis man samtidig har sat antallet ned. Sættes
+       antallet til 0, falder den ud af sig selv. */
+    const kilde = (qty>1) ? dPlacering
+      : placeringer(it).slice(0,1).map(function(p){
+          return {vogn:p.vogn, antal:Math.min(p.antal, qty)};
+        });
+    kilde.forEach(function(pl){
       if(!pl.vogn || !(+pl.antal>0)) return;
       samlet[pl.vogn]=(samlet[pl.vogn]||0)+(+pl.antal);
     });
@@ -8467,8 +8532,7 @@ async function savePkgFromOverlay(){
     if(detailPendingFile){
       const ext=detailPendingFile.name.split('.').pop();
       const path='pkg_'+(editingPkgId||Date.now())+'_'+Date.now()+'.'+ext;
-      const {error:ue}=await supa.storage.from('udstyr-billeder').upload(path,detailPendingFile,{upsert:true});
-      if(!ue){ const {data:pub}=supa.storage.from('udstyr-billeder').getPublicUrl(path); image_url=pub.publicUrl; }
+      image_url=await laegBilledeOp(detailPendingFile,path);
     }
     const row={name,category,qty,tv2_number:document.getElementById('dTv2').value.trim(),serial_number:document.getElementById('dSerial').value.trim(),qr_code:(document.getElementById('dQrCode').value.trim()||null),power_connection:document.getElementById('dPower').value.trim(),image_url,custom_fields:detailCustomFields.filter(function(f){return f.label.trim()||f.value.trim();})};
     if(editingPkgId){ const {error}=await supa.from('packages').update(row).eq('id',editingPkgId); if(error) throw error; }
