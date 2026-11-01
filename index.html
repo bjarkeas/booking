@@ -3944,7 +3944,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_d2b4pWi-2jTYIeCAAUAQcA_0ygShdrH';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.31-d';
+const EP_VERSION = '2026.11.01-a';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -8386,59 +8386,76 @@ function renderCustomFields(){
   });
 }
 document.getElementById('addCustomFieldBtn').addEventListener('click', function(){ detailCustomFields.push({label:'',value:''}); renderCustomFields(); });
-/* ── Læg et billede op, og sig til hvis det ikke går ───────────
-   Før stod der kort og godt:
+/* ── Læg et billede på udstyret ────────────────────────────────
+   Billedet gemmes direkte i udstyrets felt, ikke i Supabase Storage.
 
-       if(!ue){ ...hent adressen... }
+   Hvorfor: de 64 billeder, der allerede VIRKER i lageret, ligger
+   sådan. De ti, der lå i spanden, svarede med serverfejl, når
+   browseren prøvede at hente dem. Når én metode beviseligt virker i
+   de samme data, er det den, der skal bruges — ikke den, der skal
+   fejlfindes.
 
-   Gik uploaden galt, blev den linje bare sprunget over. Resten blev
-   gemt, billedet manglede, og forhåndsvisningen stod tilbage som en
-   mørk firkant — fordi et <img>, der ikke kan hente sit billede,
-   viser sin egen baggrundsfarve. Ingen fik at vide hvorfor.
+   Billedet skaleres ned til 260 px på den længste led, så et foto
+   fra en telefon ikke fylder flere megabyte i databasen.
 
-   Og der er en fejl mere, der ser nøjagtig ligesådan ud: filen
-   KOMMER op, men adressen fra getPublicUrl virker kun, hvis spanden
-   er offentlig. Er den ikke, er der ingen fejl at fange — browseren
-   får bare et afslag, når den henter. Derfor prøves adressen af her,
-   med det samme, mens nogen står og kigger. */
-async function laegBilledeOp(fil, sti){
-  const {error:ue} = await supa.storage.from('udstyr-billeder')
-    .upload(sti, fil, {upsert:true});
-  if(ue){
-    throw new Error('Billedet kunne ikke lægges op: '
-      + (ue.message || ue.error || 'ukendt fejl')
-      + '\n\nIntet er gemt. Prøv igen, eller fjern billedet og gem resten.');
-  }
-  const {data:pub} = supa.storage.from('udstyr-billeder').getPublicUrl(sti);
-  const adresse = pub.publicUrl;
+   PNG eller JPEG afgøres af, om billedet har gennemsigtige steder.
+   JPEG kan ikke gennemsigtighed: et sort kamera på gennemsigtig bund
+   ville få en RIGTIG sort baggrund bagt ind i filen. Det er netop
+   den fejl, vi brugte en aften på at opklare. Har billedet derimod
+   ingen gennemsigtighed, er JPEG langt mindre end PNG for et foto. */
+const BILLEDE_MAX = 260;
 
-  /* ── Prøv adressen af, men SPÆR IKKE på den ────────────────
-     Lige efter en upload kan adressen svare afvisende et øjeblik,
-     før filen er slået igennem. Første udgave af det her kastede en
-     fejl i det tilfælde — og nægtede dermed at gemme noget, der var
-     fuldstændig i orden. En kontrol, der kan tage fejl, må aldrig
-     stå i vejen for arbejdet.
-     Derfor: tre forsøg med pause imellem, og går det stadig ikke,
-     gemmes der alligevel. Du får en linje at vide i stedet. */
-  billedeNote = '';
-  let naaet = false;
-  for(let forsoeg = 0; forsoeg < 3 && !naaet; forsoeg++){
-    if(forsoeg) await new Promise(function(v){ setTimeout(v, 800) });
-    naaet = await new Promise(function(svar){
+function billedeFraFil(fil){
+  return new Promise(function(ok, nej){
+    const rd = new FileReader();
+    rd.onload  = function(){ ok(rd.result) };
+    rd.onerror = function(){ nej(new Error('Kunne ikke læse filen.')) };
+    rd.readAsDataURL(fil);
+  }).then(function(dataUrl){
+    return new Promise(function(ok, nej){
       const im = new Image();
-      im.onload  = function(){ svar(true) };
-      im.onerror = function(){ svar(false) };
-      /* eget nummer hver gang, så et afvisende svar ikke bliver husket */
-      im.src = adresse + '?t=' + Date.now() + '-' + forsoeg;
-      setTimeout(function(){ svar(false) }, 5000);
+      im.onload  = function(){ ok(im) };
+      im.onerror = function(){
+        nej(new Error('Filen er ikke et billede, browseren kan vise.\n\n'
+          + 'Prøv et almindeligt JPEG eller PNG.'));
+      };
+      im.src = dataUrl;
     });
+  });
+}
+
+/* Er der gennemsigtige steder? Så skal det være PNG. */
+function harGennemsigtighed(lae){
+  try{
+    const d = lae.getContext('2d').getImageData(0, 0, lae.width, lae.height).data;
+    for(let i = 3; i < d.length; i += 4){ if(d[i] < 250) return true; }
+    return false;
+  }catch(e){ return true; }   /* i tvivl: behold gennemsigtigheden */
+}
+
+async function laegBilledeOp(fil){
+  const im = await billedeFraFil(fil);
+  let bredde = im.width, hoejde = im.height;
+  if(!bredde || !hoejde) throw new Error('Billedet har ingen størrelse.');
+
+  let ud = '';
+  /* Er resultatet stadig meget stort — et foto med mange farver —
+     tages der en omgang mere i mindre størrelse. Tre forsøg, så
+     stopper vi: bedre et lidt stort billede end ingen gemning. */
+  for(let runde = 0; runde < 3; runde++){
+    const maal = BILLEDE_MAX / Math.pow(1.5, runde);
+    const sk = Math.min(1, maal / Math.max(bredde, hoejde));
+    const lae = document.createElement('canvas');
+    lae.width  = Math.max(1, Math.round(bredde * sk));
+    lae.height = Math.max(1, Math.round(hoejde * sk));
+    const k = lae.getContext('2d');
+    k.clearRect(0, 0, lae.width, lae.height);
+    k.drawImage(im, 0, 0, lae.width, lae.height);
+    ud = harGennemsigtighed(lae) ? lae.toDataURL('image/png')
+                                 : lae.toDataURL('image/jpeg', 0.85);
+    if(ud.length <= 300000) break;
   }
-  if(!naaet){
-    billedeNote = 'Billedet er lagt op, men kunne ikke hentes endnu. '
-      + 'Det viser sig formentlig om et øjeblik. Bliver det ved, så tjek '
-      + 'at spanden «udstyr-billeder» er offentlig.';
-  }
-  return adresse;
+  return ud;
 }
 let billedeNote = '';
 document.getElementById('equipImgFile').addEventListener('change', function(e){
@@ -8463,9 +8480,7 @@ document.getElementById('equipDetailSaveBtn').addEventListener('click', async fu
   try{
     let image_url=it.image_url||null;
     if(detailPendingFile){
-      const ext=detailPendingFile.name.split('.').pop();
-      const path='equip_'+it.id+'_'+Date.now()+'.'+ext;
-      image_url=await laegBilledeOp(detailPendingFile,path);
+      image_url=await laegBilledeOp(detailPendingFile);
     }
     const name=document.getElementById('dName').value.trim();
     const category=document.getElementById('dCategory').value||'Diverse';
@@ -8546,9 +8561,7 @@ async function savePkgFromOverlay(){
     const existing=editingPkgId?PACKAGES.find(function(p){return p.id===editingPkgId;}):null;
     let image_url=existing?(existing.image_url||null):null;
     if(detailPendingFile){
-      const ext=detailPendingFile.name.split('.').pop();
-      const path='pkg_'+(editingPkgId||Date.now())+'_'+Date.now()+'.'+ext;
-      image_url=await laegBilledeOp(detailPendingFile,path);
+      image_url=await laegBilledeOp(detailPendingFile);
     }
     const row={name,category,qty,tv2_number:document.getElementById('dTv2').value.trim(),serial_number:document.getElementById('dSerial').value.trim(),qr_code:(document.getElementById('dQrCode').value.trim()||null),power_connection:document.getElementById('dPower').value.trim(),image_url,custom_fields:detailCustomFields.filter(function(f){return f.label.trim()||f.value.trim();})};
     if(editingPkgId){ const {error}=await supa.from('packages').update(row).eq('id',editingPkgId); if(error) throw error; }
