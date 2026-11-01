@@ -3944,7 +3944,7 @@ const SUPABASE_URL = 'https://oqfwegzondrsvdbneury.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_d2b4pWi-2jTYIeCAAUAQcA_0ygShdrH';
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const EP_VERSION = '2026.10.31-c';
+const EP_VERSION = '2026.10.31-d';
 
 /* ── Fejl der siger hvad man gør nu ────────────────────────────
    "Fejl: duplicate key value violates unique constraint" fortæller brugeren
@@ -8411,21 +8411,36 @@ async function laegBilledeOp(fil, sti){
   }
   const {data:pub} = supa.storage.from('udstyr-billeder').getPublicUrl(sti);
   const adresse = pub.publicUrl;
-  const kanHentes = await new Promise(function(svar){
-    const im = new Image();
-    im.onload  = function(){ svar(true) };
-    im.onerror = function(){ svar(false) };
-    im.src = adresse;
-    setTimeout(function(){ svar(false) }, 8000);
-  });
-  if(!kanHentes){
-    throw new Error('Billedet blev lagt op, men adressen kan ikke hentes.\n\n'
-      + 'Spanden «udstyr-billeder» er efter alt at dømme ikke offentlig. '
-      + 'Åbn Storage → udstyr-billeder → Settings og slå «Public bucket» til. '
-      + 'Det er udstyrsfotos, ikke noget hemmeligt.\n\nIntet er gemt.');
+
+  /* ── Prøv adressen af, men SPÆR IKKE på den ────────────────
+     Lige efter en upload kan adressen svare afvisende et øjeblik,
+     før filen er slået igennem. Første udgave af det her kastede en
+     fejl i det tilfælde — og nægtede dermed at gemme noget, der var
+     fuldstændig i orden. En kontrol, der kan tage fejl, må aldrig
+     stå i vejen for arbejdet.
+     Derfor: tre forsøg med pause imellem, og går det stadig ikke,
+     gemmes der alligevel. Du får en linje at vide i stedet. */
+  billedeNote = '';
+  let naaet = false;
+  for(let forsoeg = 0; forsoeg < 3 && !naaet; forsoeg++){
+    if(forsoeg) await new Promise(function(v){ setTimeout(v, 800) });
+    naaet = await new Promise(function(svar){
+      const im = new Image();
+      im.onload  = function(){ svar(true) };
+      im.onerror = function(){ svar(false) };
+      /* eget nummer hver gang, så et afvisende svar ikke bliver husket */
+      im.src = adresse + '?t=' + Date.now() + '-' + forsoeg;
+      setTimeout(function(){ svar(false) }, 5000);
+    });
+  }
+  if(!naaet){
+    billedeNote = 'Billedet er lagt op, men kunne ikke hentes endnu. '
+      + 'Det viser sig formentlig om et øjeblik. Bliver det ved, så tjek '
+      + 'at spanden «udstyr-billeder» er offentlig.';
   }
   return adresse;
 }
+let billedeNote = '';
 document.getElementById('equipImgFile').addEventListener('change', function(e){
   const file=e.target.files[0]; if(!file) return; detailPendingFile=file;
   const reader=new FileReader(); reader.onload=function(){
@@ -8494,6 +8509,7 @@ document.getElementById('equipDetailSaveBtn').addEventListener('click', async fu
     const {error}=await supa.from('equipment').update({name,category,qty,tv2_number:document.getElementById('dTv2').value.trim(),serial_number:document.getElementById('dSerial').value.trim(),qr_code:(document.getElementById('dQrCode').value.trim()||null),power_connection:document.getElementById('dPower').value.trim(),image_url,custom_fields,placering,ob_vogn_id:enVogn}).eq('id',it.id);
     if(error) throw error;
     await loadEquipment(); equipOverlay.classList.remove('open'); renderLager(document.getElementById('lagerSearch').value||''); renderJobs();
+    if(billedeNote){ alert(billedeNote); billedeNote=''; }
   }catch(e){ console.error(e); sigFejl(e, 'gemme ændringen'); }
   finally{ btn.disabled=false; btn.textContent='Gem detaljer'; }
 });
@@ -8538,6 +8554,7 @@ async function savePkgFromOverlay(){
     if(editingPkgId){ const {error}=await supa.from('packages').update(row).eq('id',editingPkgId); if(error) throw error; }
     else { const {error}=await supa.from('packages').insert(row); if(error) throw error; }
     await loadPackages(); equipOverlay.classList.remove('open'); renderLager(document.getElementById('lagerSearch').value||'');
+    if(billedeNote){ alert(billedeNote); billedeNote=''; }
   }catch(e){ console.error(e); sigFejl(e, 'gemme ændringen'); }
   finally{ btn.disabled=false; btn.textContent='Gem detaljer'; }
 }
